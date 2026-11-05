@@ -6,7 +6,7 @@ const KINDS = [
   { id: 'agent', label: 'Agents', tone: 'agent' },
   { id: 'skill', label: 'Skills', tone: 'skill' },
   { id: 'tool', label: 'Tools', tone: 'tool' },
-  { id: 'framework', label: 'Frameworks · Helio', tone: 'fw' },
+  { id: 'framework', label: 'Frameworks · Accelerators', tone: 'fw' },
   { id: 'snowflake', label: 'Snowflake', tone: 'snow' },
 ]
 
@@ -38,7 +38,7 @@ export default function Catalog({ focus, onNavigate }) {
     <div className="page">
       <header className="page-head">
         <div>
-          <div className="eyebrow">Toolkit catalog · slides 30–37</div>
+          <div className="eyebrow">Toolkit catalog · –37</div>
           <h1>Every agent, skill, tool and framework</h1>
           <p className="lede">AI tools are interchangeable, chosen per team, estate and approval model. Agents draft, skills are invoked by hand, every change clears a human review.</p>
         </div>

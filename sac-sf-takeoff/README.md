@@ -1,21 +1,21 @@
-# Keystone Navigator
+# SAC SF Takeoff
 
-A conversational, self-guided UI for the Virtusa × CJLA Keystone proposal (v.6). It walks a team from **discovery to monitoring** and catalogs every agent, skill, tool and framework from slides 30–37. It also gives you curation workspaces for persona journeys (slides 18–20), insights (21–24) and the logistics industry data model (25–29).
+A conversational, self-guided UI for Snowflake takeoff programs. It walks a team from **discovery to monitoring** and catalogs every agent, skill, tool and framework from the reference content. It also gives you curation workspaces for persona journeys, insights and the logistics industry data model.
 
 **Stack:** React 18 + Vite · FastAPI · PostgreSQL 16 (one small database, no ORM)
 
 ## What's inside
 
-| Area | What you can do | Source slides |
-|---|---|---|
-| **Guided workflow** | A 10-step flow map grouped by delivery phase, with the G1/G2/G3 human gates and the loop that feeds build learnings back into Discover. For each step you get a checklist (progress saved in Postgres), the lead role, agents with their skills and tools, Helio frameworks, Snowflake components, outputs, gate evidence and metrics. Prev/Next buttons walk you through in order. | 30–37 |
-| **Toolkit catalog** | A stage × component coverage heatmap. 55 agents, 46 skills, 36 tools, 7 Helio frameworks and 47 Snowflake components, each linked to the stages and agents that use it. Search, add or edit. | 30–37 |
-| **Persona journeys** | 7 personas and 29 journey moments (question → experience → metrics, plus doing / today for the customer). Add personas and moments, or edit them. | 18–20 |
-| **Insights** | 4 dashboards, each built on four questions: what happened, why, what will happen, what you can do. Every dashboard links to its persona. Add dashboards and insights, or edit them. | 21–24 |
-| **Data models** | 4 domains and 20 subject areas, Bronze/Silver/Gold layers, conformed dimensions, 45 facts and dimensions with 168 attributes, a star-schema view of each fact, and a 32-KPI library with E/O/C audience filters. Everything is editable. | 25–29 |
-| **Keystone guide (chat)** | Ask about a stage, agent, skill (`/reconcile`), KPI, persona or dashboard. Answers come with cards that take you to the right screen, and "What's next?" follows the guided flow. Works offline using intent rules and retrieval over the Postgres `search_index` view. If you set `ANTHROPIC_API_KEY`, Claude phrases the answer using only the retrieved context. | all |
+| Area | What you can do |
+|---|---|
+| **Guided workflow** | A 10-step flow map grouped by delivery phase, with the G1/G2/G3 human gates and the loop that feeds build learnings back into Discover. For each step you get a checklist (progress saved in Postgres), the lead role, agents with their skills and tools, accelerator frameworks, Snowflake components, outputs, gate evidence and metrics. Prev/Next buttons walk you through in order. |
+| **Toolkit catalog** | A stage × component coverage heatmap. 55 agents, 46 skills, 36 tools, 7 accelerator frameworks and 47 Snowflake components, each linked to the stages and agents that use it. Search, add or edit. |
+| **Persona journeys** | 7 personas and 29 journey moments (question → experience → metrics, plus doing / today for the customer). Add personas and moments, or edit them. |
+| **Insights** | 4 dashboards, each built on four questions: what happened, why, what will happen, what you can do. Every dashboard links to its persona. Add dashboards and insights, or edit them. |
+| **Data models** | 4 domains and 20 subject areas, Bronze/Silver/Gold layers, conformed dimensions, 45 facts and dimensions with 168 attributes, a star-schema view of each fact, and a 32-KPI library with E/O/C audience filters. Everything is editable. |
+| **Takeoff guide (chat)** | Ask about a stage, agent, skill (`/reconcile`), KPI, persona or dashboard. Answers come with cards that take you to the right screen, and "What's next?" follows the guided flow. Works offline using intent rules and retrieval over the Postgres `search_index` view. If you set `ANTHROPIC_API_KEY`, Claude phrases the answer using only the retrieved context. | all |
 
-Rows loaded from the proposal are tagged `origin='seed'`. Anything added or edited in the UI is tagged `curated` and shows a **Curated** badge.
+Rows loaded from the reference content are tagged `origin='seed'`. Anything added or edited in the UI is tagged `curated` and shows a **Curated** badge.
 
 ## Run with Docker
 
@@ -31,12 +31,12 @@ The first time the API starts, it creates the schema and seeds the database (`py
 
 ```bash
 # 1. Postgres (any 14+). Create the role and database:
-createuser -s keystone && createdb -O keystone keystone   # password: keystone
+createuser -s sactakeoff && createdb -O sactakeoff sactakeoff   # password: sactakeoff
 
 # 2. API
 cd backend
 pip install -r requirements.txt
-export DATABASE_URL=postgresql://keystone:keystone@localhost:5432/keystone
+export DATABASE_URL=postgresql://sactakeoff:sactakeoff@localhost:5432/sactakeoff
 python -m app.seed            # drops and reloads everything
 uvicorn app.main:app --reload --port 8000
 
@@ -51,7 +51,7 @@ Single-process option: run `npm run build` in `frontend/`, and FastAPI will serv
 
 ```
 backend/app/
-  seed_data.py   # all proposal content: stages, agents, skills, tools, personas, insights, data model, KPIs
+  seed_data.py   # all reference content: stages, agents, skills, tools, personas, insights, data model, KPIs
   schema.sql     # tables + search_index view
   seed.py        # loader
   main.py        # REST API: workflow, catalog, progress, curation CRUD, chat
@@ -72,6 +72,6 @@ frontend/src/
 
 ## Notes
 
-- Dashboard figures are illustrative, as they are in the proposal. OneTrack and Rebus content is flagged as discovery only.
-- Each KPI's `source_fact` is a suggested mapping to confirm in discovery. Facts without detailed attributes on the slides get a placeholder attribute so they can be curated.
+- Dashboard figures are illustrative, as they are in the reference content. fleet management system and labor management system content is flagged as discovery only.
+- Each KPI's `source_fact` is a suggested mapping to confirm in discovery. Facts without detailed attributes in the reference content get a placeholder attribute so they can be curated.
 - To re-seed from scratch, run `python -m app.seed`. This drops curated edits.

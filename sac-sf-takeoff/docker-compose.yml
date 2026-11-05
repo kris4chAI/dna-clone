@@ -2,20 +2,20 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: keystone
-      POSTGRES_PASSWORD: keystone
-      POSTGRES_DB: keystone
+      POSTGRES_USER: sactakeoff
+      POSTGRES_PASSWORD: sactakeoff
+      POSTGRES_DB: sactakeoff
     ports: ["5432:5432"]
     volumes: [pgdata:/var/lib/postgresql/data]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U keystone"]
+      test: ["CMD-SHELL", "pg_isready -U sactakeoff"]
       interval: 3s
       retries: 20
 
   api:
     build: ./backend
     environment:
-      DATABASE_URL: postgresql://keystone:keystone@db:5432/keystone
+      DATABASE_URL: postgresql://sactakeoff:sactakeoff@db:5432/sactakeoff
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     depends_on:
       db: { condition: service_healthy }

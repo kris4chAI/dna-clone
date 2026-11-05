@@ -79,7 +79,7 @@ def answer(message: str, context: dict | None = None):
     # 1. Orientation
     if re.search(r"\b(hi|hello|help|start|begin|get started|where do i)\b", m) and len(m) < 60:
         stages = q("SELECT code, seq, name, lead_role FROM stage ORDER BY seq")
-        reply = ("Welcome to **Keystone Navigator**. The delivery runs in ten guided steps from discovery to monitoring, "
+        reply = ("Welcome to **SAC SF Takeoff**. The delivery runs in ten guided steps from discovery to monitoring, "
                  "each with its agents, skills, tools and human gates:\n" +
                  "\n".join(f"- {s['seq']}. {s['name']} — {s['lead_role']}" for s in stages) +
                  "\n\nStart with **Discover**: open it, tick off the key steps, then press **Next**. "
@@ -199,7 +199,7 @@ def answer(message: str, context: dict | None = None):
     scored.sort(key=lambda x: -x[0])
     top = [r for _, r in scored[:6]]
     if not top:
-        return {"reply": "I couldn't find that in the Keystone catalog yet. Try asking about a stage, an agent, a skill like `/reconcile`, a KPI or a persona — or add it through the curation screens.",
+        return {"reply": "I couldn't find that in the takeoff catalog yet. Try asking about a stage, an agent, a skill like `/reconcile`, a KPI or a persona — or add it through the curation screens.",
                 "cards": [], "suggestions": SUGGEST_DEFAULT}
     view = {"stage": "workflow", "agent": "catalog", "skill": "catalog", "tool": "catalog", "framework": "catalog", "snowflake": "catalog",
             "persona": "journeys", "journey_step": "journeys", "dashboard": "insights", "insight": "insights",
@@ -218,7 +218,7 @@ def llm_polish(message, result):
         r = httpx.post("https://api.anthropic.com/v1/messages", timeout=30, headers={
             "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json"},
             json={"model": os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5"), "max_tokens": 600,
-                  "system": "You are the Keystone Navigator guide for a Snowflake modernization program. Answer only from the CONTEXT. Be concise; use short markdown bullets.",
+                  "system": "You are the SAC SF Takeoff guide for a Snowflake modernization program. Answer only from the CONTEXT. Be concise; use short markdown bullets.",
                   "messages": [{"role": "user", "content": f"CONTEXT:\n{ctx}\n\nQUESTION: {message}"}]})
         r.raise_for_status()
         result["reply"] = "".join(b.get("text", "") for b in r.json()["content"])

@@ -3,6 +3,6 @@ WORKDIR /srv
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY app ./app
-ENV DATABASE_URL=postgresql://keystone:keystone@db:5432/keystone
+ENV DATABASE_URL=postgresql://sactakeoff:sactakeoff@db:5432/sactakeoff
 EXPOSE 8000
 CMD ["sh", "-c", "python -m app.seed --if-empty && uvicorn app.main:app --host 0.0.0.0 --port 8000"]

@@ -1,15 +1,15 @@
-"""Seed content for Keystone Navigator.
+"""Seed content for SAC SF Takeoff.
 
-Source: Virtusa Proposal to CJLA - Keystone v.6
-  - Slides 18-20  persona journeys
-  - Slides 21-24  insight dashboards
-  - Slides 25-29  logistics data model, schemas, KPI library
-  - Slides 30-37  engineering accelerators: agents, skills, tools, frameworks
+Source: SAC Snowflake takeoff reference content
+  - persona journeys
+  - insight dashboards
+  - logistics data model, schemas, KPI library
+  - engineering accelerators: agents, skills, tools, frameworks
 Everything here is a starting point. All rows are editable from the UI ("curation").
 """
 
 # ---------------------------------------------------------------------------
-# Delivery phases (slide 30)
+# Delivery phases 
 # ---------------------------------------------------------------------------
 PHASES = [
     {"num": 1, "name": "Mobilize + discover", "months": "Months 1-2", "output": "Lineage, prioritized waves, PRDs"},
@@ -33,12 +33,12 @@ TOOL_CATEGORY = {
     "GitHub": "CI/CD", "GitHub Releases": "CI/CD", "Semantic versioning": "CI/CD",
     "SQLFluff": "Quality", "dbt tests": "Quality", "PR templates": "Quality",
     "Zero-copy clones": "Infrastructure", "Jira": "Work management", "JIRA / Xray": "Work management",
-    "IdP CLI": "Platform & policy", "Tableau Cloud": "BI", "Data Harness": "Virtusa Helio",
-    "Platform Assurance": "Virtusa Helio", "Markdown in repo": "Documentation",
+    "IdP CLI": "Platform & policy", "Tableau Cloud": "BI", "Data Harness": "Accelerators",
+    "Platform Assurance": "Accelerators", "Markdown in repo": "Documentation",
     "Recorded sessions": "Enablement", "Handover sign-off": "Enablement",
 }
 
-# Helio services = Virtusa frameworks (slide 30)
+# Accelerator services (frameworks)
 FRAMEWORKS = [
     ("Discovery and Design", "Estate, lineage and ~400 reports profiled."),
     ("Foundation", "Zones, RBAC and masking as code."),
@@ -185,7 +185,7 @@ STAGES = [
     },
     {
         "code": "migration", "seq": 6, "name": "Platform migration", "phase": 3, "slide": 33,
-        "lead_role": "Virtusa migration lead", "mode": "Engineer-led supervision · human + AI",
+        "lead_role": "Migration lead", "mode": "Engineer-led supervision · human + AI",
         "gate": "Wave sign-off per component",
         "summary": "Delivered on Snowflake AIM: AI converts the code, DMS lands history in S3. Parity is proven by reconciliation, not by the converter.",
         "key_steps": [
@@ -210,7 +210,7 @@ STAGES = [
             {"name": "BI Repoint agent", "capability": "BI conversion", "description": "Repoints OAC and Power BI to Tableau on semantic views.", "skills": ["/repoint-bi"], "tools": ["Tableau Cloud"]},
             {"name": "Migration Runner", "capability": "Data migration", "description": "Loads history and reconciles.", "skills": ["/load-initial", "/reconcile"], "tools": ["Snowflake CLI"]},
             {"name": "Cutover Validator", "capability": "Cut-over", "description": "Runs parallel runs and the cut-over runbook.", "skills": ["/parallel-run"], "tools": ["GitHub Actions"]},
-            {"name": "Converter agent", "capability": "Platform Migration (Helio)", "description": "ODI, PL/SQL and OAC logic conversion orchestrator.", "skills": ["/convert-ddl", "/convert-etl"], "tools": ["Claude Code", "Cortex Code"]},
+            {"name": "Converter agent", "capability": "Platform Migration", "description": "ODI, PL/SQL and OAC logic conversion orchestrator.", "skills": ["/convert-ddl", "/convert-etl"], "tools": ["Claude Code", "Cortex Code"]},
         ],
         "frameworks": ["Platform Migration", "Discovery and Design", "Code Promotion", "Data Harness"],
         "snowflake": ["AIM code conversion (SnowConvert AI)", "AIM ETL conversion to dbt", "AIM data migration", "Semantic Views", "AIM shared migration state"],
@@ -223,7 +223,7 @@ STAGES = [
         "code": "bi", "seq": 7, "name": "BI modernization", "phase": 3, "slide": 36,
         "lead_role": "BI lead", "mode": "Brownfield (Track A) + Greenfield (Track B)",
         "gate": "Signed validation evidence",
-        "summary": "Rationalize, convert, validate and generate: ~400 OAC, Power BI, Klipfolio and Excel reports migrated, plus new Körber customer, HR executive and ops dashboards.",
+        "summary": "Rationalize, convert, validate and generate: ~400 OAC, Power BI, Klipfolio and Excel reports migrated, plus new customer, HR executive and ops dashboards.",
         "key_steps": ["Report rationalization", "Semantic layer creation", "Report conversion", "Report generation", "Report validation"],
         "steps": [
             {"name": "Report rationalization", "track": "Brownfield", "snowflake": ["Snowflake usage history", "Horizon catalog"], "agent": "Report Analyzer agent", "output": "Rationalized inventory and wave backlog",
@@ -231,8 +231,8 @@ STAGES = [
             {"name": "Semantic layer creation", "track": "Both", "snowflake": ["Semantic Views", "Cortex Analyst"], "agent": "Logic Extractor · Metric Normalizer", "output": "32-KPI certified library",
              "detail": "DAX, OAC logical SQL and Klipfolio formulas extracted and compared; conflicts resolved into one certified definition; published as semantic views, dbt metrics and OSI."},
             {"name": "Report conversion", "track": "Brownfield", "snowflake": ["Tableau Cloud", "Live connections"], "agent": "Report Converter agent", "output": "Tableau workbooks per wave",
-             "detail": "Layouts, calculations, filters and parameters mapped to Tableau; UX lifted to Keystone standards; published through the Tableau REST API."},
-            {"name": "Report generation", "track": "Greenfield", "snowflake": ["Semantic Views", "Tableau", "Cortex"], "agent": "Report Generator agent", "output": "Körber, HR and ops dashboards",
+             "detail": "Layouts, calculations, filters and parameters mapped to Tableau; UX lifted to modern standards; published through the Tableau REST API."},
+            {"name": "Report generation", "track": "Greenfield", "snowflake": ["Semantic Views", "Tableau", "Cortex"], "agent": "Report Generator agent", "output": "WMS, HR and ops dashboards",
              "detail": "New dashboards drafted from PRDs, journey maps and semantic views; wireframe to workbook scaffold; Cortex Analyst for natural-language questions."},
             {"name": "Report validation", "track": "Both", "snowflake": ["Query Insights", "Tableau metadata"], "agent": "BI Validator", "output": "Signed validation evidence",
              "detail": "Numbers, filters and visuals compared with legacy or golden queries; RLS and masking tested per persona; filters under 5 seconds."},
@@ -243,7 +243,7 @@ STAGES = [
             {"name": "Metric Normalizer", "capability": "Semantic layer creation", "description": "Resolves conflicting measures into one certified definition.", "skills": [], "tools": ["Semantic views"]},
             {"name": "Report Converter agent", "capability": "Report conversion", "description": "Maps layouts and calculations to Tableau workbooks.", "skills": ["/repoint-bi"], "tools": ["Tableau Cloud"]},
             {"name": "Report Generator agent", "capability": "Report generation", "description": "Drafts new dashboards from PRDs, journeys and semantic views.", "skills": [], "tools": ["Tableau Cloud", "Cortex Analyst"]},
-            {"name": "BI modernization agents", "capability": "BI Modernization (Helio)", "description": "Rationalize, convert, generate, validate.", "skills": [], "tools": ["Tableau Cloud"]},
+            {"name": "BI modernization agents", "capability": "BI Modernization", "description": "Rationalize, convert, generate, validate.", "skills": [], "tools": ["Tableau Cloud"]},
         ],
         "frameworks": ["BI Modernization", "Platform Assurance"],
         "snowflake": ["Semantic Views", "Cortex Analyst", "Query Insights", "Horizon catalog"],
@@ -276,11 +276,11 @@ STAGES = [
             {"name": "Self Healing agent", "capability": "Execution + analytics", "description": "Repairs brittle tests during execution.", "skills": [], "tools": ["GitHub Actions"]},
             {"name": "Defect Triage agent", "capability": "Execution + analytics", "description": "Triages and routes defects.", "skills": [], "tools": ["JIRA / Xray"]},
             {"name": "Test Reporting agent", "capability": "Reporting", "description": "Publishes test evidence per gate.", "skills": [], "tools": ["GitHub Actions"]},
-            {"name": "Reconciler", "capability": "SIT + UAT (Helio)", "description": "Reconciles every converted object against Oracle.", "skills": ["/reconcile"], "tools": ["Snowflake DMFs"]},
+            {"name": "Reconciler", "capability": "SIT + UAT", "description": "Reconciles every converted object against Oracle.", "skills": ["/reconcile"], "tools": ["Snowflake DMFs"]},
         ],
         "frameworks": ["Platform Assurance"],
         "snowflake": ["AIM unit test generation", "AIM data validation", "Query Insights", "Performance Explorer"],
-        "test_types": ["System test · end to end, per wave", "Integration test · source → Gold → Tableau", "Functional test · business rules + metrics", "Acceptance test · UAT with CJLA, signed off", "Performance test · < 5 s, concurrency, cost"],
+        "test_types": ["System test · end to end, per wave", "Integration test · source → Gold → Tableau", "Functional test · business rules + metrics", "Acceptance test · UAT with the customer, signed off", "Performance test · < 5 s, concurrency, cost"],
         "outputs": ["Test evidence", "Reconciliation", "UAT sign-off"],
         "prompts": ["How is BI parity tested?", "What does the Performance Agent check?"],
     },
@@ -314,7 +314,7 @@ STAGES = [
         "code": "monitor", "seq": 10, "name": "Operate & monitor", "phase": 5, "slide": 30,
         "lead_role": "Platform operations", "mode": "AI-assisted operations",
         "gate": "Formal handover sign-off",
-        "summary": "AI-assisted operations keep cost, quality and service levels in check after go-live. CJLA owns the code from day one; every release is reproducible, documented and handed over with runbooks.",
+        "summary": "AI-assisted operations keep cost, quality and service levels in check after go-live. The team owns the code from day one; every release is reproducible, documented and handed over with runbooks.",
         "key_steps": [
             "Run the monitored go-live with release, rollback and runbooks",
             "Watch catalog, lineage, run and cost telemetry",
@@ -338,13 +338,13 @@ STAGES = [
 ]
 
 TEAM = [
-    ("AI Native Engineer", "Core pod: builds Helio services"),
+    ("AI Native Engineer", "Core pod: builds accelerator services"),
     ("AI-Assisted Engineers", "Track pods: apply them per wave"),
     ("Snowflake SE · Frontier", "AIM, Cortex and platform guidance"),
 ]
 
 # ---------------------------------------------------------------------------
-# Personas & journeys (slides 18-20)
+# Personas & journeys 
 # step: (stage, question, experience, metrics, doing, today)
 # ---------------------------------------------------------------------------
 PERSONAS = [
@@ -387,26 +387,26 @@ PERSONAS = [
           "Follows orders from release to ship, delivery and proof of delivery.", "Calls the account team for status."),
          ("Resolve exceptions", "What went wrong, and who owns the fix?", "Exception alerts", "reason code · damage-free · claims",
           "Handles shorts, damages and late deliveries.", "Learns of the problem when the store complains."),
-         ("Review and pay", "Did CJLA meet our SLA, and is the invoice right?", "Customer SLA Scorecard", "OTIF · fill rate · SLA trend · billing detail",
-          "Runs the QBR with CJLA and reconciles the invoice.", "QBR deck built by hand; disputes on billable activity."),
+         ("Review and pay", "Did the provider meet our SLA, and is the invoice right?", "Customer SLA Scorecard", "OTIF · fill rate · SLA trend · billing detail",
+          "Runs the QBR with the provider and reconciles the invoice.", "QBR deck built by hand; disputes on billable activity."),
      ]},
     {"code": "automation", "segment": "Operational", "name": "Automation, robotics and lift fleet", "roles": "Engineering and automation managers · safety leads",
      "wants": "Every robot, lift and conveyor available and safe when the volume arrives", "slide": 20, "journey": "Automation",
-     "note": "Illustrative: OneTrack and Rebus are discovery only in Keystone scope.",
+     "note": "Illustrative: fleet management system and labor management system are discovery only in scope.",
      "steps": [
-         ("Pre-shift check", "Is every AMR, lift and conveyor ready for today's volume?", "OneTrack AiOn brief + Command Center", "fleet availability · open faults · lift impacts overnight"),
-         ("Monitor live", "Which robots, lifts or merges are slowing the flow?", "Command Center, embedded in OneTrack", "AMR utilization · near misses · throughput by zone"),
-         ("Act", "Rebalance charging, reroute tasks or slow a lift zone?", "WCS, fleet manager and OneTrack AiOn", "write-back: tasks rerouted, drivers alerted"),
+         ("Pre-shift check", "Is every AMR, lift and conveyor ready for today's volume?", "fleet management system brief + Command Center", "fleet availability · open faults · lift impacts overnight"),
+         ("Monitor live", "Which robots, lifts or merges are slowing the flow?", "Command Center, embedded in fleet management system", "AMR utilization · near misses · throughput by zone"),
+         ("Act", "Rebalance charging, reroute tasks or slow a lift zone?", "WCS, fleet manager and fleet management system", "write-back: tasks rerouted, drivers alerted"),
          ("Improve weekly", "Which faults and hotspots recur, and is it paying back?", "Automation Performance Review", "MTBF and MTTR · impacts per 1,000 hours · ROI"),
      ]},
     {"code": "labor", "segment": "Operational", "name": "Labor planning and shift ops", "roles": "Labor planners · shift managers",
      "wants": "The right people in the right zone, at standard, without overtime", "slide": 20, "journey": "Automation",
-     "note": "Illustrative: Rebus is discovery only in Keystone scope.",
+     "note": "Illustrative: labor management system is discovery only in scope.",
      "steps": [
-         ("Plan the shift", "Do scheduled associates match the Körber waves?", "Rebus forecast + Blue Yonder plan", "required vs scheduled hours · skills by zone"),
-         ("During shift", "Who is behind standard, and where?", "Rebus LMS with embedded Tableau", "performance to standard · idle time · absence"),
-         ("Act", "Move associates or re-release the wave?", "Rebus Intraday, Blue Yonder, Körber", "write-back: reassignments, wave re-release"),
-         ("Close and coach", "Who needs coaching, and is incentive pay right?", "Rebus LMS scorecard", "performance to standard · incentive · coaching log"),
+         ("Plan the shift", "Do scheduled associates match the WMS waves?", "labor management system forecast + planning system plan", "required vs scheduled hours · skills by zone"),
+         ("During shift", "Who is behind standard, and where?", "labor management system with embedded Tableau", "performance to standard · idle time · absence"),
+         ("Act", "Move associates or re-release the wave?", "labor management system, planning system, WMS", "write-back: reassignments, wave re-release"),
+         ("Close and coach", "Who needs coaching, and is incentive pay right?", "labor management system scorecard", "performance to standard · incentive · coaching log"),
      ]},
     {"code": "site_ci", "segment": "Executive", "name": "Site leadership and continuous improvement", "roles": "DC GM · continuous improvement leaders",
      "wants": "Robots and people delivering the plan at the lowest cost per unit", "slide": 20, "journey": "Automation",
@@ -419,7 +419,7 @@ PERSONAS = [
 ]
 
 # ---------------------------------------------------------------------------
-# Insight dashboards (slides 21-24)
+# Insight dashboards 
 # ---------------------------------------------------------------------------
 INSIGHT_KINDS = ["What happened", "Why it happened", "What will happen", "What you can do"]
 DASHBOARDS = [
@@ -436,25 +436,25 @@ DASHBOARDS = [
             ("Will every order ship by cut-off?", "The burn-down projects 2,100 units missing the 16:00 cut-off."),
             ("What should I move to recover?", "Three moves clear the backlog by 15:40; the shift lead is notified.")]},
     {"code": "customer", "name": "Customer dashboard", "audience": "External customer", "roles": "Supply-chain manager at a shipper",
-     "surface": "Customer portal · Cortex assistant", "headline": "Self-service visibility and action for every CJLA shipper", "slide": 23, "persona": "customer",
+     "surface": "Customer portal · Cortex assistant", "headline": "Self-service visibility and action for every shipper", "slide": 23, "persona": "customer",
      "qa": [("Where are my orders right now?", "Order pipeline and OTIF trend, secured to their own data."),
             ("Why was OTIF below SLA in W38–W39?", "Root-cause donut and store dots: carrier delay drives 48%."),
             ("Will we have stock for Friday's promotion?", "Bullet chart flags 2 SKUs that run out before the promotion."),
             ("What can I do before stores are affected?", "Three self-service requests cut at-risk orders from 23 to 8.")]},
     {"code": "automation", "name": "Automation dashboard", "audience": "Warehouse automation and labor", "roles": "Automation manager · shift manager",
-     "surface": "Automation and Labor Command Center", "headline": "One view of robots, lifts and labor, embedded in Rebus, with fixes written back before the shift is lost", "slide": 24, "persona": "automation",
-     "guardrail": "OneTrack and Rebus elements are illustrative: both are discovery only in Keystone scope.",
+     "surface": "Automation and Labor Command Center", "headline": "One view of robots, lifts and labor, embedded in labor management system, with fixes written back before the shift is lost", "slide": 24, "persona": "automation",
+     "guardrail": "fleet management system and labor management system elements are illustrative: both are discovery only in scope.",
      "qa": [("Why did the floor slow at 10:00?", "AMR availability and labor productivity fell together below the 90% target."),
-            ("Is it robots, people or process?", "Charging, absence and below-standard picking (Rebus) drive 68%; OneTrack flags lift congestion."),
+            ("Is it robots, people or process?", "Charging, absence and below-standard picking (labor management system) drive 68%; fleet management system flags lift congestion."),
             ("Will we make plan by end of shift?", "As-is, 4,600 units fall short; with actions, back on plan by 15:30."),
-            ("What do I change, and where?", "Rebalance AMRs, reassign through Rebus Intraday, re-release in Körber.")]},
+            ("What do I change, and where?", "Rebalance AMRs, reassign through labor management system, re-release in WMS.")]},
 ]
 
 # ---------------------------------------------------------------------------
-# Logistics industry data model (slides 25-29)
+# Logistics industry data model 
 # ---------------------------------------------------------------------------
 DOMAINS = [
-    ("Warehouse management", "Körber + legacy WMS", [
+    ("Warehouse management", "WMS + legacy WMS", [
         ("Facility & Location", "site, building, zone, aisle, bin, storage type"),
         ("Inbound & Receiving", "ASN, dock appointment, receipt, putaway"),
         ("Inventory & Cycle Count", "position, lot, status, movement, count variance"),
@@ -466,7 +466,7 @@ DOMAINS = [
         ("Tracking Events & ETA", "status, reason code, responsible party, ETA"),
         ("Carrier, Lane & Rate", "service provider, lane, rate offering, tender"),
         ("Freight Cost & Audit", "planned vs invoiced cost, accessorials, disputes")]),
-    ("Customer & commercial", "Körber customer data · contracts · billing", [
+    ("Customer & commercial", "customer data · contracts · billing", [
         ("Customer Account", "client, account hierarchy, ship-to, consignee"),
         ("Contract & SLA", "service scope, SLA commitment, volume commitment"),
         ("Billing & Revenue", "billable activity, rate schedule, invoice"),
@@ -497,7 +497,7 @@ def _fk(*names):
     return [(n, "FK", "") for n in names]
 
 ENTITIES = [
-    # Warehouse schema (slide 26)
+    # Warehouse schema 
     ("Warehouse", "FACT_WAREHOUSE_TASK", "fact", "Transaction",
      "One row per warehouse task (receive, putaway, replenish, pick, pack, load) per item, location and employee", "Labour, Dock & Yard",
      _m("Units and lines handled", "Cases, pallets, weight, cube", "Task start, end and duration", "Engineered standard minutes",
@@ -521,7 +521,7 @@ ENTITIES = [
     ("Warehouse", "FACT_LABOR_ACTIVITY", "fact", "Transaction", "Direct and indirect hours against engineered standards; UPH and utilization.", "Labour, Dock & Yard", []),
     ("Warehouse", "FACT_DOCK_APPOINTMENT", "fact", "Accumulating", "Scheduled vs actual arrival, door time and yard dwell per trailer.", "Labour, Dock & Yard", []),
     ("Warehouse", "FACT_BILLABLE_ACTIVITY", "fact", "Transaction", "Storage, handling and value-added services by customer and rate for 3PL billing.", "Billing & Revenue", []),
-    # Transportation schema (slide 27)
+    # Transportation schema 
     ("Transportation", "FACT_SHIPMENT_LEG", "fact", "Transaction",
      "One row per shipment leg (stop-to-stop) per shipment, carrier and equipment", "Shipment, Stop & Leg",
      _m("Planned vs actual pickup", "Planned vs actual delivery", "Transit time and delay hours", "Loaded and empty miles",
@@ -541,7 +541,7 @@ ENTITIES = [
     ("Transportation", "FACT_FREIGHT_INVOICE_LINE", "fact", "Transaction", "Billed vs planned cost, accessorials, audit result and dispute value.", "Freight Cost & Audit", []),
     ("Transportation", "FACT_FLEET_TRIP", "fact", "Transaction", "Private fleet trips: loaded and empty miles, fuel, driver hours of service.", "Fleet, Driver & Equipment", []),
     ("Transportation", "FACT_LANE_MONTHLY", "fact", "Snapshot", "Monthly lane and carrier performance: volume, on-time, cost per mile.", "Carrier, Lane & Rate", []),
-    # Automation and labor (slide 28)
+    # Automation and labor 
     ("Automation & labor", "FACT_TASK_EXECUTION", "fact", "Transaction",
      "One row per task executed by a robot or an associate: pick, putaway, replenish, induct, move", "Labour, Dock & Yard",
      _m("Units and lines handled", "Task duration and travel time", "Idle and wait time", "Engineered standard time",
@@ -549,23 +549,23 @@ ENTITIES = [
      + _fk("task", "wave", "robot or employee", "location", "item", "shift", "date", "reason code", "source system")),
     ("Automation & labor", "DIM_DATE_SHIFT", "dim", "Conformed", "date, shift, hour, fiscal week", "Workforce & HR", []),
     ("Automation & labor", "DIM_SITE_ZONE", "dim", "Conformed", "site, building, zone, aisle, bin", "Facility & Location", []),
-    ("Automation & labor", "DIM_ROBOT_ASSET", "dim", "Local", "AMR, forklift (OneTrack), AS/RS, sorter, conveyor", "Engineering & Maintenance", []),
-    ("Automation & labor", "DIM_WAVE_ORDER", "dim", "Local", "Körber wave, order, priority, cut-off", "Outbound & Fulfilment", []),
-    ("Automation & labor", "DIM_LABOR_STANDARD", "dim", "Local", "engineered standards by task and zone (Rebus if built)", "Labour, Dock & Yard", []),
+    ("Automation & labor", "DIM_ROBOT_ASSET", "dim", "Local", "AMR, forklift (fleet management system), AS/RS, sorter, conveyor", "Engineering & Maintenance", []),
+    ("Automation & labor", "DIM_WAVE_ORDER", "dim", "Local", "WMS wave, order, priority, cut-off", "Outbound & Fulfilment", []),
+    ("Automation & labor", "DIM_LABOR_STANDARD", "dim", "Local", "engineered standards by task and zone (labor management system if built)", "Labour, Dock & Yard", []),
     ("Automation & labor", "DIM_REASON_CODE", "dim", "Conformed", "fault, delay, idle, exception", "Tracking Events & ETA", []),
     ("Automation & labor", "FACT_ROBOT_STATUS", "fact", "Snapshot", "Every 1-5 minutes per AMR: working, charging, fault or idle; WCS and PLC fault events", "Engineering & Maintenance", []),
-    ("Automation & labor", "FACT_LIFT_EVENT", "fact", "Transaction", "Discovery only · OneTrack Iris-1: collisions, near misses, speeding and idle per lift", "Safety & Sustainability", []),
-    ("Automation & labor", "FACT_LABOR_SHIFT", "fact", "Snapshot", "Blue Yonder WFM and UKG / Dayforce: scheduled vs clocked hours, absence, overtime", "Workforce & HR", []),
-    ("Automation & labor", "FACT_LABOR_PERFORMANCE", "fact", "Accumulating", "Discovery only · Rebus LMS: performance to standard per associate and shift", "Labour, Dock & Yard", []),
-    ("Automation & labor", "FACT_WAVE_PROGRESS", "fact", "Accumulating", "Körber waves from release to ship: planned vs actual units and cut-off risk", "Outbound & Fulfilment", []),
-    ("Automation & labor", "FACT_ACTION_LOG", "fact", "Transaction", "Every write-back to Körber, Blue Yonder, Rebus or the WCS, and each AiOn alert: who, what, outcome", "Service Cases", []),
+    ("Automation & labor", "FACT_LIFT_EVENT", "fact", "Transaction", "Discovery only · fleet telemetry: collisions, near misses, speeding and idle per lift", "Safety & Sustainability", []),
+    ("Automation & labor", "FACT_LABOR_SHIFT", "fact", "Snapshot", "planning system WFM and UKG / Dayforce: scheduled vs clocked hours, absence, overtime", "Workforce & HR", []),
+    ("Automation & labor", "FACT_LABOR_PERFORMANCE", "fact", "Accumulating", "Discovery only · labor management system: performance to standard per associate and shift", "Labour, Dock & Yard", []),
+    ("Automation & labor", "FACT_WAVE_PROGRESS", "fact", "Accumulating", "WMS waves from release to ship: planned vs actual units and cut-off risk", "Outbound & Fulfilment", []),
+    ("Automation & labor", "FACT_ACTION_LOG", "fact", "Transaction", "Every write-back to WMS, planning system, labor management system or the WCS, and each alert: who, what, outcome", "Service Cases", []),
 ]
 
 # Dimension descriptions become attributes too
 def dim_attributes(desc):
     return [(a.strip(), "attribute", "") for a in desc.split(",") if a.strip()]
 
-# KPIs (slide 29). audiences: E executive, O operational, C external customer. source_fact is a suggested mapping.
+# KPIs . audiences: E executive, O operational, C external customer. source_fact is a suggested mapping.
 KPIS = [
     ("Warehouse operations", "Units per hour (UPH)", "units picked ÷ direct labour hours", "O", "FACT_LABOR_ACTIVITY"),
     ("Warehouse operations", "Dock-to-stock time", "putaway confirmed − trailer arrival, hours", "C,O", "FACT_INBOUND_RECEIPT_LINE"),

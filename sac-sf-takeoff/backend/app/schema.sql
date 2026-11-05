@@ -1,5 +1,5 @@
--- Keystone Navigator schema (PostgreSQL 14+)
--- `origin` = 'seed' for rows loaded from the proposal, 'curated' for rows added or edited in the UI.
+-- SAC SF Takeoff schema (PostgreSQL 14+)
+-- `origin` = 'seed' for rows loaded from the reference content, 'curated' for rows added or edited in the UI.
 
 DROP TABLE IF EXISTS chat_message, guide_progress, stage_component, component, stage, phase,
   journey_step, persona, insight_question, insight_dashboard,
@@ -21,7 +21,7 @@ CREATE TABLE stage (
   key_steps JSONB DEFAULT '[]', outputs JSONB DEFAULT '[]', extra JSONB DEFAULT '{}'
 );
 
--- agents, skills, tools, frameworks (Helio services), snowflake components
+-- agents, skills, tools, frameworks (accelerator services), snowflake components
 CREATE TABLE component (
   id SERIAL PRIMARY KEY,
   kind TEXT NOT NULL CHECK (kind IN ('agent','skill','tool','framework','snowflake')),
@@ -47,7 +47,7 @@ CREATE TABLE guide_progress (
   PRIMARY KEY (session_id, stage_code, step_index)
 );
 
--- Persona journeys (slides 18-20)
+-- Persona journeys 
 CREATE TABLE persona (
   id SERIAL PRIMARY KEY, code TEXT UNIQUE, segment TEXT, name TEXT NOT NULL, roles TEXT, wants TEXT,
   journey TEXT, goals TEXT, pains TEXT, kpis TEXT, note TEXT, slide INT, origin TEXT DEFAULT 'seed'
@@ -58,7 +58,7 @@ CREATE TABLE journey_step (
   origin TEXT DEFAULT 'seed'
 );
 
--- Insights (slides 21-24)
+-- Insights 
 CREATE TABLE insight_dashboard (
   id SERIAL PRIMARY KEY, code TEXT UNIQUE, name TEXT NOT NULL, audience TEXT, roles TEXT, surface TEXT,
   headline TEXT, guardrail TEXT, persona_code TEXT, slide INT, origin TEXT DEFAULT 'seed'
@@ -68,7 +68,7 @@ CREATE TABLE insight_question (
   seq INT, kind TEXT, question TEXT, answer TEXT, origin TEXT DEFAULT 'seed'
 );
 
--- Industry data model (slides 25-29)
+-- Industry data model 
 CREATE TABLE domain (id SERIAL PRIMARY KEY, name TEXT UNIQUE NOT NULL, source TEXT, origin TEXT DEFAULT 'seed');
 CREATE TABLE subject_area (
   id SERIAL PRIMARY KEY, domain_id INT REFERENCES domain(id) ON DELETE CASCADE,

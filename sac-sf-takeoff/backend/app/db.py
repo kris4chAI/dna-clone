@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://keystone:keystone@localhost:5432/keystone")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://sactakeoff:sactakeoff@localhost:5432/sactakeoff")
 
 pool = ConnectionPool(DATABASE_URL, min_size=1, max_size=5, kwargs={"row_factory": dict_row}, open=False)
 

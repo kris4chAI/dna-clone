@@ -48,7 +48,7 @@ export default function Workflow({ code, onSelect, onAsk, onNavigate }) {
     <div className="page">
       <header className="page-head">
         <div>
-          <div className="eyebrow">Guided workflow · slides 30–37</div>
+          <div className="eyebrow">Guided workflow · –37</div>
           <h1>From discovery to monitoring</h1>
           <p className="lede">Ten human-gated steps. Each one names who leads, which agents draft the work, the skills they invoke, the tools they run on and the evidence that clears the gate.</p>
         </div>
@@ -209,7 +209,7 @@ export default function Workflow({ code, onSelect, onAsk, onNavigate }) {
 
               <div className="two">
                 <section className="panel">
-                  <h4>Frameworks · Virtusa Helio</h4>
+                  <h4>Frameworks · Accelerators</h4>
                   {stage.frameworks.length ? <div className="chips">{stage.frameworks.map((f) => <Chip key={f.id} tone="fw" onClick={() => onNavigate('catalog', 'framework')}>{f.name}</Chip>)}</div> : <span className="muted">Agent-generated step</span>}
                 </section>
                 <section className="panel">

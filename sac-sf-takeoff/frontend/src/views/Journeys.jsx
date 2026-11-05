@@ -43,7 +43,7 @@ export default function Journeys({ focus, onAsk }) {
         </div>
         <button className="btn primary" onClick={() => setEdit({ t: 'persona', d: { journey: 'New' } })}>+ New persona</button>
       </header>
-      <CurationBanner slides="18–20">Curate persona-based user journeys: who they are, the moments that matter, the question at each moment and the experience that answers it.</CurationBanner>
+      <CurationBanner>Curate persona-based user journeys: who they are, the moments that matter, the question at each moment and the experience that answers it.</CurationBanner>
 
       <div className="split">
         <aside className="list">
@@ -89,7 +89,7 @@ export default function Journeys({ focus, onAsk }) {
                   {s.doing && <div className="jrow"><span>Doing</span>{s.doing}</div>}
                   <div className="jq">“{s.question}”</div>
                   {s.today && <div className="jrow today"><span>Today</span>{s.today}</div>}
-                  <div className="jexp"><span>With Keystone</span><b>{s.experience}</b><small>{s.metrics}</small></div>
+                  <div className="jexp"><span>With takeoff</span><b>{s.experience}</b><small>{s.metrics}</small></div>
                 </div>
               ))}
               <button className="jstep add" onClick={() => setEdit({ t: 'journey_step', d: { persona_id: p.id, seq: p.steps.length + 1 } })}>+ Add moment</button>

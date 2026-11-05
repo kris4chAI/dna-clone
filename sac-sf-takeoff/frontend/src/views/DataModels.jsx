@@ -23,10 +23,10 @@ export default function DataModels({ focus }) {
         <div>
           <div className="eyebrow">3 Data · logistics industry data model</div>
           <h1>Twenty subject areas on a conformed backbone</h1>
-          <p className="lede">Reference: Databricks Transport &amp; Shipping model plus Oracle OTM and Fusion SCM subject areas, tailored to CJLA and checked against Oracle ADW in discovery.</p>
+          <p className="lede">Reference: Databricks Transport &amp; Shipping model plus Oracle OTM and Fusion SCM subject areas, tailored to your context and checked against Oracle ADW in discovery.</p>
         </div>
       </header>
-      <CurationBanner slides="25–29">Curate subject areas, facts, dimensions, attributes and certified KPIs for the logistics industry model.</CurationBanner>
+      <CurationBanner>Curate subject areas, facts, dimensions, attributes and certified KPIs for the logistics industry model.</CurationBanner>
       <div className="tabs">{TABS.map(([id, l]) => <button key={id} className={tab === id ? 'on' : ''} onClick={() => setTab(id)}>{l}</button>)}</div>
 
       {tab === 'areas' && <Areas m={m} setEdit={setEdit} />}

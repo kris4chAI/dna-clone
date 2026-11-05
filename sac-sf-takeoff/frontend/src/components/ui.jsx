@@ -74,11 +74,11 @@ export function Editor({ title, fields, initial = {}, onSave, onClose, onDelete 
   )
 }
 
-export function CurationBanner({ slides, children }) {
+export function CurationBanner({ children }) {
   return (
     <div className="curation">
       <div className="curation-tag">Curation workspace</div>
-      <div>{children} <span className="muted">Seeded from proposal slides {slides}. Anything you add or edit is saved to Postgres and tagged <em>Curated</em>.</span></div>
+      <div>{children} <span className="muted">Seeded from reference content. Anything you add or edit is saved to Postgres and tagged <em>Curated</em>.</span></div>
     </div>
   )
 }

@@ -10,8 +10,8 @@ import DataModels from './views/DataModels'
 const NAV = [
   { id: 'workflow', label: 'Guided workflow', hint: 'Discovery → monitoring', icon: '◆' },
   { id: 'catalog', label: 'Toolkit catalog', hint: 'Agents · skills · tools', icon: '▦' },
-  { id: 'journeys', label: 'Persona journeys', hint: 'Curate · slides 18–20', icon: '◉' },
-  { id: 'insights', label: 'Insights', hint: 'Curate · slides 21–24', icon: '◔' },
+  { id: 'journeys', label: 'Persona journeys', hint: 'Curate · –20', icon: '◉' },
+  { id: 'insights', label: 'Insights', hint: 'Curate · –24', icon: '◔' },
   { id: 'data', label: 'Data models', hint: 'Subject areas · KPIs', icon: '⬡' },
 ]
 
@@ -35,7 +35,7 @@ export default function App() {
       <aside className="side">
         <div className="brand">
           <div className="logo">K</div>
-          <div><div className="brand-name">Keystone Navigator</div><div className="brand-sub">AI native delivery · Snowflake</div></div>
+          <div><div className="brand-name">SAC SF Takeoff</div><div className="brand-sub">AI native delivery · Snowflake</div></div>
         </div>
         <nav>
           {NAV.map((n) => (
@@ -53,7 +53,7 @@ export default function App() {
             ))}
           </div>
         )}
-        <div className="side-foot">CJLA · Keystone proposal v.6</div>
+        <div className="side-foot">Snowflake takeoff toolkit</div>
       </aside>
 
       <main className="main">

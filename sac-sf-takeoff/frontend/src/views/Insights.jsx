@@ -25,7 +25,7 @@ export default function Insights({ focus, onNavigate }) {
         </div>
         <button className="btn primary" onClick={() => setEdit({ t: 'insight_dashboard', d: {} })}>+ New dashboard</button>
       </header>
-      <CurationBanner slides="21–24">Curate the insights each dashboard must deliver, framed as four questions: what happened, why, what will happen, and what you can do.</CurationBanner>
+      <CurationBanner>Curate the insights each dashboard must deliver, framed as four questions: what happened, why, what will happen, and what you can do.</CurationBanner>
 
       <div className="tabs big">
         {ds.map((x) => <button key={x.id} className={x.id === sel ? 'on' : ''} onClick={() => setSel(x.id)}>{x.name}<small>{x.audience}</small></button>)}

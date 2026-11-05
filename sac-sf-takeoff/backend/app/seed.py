@@ -1,4 +1,4 @@
-"""Create schema and load the proposal content. Usage: python -m app.seed [--if-empty]"""
+"""Create schema and load the reference content content. Usage: python -m app.seed [--if-empty]"""
 import json
 import sys
 from pathlib import Path
@@ -30,7 +30,7 @@ def seed(c):
         return comp_ids[key]
 
     for name, desc in S.FRAMEWORKS:
-        comp("framework", name, "Virtusa Helio service", desc)
+        comp("framework", name, "Accelerator service", desc)
 
     for st in S.STAGES:
         extra = {k: st[k] for k in ("steps", "metrics", "evidence", "harnesses", "test_types", "references", "prompts") if k in st}
@@ -56,7 +56,7 @@ def seed(c):
             for sf in step.get("snowflake", []):
                 c.execute(link, (sid, comp("snowflake", sf, "Snowflake component"), None, seq)); seq += 1
 
-    # interchangeable AI tool options (slides 32, 33, 37) not already linked
+    # interchangeable AI tool options  not already linked
     for t in ["Cursor", "Cortex Agents", "OPA / Checkov", "dbt / schemachange", "PR templates", "Zero-copy clones"]:
         comp("tool", t, S.TOOL_CATEGORY.get(t, "Other"))
 

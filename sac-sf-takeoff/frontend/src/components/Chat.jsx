@@ -32,7 +32,7 @@ export default function Chat({ context, ask, onNavigate, onClose }) {
   return (
     <section className="chat">
       <header className="chat-head">
-        <div><div className="chat-title">Keystone guide</div><div className="chat-sub">Ask about any stage, agent, skill, KPI or persona</div></div>
+        <div><div className="chat-title">Takeoff guide</div><div className="chat-sub">Ask about any stage, agent, skill, KPI or persona</div></div>
         <button className="icon-btn" onClick={onClose} aria-label="Close">×</button>
       </header>
       <div className="chat-body">
