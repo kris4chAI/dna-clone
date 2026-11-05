@@ -1,0 +1,2381 @@
+[
+ {
+  "stage": "01 Signal and qualify",
+  "file": "Opportunity brief and bid memo.docx",
+  "format": "docx",
+  "sample": false,
+  "sheets": [
+   {
+    "name": "Sections",
+    "title": "Opportunity brief and bid memo",
+    "guidance": "Gate G0 · bid / no-bid · approvers: pursuit lead + practice head",
+    "columns": [
+     "Section",
+     "Guidance",
+     "Response"
+    ],
+    "rows": [
+     [
+      "Opportunity",
+      "Client, program name, RFP/RFI reference, submission and decision dates Scope in one paragraph; estimated TCV and term",
+      ""
+     ],
+     [
+      "Funding and sponsor",
+      "Is the program funded? Who is the sponsor and economic buyer? Do we know them? Relationship strength (0–3)",
+      ""
+     ],
+     [
+      "Competition and incumbent",
+      "Incumbent and likely shortlist (internal only, never client-facing) Their likely attack on us",
+      ""
+     ],
+     [
+      "Partners",
+      "Platform partners engaged (Snowflake, AWS, Databricks, Salesforce/Tableau…) and whether they back us Partner funding available",
+      ""
+     ],
+     [
+      "Can we win, can we deliver",
+      "Win probability with rationale Delivery capacity, margin outlook, key risks",
+      ""
+     ],
+     [
+      "Recommendation and gate decision",
+      "Bid / no-bid, approver name, date, conditions",
+      ""
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "stage": "01 Signal and qualify",
+  "file": "Stakeholder map.xlsx",
+  "format": "xlsx",
+  "sample": false,
+  "sheets": [
+   {
+    "name": "Stakeholders",
+    "title": "Stakeholder map (confirmed roles)",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "Name",
+     "Title (confirmed)",
+     "Source (LinkedIn/RFP/meeting)",
+     "Role in decision",
+     "Cares about",
+     "Relationship owner",
+     "Stance",
+     "Last contact",
+     "Next action"
+    ],
+    "rows": [
+     [
+      "[Name]",
+      "[Title]",
+      "[LinkedIn URL]",
+      "Economic buyer",
+      "[Outcome they are measured on]",
+      "[Niche Consulting owner]",
+      "Amber",
+      "[date]",
+      "[action]"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "stage": "02 Decode the RFP",
+  "file": "Requirements compliance matrix.xlsx",
+  "format": "xlsx",
+  "sample": false,
+  "sheets": [
+   {
+    "name": "Requirements",
+    "title": "Requirements and compliance matrix",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "Req ID",
+     "RFP section",
+     "Requirement (verbatim)",
+     "Type",
+     "Scoring weight",
+     "Compliance",
+     "Response section / slide",
+     "Owner",
+     "Notes"
+    ],
+    "rows": [
+     [
+      "R-001",
+      "[3.2]",
+      "[Requirement text]",
+      "Mandatory",
+      "[10%]",
+      "Full",
+      "[Section 03 · Target state]",
+      "[Owner]",
+      ""
+     ]
+    ]
+   },
+   {
+    "name": "Clarification log",
+    "title": "Clarification log",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "Q ID",
+     "RFP reference",
+     "Question",
+     "Why it matters (impact on scope/price)",
+     "Sent on",
+     "Answer",
+     "Answered on",
+     "Status"
+    ],
+    "rows": [
+     [
+      "Q-01",
+      "[ref]",
+      "[Question]",
+      "[impact]",
+      "",
+      "",
+      "",
+      "Open"
+     ]
+    ]
+   },
+   {
+    "name": "Unknowns",
+    "title": "Volumes and counts still unknown",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "Item",
+     "Assumed value",
+     "Basis of assumption",
+     "Owner to confirm",
+     "Affects (effort/price/plan)"
+    ],
+    "rows": [
+     [
+      "Data volume (TB)",
+      "[X]",
+      "[RFP p.N / workshop]",
+      "[Client owner]",
+      "Effort, TCO"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "stage": "03 Win strategy",
+  "file": "Sample - FlyHigh proposal scorecard.xlsx",
+  "format": "xlsx",
+  "sample": true,
+  "sheets": [
+   {
+    "name": "Summary",
+    "title": "FlyHigh proposal scorecard: summary",
+    "guidance": "As of 2026-11-01 · v6 deck (85 slides: trust, security and MSA readiness added) · Internal only, not for ABC Retail",
+    "columns": [
+     "Measure",
+     "Score (1–5)",
+     "RAG",
+     "Basis",
+     "Previous run",
+     "Change"
+    ],
+    "rows": [
+     [
+      "Executive average (simple)",
+      3.82,
+      "Amber",
+      "9 executives",
+      3.76,
+      0.06
+     ],
+     [
+      "Executive average (influence-weighted)",
+      3.86,
+      "Amber",
+      "Influence 1–3 per person",
+      3.79,
+      0.07
+     ],
+     [
+      "Evaluator average (simple)",
+      4.03,
+      "Green",
+      "9 evaluators, roles confirmed from LinkedIn",
+      3.98,
+      0.05
+     ],
+     [
+      "Evaluator average (influence-weighted)",
+      4.06,
+      "Green",
+      "Influence 1–3 per person",
+      4,
+      0.06
+     ],
+     [
+      "Whole buying group (influence-weighted)",
+      3.96,
+      "Amber",
+      "18 people",
+      3.89,
+      0.07
+     ],
+     [
+      "Niche Consulting weighted rubric score",
+      4.47,
+      "Green",
+      "vs rivals below",
+      4.42,
+      0.05
+     ],
+     [
+      "Best rival weighted rubric score",
+      4.08,
+      "Green",
+      "Tier-1 consulting archetype",
+      4.08,
+      0
+     ],
+     [
+      "Projected group score if all actions done",
+      4.23,
+      "Green",
+      "Average expected lift across actions",
+      4.16,
+      0.07
+     ],
+     [
+      "RAG legend",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Green",
+      "4.0 or higher: a reason to pick Niche Consulting",
+      "",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Amber",
+      "3.0–3.9: parity with other shortlisted vendors",
+      "",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Red",
+      "Below 3.0: works against us",
+      "",
+      "",
+      "",
+      ""
+     ],
+     [
+      "How to use",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Blue cells are editable score inputs; black cells are formulas; green cells link to other sheets.",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Each person is scored 1–5 on five dimensions: business value, delivery certainty, domain and solution fit, commercials and TCO, trust and MSA terms.",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ],
+     [
+      "All evaluator roles confirmed from LinkedIn on 2026-11-01; the Previous column shows scores made against assumed roles.",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Scores reflect the deck alone, not orals or relationships.",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    ]
+   },
+   {
+    "name": "Executive scorecard",
+    "title": "Executive scorecard",
+    "guidance": "Nine ABC Retail executives scored on the v6 deck (76 slides, incl. TCO and ROI). Blue = editable score inputs; Overall and RAG are formulas.",
+    "columns": [
+     "Stakeholder",
+     "Role",
+     "Role status",
+     "Influence (1–3)",
+     "What they weigh",
+     "Business value (1–5)",
+     "Delivery certainty (1–5)",
+     "Domain and solution fit (1–5)",
+     "Commercials and TCO (1–5)",
+     "Trust and MSA terms (1–5)",
+     "Overall (1–5)",
+     "RAG",
+     "What lands",
+     "Gap to close",
+     "Action IDs",
+     "Previous overall (guardrail run)",
+     "Change"
+    ],
+    "rows": [
+     [
+      "Daniel Price",
+      "CEO",
+      "Confirmed",
+      3,
+      "Growth, risk to July 2027, partner fit",
+      4.5,
+      4,
+      4,
+      4,
+      4,
+      4.1,
+      "Green",
+      "Four value levers; Beyond the badges; Next steps with a clear ask",
+      "No headline value figure on the cover or exec summary; deck is 76 slides",
+      "A1, A5",
+      4,
+      0.1
+     ],
+     [
+      "Grace Lin",
+      "CFO",
+      "Confirmed",
+      3,
+      "Cost, TCO, payback, funding",
+      4,
+      3.5,
+      3.5,
+      4,
+      3.5,
+      3.7,
+      "Amber",
+      "Pricing options ($0.77M–$1.17M), 3-year TCV with 7.5% saving, TCO and ROI",
+      "TCO baselines are still Niche Consulting assumptions; payback not restated against the actual price",
+      "A1, A2, A3",
+      3.6,
+      0.1
+     ],
+     [
+      "Mark Ellison",
+      "COO",
+      "Confirmed",
+      3,
+      "Operational continuity, adoption",
+      4.5,
+      4.5,
+      4,
+      3.5,
+      3.5,
+      4,
+      "Green",
+      "Operations dashboard; 3–5 month parallel run; safe cut-over",
+      "Peak-season protection and site rollout sequence not explicit",
+      "A8",
+      4,
+      0
+     ],
+     [
+      "Rosa Delgado",
+      "Head of Warehousing",
+      "Confirmed",
+      2,
+      "WMS data, labor, site KPIs",
+      4.5,
+      4,
+      4.5,
+      3.5,
+      3.5,
+      4,
+      "Green",
+      "Automation and labor journeys, dashboard and data model across WMS, planning system, fleet management system, labor management system",
+      "Labor productivity value not quantified; site adoption plan not shown",
+      "A8, A9",
+      4,
+      0
+     ],
+     [
+      "Paul Becker",
+      "Head of Transportation",
+      "Confirmed",
+      2,
+      "OTM data, carrier cost, OTIF",
+      4,
+      4,
+      4.5,
+      3.5,
+      3.5,
+      3.9,
+      "Amber",
+      "Transportation schema; Penske proof; OTIF in executive dashboard",
+      "Freight cost and carrier performance use cases not quantified",
+      "A9",
+      3.9,
+      0
+     ],
+     [
+      "Henry Cho",
+      "Chief Strategic Growth Officer",
+      "Confirmed",
+      2,
+      "New revenue, data products",
+      4,
+      3.5,
+      4,
+      3.5,
+      3.5,
+      3.7,
+      "Amber",
+      "Customer journey; customer portal; Cortex roadmap",
+      "No monetization model for shipper-facing data products",
+      "A7",
+      3.7,
+      0
+     ],
+     [
+      "Megan Hart",
+      "Head of PMO, SVP Technology",
+      "Confirmed",
+      3,
+      "Plan, governance, architecture, risk",
+      4,
+      4.5,
+      4.5,
+      4,
+      4.5,
+      4.3,
+      "Green",
+      "Integrated plan; RACI; resource loading behind pricing; managed-services run model",
+      "Tableau CI/CD with embedded extracts and IaC need one explicit answer",
+      "A6",
+      4.2,
+      0.1
+     ],
+     [
+      "Owen Reyes",
+      "EVP Customer Development",
+      "Confirmed",
+      2,
+      "Shipper experience, sales story",
+      3.5,
+      3.5,
+      3.5,
+      3,
+      3.5,
+      3.4,
+      "Amber",
+      "Customer dashboard; self-service journey",
+      "No shipper outcome proof or sales enablement narrative",
+      "A7",
+      3.4,
+      0
+     ],
+     [
+      "Victor Hale",
+      "VP, General Counsel",
+      "Confirmed",
+      2,
+      "MSA terms, IP, data, liability",
+      3,
+      3.5,
+      3,
+      3.5,
+      3.5,
+      3.3,
+      "Amber",
+      "MSA readiness slide: IP, data residency, SLAs, warranty, liability, insurance, exit; Forbes #3 cybersecure, ISO 27701, HITRUST",
+      "Bracketed values (notice, SLAs, warranty, liability cap) still to agree; Legal review pending",
+      "A4",
+      3,
+      0.3
+     ],
+     [
+      "Simple average",
+      "",
+      "",
+      "",
+      "",
+      4,
+      3.89,
+      3.94,
+      3.61,
+      3.67,
+      3.82,
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Influence-weighted",
+      "",
+      "",
+      "",
+      "",
+      4.05,
+      3.93,
+      3.95,
+      3.66,
+      3.7,
+      3.86,
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    ]
+   },
+   {
+    "name": "Evaluator scorecard",
+    "title": "Evaluator scorecard",
+    "guidance": "Named evaluators. Roles confirmed from LinkedIn headlines on 2026-11-01. ",
+    "columns": [
+     "Stakeholder",
+     "Role",
+     "Role status",
+     "Influence (1–3)",
+     "What they weigh",
+     "Business value (1–5)",
+     "Delivery certainty (1–5)",
+     "Domain and solution fit (1–5)",
+     "Commercials and TCO (1–5)",
+     "Trust and MSA terms (1–5)",
+     "Overall (1–5)",
+     "RAG",
+     "What lands",
+     "Gap to close",
+     "Action IDs",
+     "Previous overall (guardrail run)",
+     "Change"
+    ],
+    "rows": [
+     [
+      "Priya Raman",
+      "CIO / CTO, ABC Retail; proposal reviewer",
+      "Confirmed",
+      3,
+      "Architecture, platform risk, security, value",
+      4,
+      4.5,
+      4.5,
+      4,
+      4.5,
+      4.3,
+      "Green",
+      "Single pane of glass; data pulled once with guardrails; honest discovery-only scoping; priced options",
+      "Snowflake edition for SOX still open; no MSA or security-controls summary for a CIO sign-off",
+      "A4, A6, A10",
+      4.2,
+      0.1
+     ],
+     [
+      "Tom Walsh",
+      "VP, Information Technology",
+      "Confirmed",
+      3,
+      "Run cost, operations, SLAs, IT roadmap",
+      4,
+      4,
+      4.5,
+      4,
+      4,
+      4.1,
+      "Green",
+      "Foundation as code; single-pane integration patterns; 24-month lean run team priced",
+      "Run-team SLAs and service levels not stated",
+      "A11",
+      4,
+      0.1
+     ],
+     [
+      "Omar Siddiqui",
+      "Data and analytics leader (BI, cloud data strategy, Snowflake, AWS, Power BI, Tableau)",
+      "Confirmed",
+      3,
+      "Data platform, BI consolidation, semantic layer, Oracle decommissioning",
+      4,
+      4.5,
+      4.5,
+      4,
+      4.5,
+      4.3,
+      "Green",
+      "Data pulled once (system-of-record matrix, options A–C); single pane; BI consolidation; TCO",
+      "Report rationalization targets and decommissioning schedule per wave not shown",
+      "A3, A12",
+      4.2,
+      0.1
+     ],
+     [
+      "Leo Zhang",
+      "Senior Director, IT – SCM Solutions",
+      "Confirmed",
+      2,
+      "WMS and supply chain platform architecture",
+      4,
+      4.5,
+      5,
+      3.5,
+      4,
+      4.2,
+      "Green",
+      "Automation data model; WMS and planning system write-back; system-of-record matrix",
+      "Write-back APIs and planning system upgrade timing to confirm in discovery",
+      "A6, A15",
+      4.2,
+      0
+     ],
+     [
+      "Eric Dunn",
+      "Senior Director, Information Technology",
+      "Confirmed",
+      2,
+      "B2B / B2C solutions, integration, delivery",
+      3.5,
+      4,
+      4.5,
+      3.5,
+      4,
+      3.9,
+      "Amber",
+      "Single-pane integration patterns; customer portal; CI/CD and environments",
+      "Customer data-feed and B2B integration approach not shown",
+      "A7, A6",
+      3.8,
+      0.1
+     ],
+     [
+      "Adam Fisher",
+      "Senior Director, Supply Chain Solutions and Analytics",
+      "Confirmed",
+      2,
+      "Analytics use cases, KPIs, solution design for customers",
+      4,
+      4,
+      4.5,
+      4,
+      3.5,
+      4,
+      "Green",
+      "KPI library; dashboards; logistics data model; customer journey",
+      "Use cases not quantified; no mapping from current reports to the KPI library",
+      "A9, A12",
+      4,
+      0
+     ],
+     [
+      "Nora Quinn",
+      "Senior Director, Engineering and Automation",
+      "Confirmed",
+      2,
+      "Warehouse automation, labor management, operational ROI",
+      4,
+      4,
+      4.5,
+      3.5,
+      3.5,
+      3.9,
+      "Amber",
+      "Automation journeys, dashboard and data model; fleet management system lift events; robot and labor facts",
+      "Productivity and automation ROI not quantified; fleet management system only discovery",
+      "A9, A15",
+      3.9,
+      0
+     ],
+     [
+      "Luis Ortega",
+      "Senior Director, Continuous Improvement",
+      "Confirmed",
+      2,
+      "Productivity, lean metrics, adoption",
+      3.5,
+      4,
+      4.5,
+      3.5,
+      3.5,
+      3.8,
+      "Amber",
+      "Automation loss tree; labor management system labor standards; continuous improvement journey",
+      "Lean and productivity KPIs (labor, dock-to-stock, cost per unit) not tied to measurable gains",
+      "A8, A9",
+      3.8,
+      0
+     ],
+     [
+      "Ian Morris",
+      "Senior Director, Shared Services",
+      "Confirmed",
+      2,
+      "Implementation, shared-services efficiency, project delivery",
+      3.5,
+      4,
+      3.5,
+      4,
+      4,
+      3.8,
+      "Amber",
+      "Integrated plan; governance; managed-services run team; MSA positions",
+      "Shared-services processes (finance, HR, onboarding reporting) are not called out as beneficiaries",
+      "A7, A8",
+      3.7,
+      0.1
+     ],
+     [
+      "Simple average",
+      "",
+      "",
+      "",
+      "",
+      3.83,
+      4.17,
+      4.44,
+      3.78,
+      3.94,
+      4.03,
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Influence-weighted",
+      "",
+      "",
+      "",
+      "",
+      3.86,
+      4.19,
+      4.45,
+      3.81,
+      4,
+      4.06,
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    ]
+   },
+   {
+    "name": "Competitor rubric",
+    "title": "Competitor rubric",
+    "guidance": "All vendor types assumed to hold AWS, Snowflake and Tableau partnerships. Competitor scores are judgment-based archetypes, not intelligence on named firms.",
+    "columns": [
+     "Criterion",
+     "Weight",
+     "Niche Consulting",
+     "Boutique Snowflake firm",
+     "Tier-1 consulting",
+     "Mid-sized SI",
+     "Niche Consulting lead vs best rival",
+     "Where Niche Consulting must press"
+    ],
+    "rows": [
+     [
+      "Logistics domain depth",
+      0.15,
+      4.8,
+      2.5,
+      4,
+      3,
+      0.8,
+      "Penske, 20 subject areas and 32 KPIs on day one"
+     ],
+     [
+      "Snowflake migration expertise",
+      0.15,
+      4.5,
+      5,
+      4,
+      3.5,
+      -0.5,
+      "Elite tier, AIM delivery, Frontier Engineering on the team"
+     ],
+     [
+      "Delivery certainty (plan, reconciliation, governance)",
+      0.15,
+      4.5,
+      3,
+      4,
+      3.5,
+      0.5,
+      "Three human gates, 3–5 month parallel run, shared RACI"
+     ],
+     [
+      "AWS foundation and security",
+      0.1,
+      4.5,
+      3,
+      4.5,
+      4,
+      0,
+      "Premier tier; IaC; SOX edition decision with Snowflake"
+     ],
+     [
+      "Tableau and BI modernization",
+      0.1,
+      4.5,
+      3,
+      3.5,
+      3.5,
+      1,
+      "Summit tier; like-for-like layouts; rationalization framework"
+     ],
+     [
+      "AI native delivery and accelerators",
+      0.1,
+      4.5,
+      3.5,
+      4,
+      3,
+      0.5,
+      "Niche Consulting-funded AI engineers; accelerators with no license fee"
+     ],
+     [
+      "Scale and continuity",
+      0.1,
+      4.5,
+      2,
+      5,
+      4,
+      -0.5,
+      "Global bench, peak team of 12, then a 24-month lean run team for continuity"
+     ],
+     [
+      "TCO and business case",
+      0.05,
+      4,
+      2.5,
+      4.5,
+      3,
+      -0.5,
+      "Five-lever TCO and 10-month ROI; validate with ABC Retail actuals in 30 days"
+     ],
+     [
+      "Cost and commercial flexibility",
+      0.05,
+      4.5,
+      4,
+      2,
+      4.5,
+      0,
+      "$170 / $40 rate card, three scope options, fixed + flex capacity with up to 8% term discount"
+     ],
+     [
+      "Executive access and advisory",
+      0.05,
+      3.5,
+      3,
+      5,
+      3,
+      -1.5,
+      "Name a Niche Consulting executive sponsor and an advisory council"
+     ],
+     [
+      "Weighted score",
+      1,
+      4.47,
+      3.2,
+      4.08,
+      3.48,
+      0.39,
+      ""
+     ],
+     [
+      "Rank",
+      "",
+      1,
+      4,
+      2,
+      3,
+      "",
+      ""
+     ],
+     [
+      "How each rival is likely to attack",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Boutique Snowflake firms: depth and focus. Counter with logistics data assets, Tableau and AWS breadth, and scale for parallel tracks.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Tier-1 consultancies: brand, C-suite access, value cases and change management. Counter with right-sized cost, senior hands-on attention and a fixed July 2027 plan.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Mid-sized SIs: price. Counter with reconciliation rigor, Niche Consulting-funded AI capacity and partner funding that narrows the gap.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    ]
+   },
+   {
+    "name": "Action items",
+    "title": "Action items to lift the score",
+    "guidance": "Expected lift = judgment of the overall score gain for the stakeholders listed. Status is a dropdown.",
+    "columns": [
+     "ID",
+     "Action",
+     "Stakeholders lifted",
+     "Dimension",
+     "Niche Consulting owner (role)",
+     "Due",
+     "Expected lift",
+     "Status"
+    ],
+    "rows": [
+     [
+      "A1",
+      "Complete the pricing slide: rate card, scope options and term discounts (done, pending review); restate payback in months against the chosen option",
+      "Grace Lin, Daniel Price, Tom Walsh",
+      "Commercials and TCO",
+      "Deal lead with the pricing team",
+      "2026-11-06",
+      0.5,
+      "In progress"
+     ],
+     [
+      "A2",
+      "Replace TCO baselines with ABC Retail actuals (Oracle contracts, BI licenses, legacy FTE) and re-issue the TCO and ROI slides",
+      "Grace Lin, Omar Siddiqui",
+      "Commercials and TCO",
+      "Solution architect + finance analyst",
+      "2026-11-13",
+      0.4,
+      "Not started"
+     ],
+     [
+      "A3",
+      "Add an Oracle decommissioning schedule tied to the waves, with contract exit and renewal dates",
+      "Omar Siddiqui, Grace Lin",
+      "Commercials and TCO",
+      "Migration lead",
+      "2026-11-13",
+      0.3,
+      "Not started"
+     ],
+     [
+      "A4",
+      "MSA readiness and security slides drafted; Niche Consulting Legal to review positions and fill bracketed values (incident notice, SLAs, warranty, liability cap)",
+      "Victor Hale, Ian Morris",
+      "Trust and MSA terms",
+      "Niche Consulting legal + delivery executive",
+      "2026-11-06",
+      0.6,
+      "In progress"
+     ],
+     [
+      "A5",
+      "Build a 12-slide executive cut with one headline value figure on the cover and exec summary",
+      "Daniel Price, Mark Ellison",
+      "Business value",
+      "Engagement partner",
+      "2026-11-04",
+      0.3,
+      "Not started"
+     ],
+     [
+      "A6",
+      "Add one slide answering Tableau CI/CD with embedded extracts, IaC and Cortex Code use in delivery",
+      "Megan Hart, Priya Raman, Leo Zhang, Eric Dunn",
+      "Delivery certainty",
+      "Platform architect",
+      "2026-11-06",
+      0.2,
+      "Not started"
+     ],
+     [
+      "A7",
+      "Add a shipper-outcome proof point, a data-product monetization view and a sales enablement line",
+      "Owen Reyes, Henry Cho, Eric Dunn, Ian Morris",
+      "Business value",
+      "Industry lead, logistics",
+      "2026-11-10",
+      0.4,
+      "Not started"
+     ],
+     [
+      "A8",
+      "Show peak-season protection, site rollout sequence and how Niche Consulting supports ABC Retail-owned change management",
+      "Mark Ellison, Rosa Delgado, Nora Quinn",
+      "Delivery certainty",
+      "Delivery manager",
+      "2026-11-10",
+      0.3,
+      "Not started"
+     ],
+     [
+      "A9",
+      "Quantify two warehouse (labor productivity) and two transportation (freight cost, carrier OTIF) use cases",
+      "Rosa Delgado, Paul Becker, Adam Fisher, Nora Quinn, Luis Ortega",
+      "Business value",
+      "Domain consultants",
+      "2026-11-13",
+      0.3,
+      "Not started"
+     ],
+     [
+      "A10",
+      "Close the Snowflake edition decision for SOX with Snowflake and state it in the deck",
+      "Priya Raman, Ian Morris, Victor Hale",
+      "Trust and MSA terms",
+      "Snowflake alliance lead",
+      "2026-11-06",
+      0.2,
+      "Not started"
+     ],
+     [
+      "A11",
+      "State the post-hypercare run model, SLAs and run cost (run team and cost priced; SLAs open)",
+      "Tom Walsh, Megan Hart",
+      "Commercials and TCO",
+      "Managed services lead",
+      "2026-11-13",
+      0.2,
+      "In progress"
+     ],
+     [
+      "A12",
+      "Publish report rationalization targets per wave (reports retired, converted, rebuilt)",
+      "Omar Siddiqui, Adam Fisher, Megan Hart",
+      "Domain and solution fit",
+      "BI lead",
+      "2026-11-13",
+      0.2,
+      "Not started"
+     ],
+     [
+      "A14",
+      "The deal desk reviews the commercials (rates, scope split, run team, discount tiers); remove the review flag on the pricing slide",
+      "Grace Lin, Tom Walsh, Victor Hale",
+      "Commercials and TCO",
+      "Deal desk",
+      "2026-11-05",
+      0.1,
+      "Not started"
+     ],
+     [
+      "A13",
+      "Get logo approvals from partners, case-study clients, fleet management system and labor management system",
+      "All",
+      "Trust and MSA terms",
+      "Account manager",
+      "2026-11-04",
+      0,
+      "In progress"
+     ],
+     [
+      "A15",
+      "Add warehouse automation, robotics and AI labor-management data to the data model and a WMS integration view (WMS, planning system)",
+      "Nora Quinn, Leo Zhang, Rosa Delgado, Luis Ortega",
+      "Domain and solution fit",
+      "Data architect + logistics domain lead",
+      "2026-11-10",
+      0.3,
+      "Done"
+     ],
+     [
+      "A16",
+      "Validate fleet management system and labor management system integration options (APIs, zero-copy share, embedding, write-back) and pick the no-duplication pattern (A, B or C)",
+      "Omar Siddiqui, Priya Raman, Leo Zhang, Nora Quinn",
+      "Delivery certainty",
+      "Data architect",
+      "Discovery",
+      0.2,
+      "Not started"
+     ],
+     [
+      "A17",
+      "Price the optional fleet management system and labor management system build after discovery and add it to the commercials as a separate option",
+      "Grace Lin, Megan Hart",
+      "Commercials and TCO",
+      "Deal lead with the deal desk",
+      "Discovery",
+      0.1,
+      "Not started"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "stage": "03 Win strategy",
+  "file": "Win themes and executive storyline.docx",
+  "format": "docx",
+  "sample": false,
+  "sheets": [
+   {
+    "name": "Sections",
+    "title": "Win themes and executive storyline",
+    "guidance": "Gate G2 · approvers: pursuit lead + client partner",
+    "columns": [
+     "Section",
+     "Guidance",
+     "Response"
+    ],
+    "rows": [
+     [
+      "One-sentence answer to \"why Niche Consulting\"",
+      "Specific to this client, provable, not a badge",
+      ""
+     ],
+     [
+      "Win themes (3–4)",
+      "Theme · buyer it lands with · proof point · slide where it is proven",
+      ""
+     ],
+     [
+      "Beyond the badges",
+      "What every shortlisted partner brings What only Niche Consulting brings",
+      ""
+     ],
+     [
+      "Competitor attack plan (internal)",
+      "How a boutique, a tier-1 firm and a mid-sized SI would attack us, and our counter",
+      ""
+     ],
+     [
+      "Executive summary storyline",
+      "Value at scale · four value levers · beyond the badges · dated ask",
+      ""
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "stage": "04 Solution design",
+  "file": "Solution design workbook.xlsx",
+  "format": "xlsx",
+  "sample": false,
+  "sheets": [
+   {
+    "name": "Artefact checklist",
+    "title": "Solution design artefacts",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "Artefact",
+     "Persona / track",
+     "Status",
+     "Stamp",
+     "Scope guardrail",
+     "Owner",
+     "Slide"
+    ],
+    "rows": [
+     [
+      "Current state per track",
+      "",
+      "Not started",
+      "None",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Reference architecture",
+      "",
+      "Not started",
+      "None",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Platform architecture",
+      "",
+      "Not started",
+      "None",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Single pane of glass",
+      "",
+      "Not started",
+      "ILLUSTRATIVE",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Partner platform integration",
+      "",
+      "Not started",
+      "ILLUSTRATIVE",
+      "",
+      "",
+      ""
+     ],
+     [
+      "System-of-record matrix",
+      "",
+      "Not started",
+      "FOR JOINT REVIEW",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Journey map",
+      "",
+      "Not started",
+      "ILLUSTRATIVE",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Persona dashboard",
+      "",
+      "Not started",
+      "ILLUSTRATIVE",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Data model / star schemas",
+      "",
+      "Not started",
+      "None",
+      "",
+      "",
+      ""
+     ],
+     [
+      "KPI library",
+      "",
+      "Not started",
+      "None",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Accelerators",
+      "",
+      "Not started",
+      "None",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Non-functional requirements",
+      "",
+      "Not started",
+      "None",
+      "",
+      "",
+      ""
+     ]
+    ]
+   },
+   {
+    "name": "System of record",
+    "title": "Data pulled once: system-of-record matrix",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "Data domain",
+     "System of record",
+     "Consumers",
+     "Pattern (land once / federate / embed)",
+     "Duplicate pipelines today",
+     "Option to validate",
+     "Discovery only?"
+    ],
+    "rows": [
+     [
+      "[Orders]",
+      "[WMS]",
+      "[BI, partner app]",
+      "Land once",
+      "[2]",
+      "[A]",
+      "No"
+     ]
+    ]
+   },
+   {
+    "name": "Journeys",
+    "title": "Journey map: persona × Monitor → Diagnose → Decide → Act",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "Persona",
+     "Stage",
+     "Question asked",
+     "Tool / screen",
+     "KPI",
+     "AI assist",
+     "Write-back system"
+    ],
+    "rows": [
+     [
+      "[DC GM]",
+      "Monitor",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ],
+     [
+      "[DC GM]",
+      "Diagnose",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ],
+     [
+      "[DC GM]",
+      "Decide",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ],
+     [
+      "[DC GM]",
+      "Act",
+      "",
+      "",
+      "",
+      "",
+      "[WMS/TMS/LMS]"
+     ]
+    ]
+   },
+   {
+    "name": "KPI library",
+    "title": "KPI library",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "Domain",
+     "KPI",
+     "Definition",
+     "Grain",
+     "Source system",
+     "Owner",
+     "Certified?"
+    ],
+    "rows": [
+     [
+      "[Warehouse]",
+      "[Units per labor hour]",
+      "[definition]",
+      "[site/day]",
+      "[LMS]",
+      "[owner]",
+      "No"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "stage": "05 Delivery plan and effort",
+  "file": "RACI, assumptions and risks.xlsx",
+  "format": "xlsx",
+  "sample": false,
+  "sheets": [
+   {
+    "name": "RACI",
+    "title": "RACI (build and run) · FOR JOINT REVIEW",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "Workstream / deliverable",
+     "Client",
+     "Niche Consulting",
+     "Partner (e.g. Snowflake)",
+     "Other vendor",
+     "Phase"
+    ],
+    "rows": [
+     [
+      "[Platform landing zone]",
+      "A",
+      "R",
+      "C",
+      "I",
+      "Build"
+     ]
+    ]
+   },
+   {
+    "name": "Assumptions",
+    "title": "Assumptions and dependencies · FOR JOINT REVIEW",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "ID",
+     "Type",
+     "Statement",
+     "Owner",
+     "Impact if wrong",
+     "Validated?"
+    ],
+    "rows": [
+     [
+      "A-01",
+      "Assumption",
+      "[Client provides source access by week 2]",
+      "[Client]",
+      "[2-week slip]",
+      "No"
+     ]
+    ]
+   },
+   {
+    "name": "Risks",
+    "title": "Risks managed · FOR JOINT REVIEW",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "ID",
+     "Risk",
+     "Impact",
+     "Likelihood",
+     "RAG",
+     "Mitigation",
+     "Owner"
+    ],
+    "rows": [
+     [
+      "R-01",
+      "[Parallel run exposes data parity gaps]",
+      "High",
+      "Medium",
+      "Amber",
+      "[Reconciliation harness from sprint 1]",
+      "[Owner]"
+     ]
+    ]
+   },
+   {
+    "name": "Effort reconciliation",
+    "title": "Effort vs resource loading (target: zero variance)",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "Pod",
+     "Phase",
+     "Estimated hours",
+     "Loaded hours",
+     "Variance"
+    ],
+    "rows": [
+     [
+      "[Pod]",
+      "[Foundation]",
+      0,
+      0,
+      0
+     ],
+     [
+      "[Pod]",
+      "[Foundation]",
+      0,
+      0,
+      0
+     ],
+     [
+      "[Pod]",
+      "[Foundation]",
+      0,
+      0,
+      0
+     ],
+     [
+      "[Pod]",
+      "[Foundation]",
+      0,
+      0,
+      0
+     ],
+     [
+      "[Pod]",
+      "[Foundation]",
+      0,
+      0,
+      0
+     ],
+     [
+      "[Pod]",
+      "[Foundation]",
+      0,
+      0,
+      0
+     ],
+     [
+      "[Pod]",
+      "[Foundation]",
+      0,
+      0,
+      0
+     ],
+     [
+      "[Pod]",
+      "[Foundation]",
+      0,
+      0,
+      0
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "stage": "06 Commercials and value",
+  "file": "Commercials and value model.xlsx",
+  "format": "xlsx",
+  "sample": false,
+  "sheets": [
+   {
+    "name": "Rate card",
+    "title": "Rate card",
+    "guidance": "Rates shown are the FlyHigh example; replace with the deal-desk approved card.",
+    "columns": [
+     "Item",
+     "Value"
+    ],
+    "rows": [
+     [
+      "Onsite $/hr",
+      170
+     ],
+     [
+      "Offshore $/hr",
+      40
+     ]
+    ]
+   },
+   {
+    "name": "Options",
+    "title": "Scope options and pricing · INDICATIVE · FOR REVIEW: [deal desk]",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "Option",
+     "Scope",
+     "Onsite hours",
+     "Offshore hours",
+     "Onsite rate",
+     "Offshore rate",
+     "Price"
+    ],
+    "rows": [
+     [
+      "Baseline",
+      "[scope]",
+      0,
+      0,
+      170,
+      40,
+      0
+     ],
+     [
+      "Option 1",
+      "[scope]",
+      0,
+      0,
+      170,
+      40,
+      0
+     ],
+     [
+      "Option 2",
+      "[scope]",
+      0,
+      0,
+      170,
+      40,
+      0
+     ],
+     [
+      "Managed services",
+      "[scope]",
+      0,
+      0,
+      170,
+      40,
+      0
+     ]
+    ]
+   },
+   {
+    "name": "Term discounts",
+    "title": "Fixed + flex term discounts",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "Term (years)",
+     "Fixed discount",
+     "Flex discount",
+     "Annual list",
+     "Annual net"
+    ],
+    "rows": [
+     [
+      1,
+      "[x%]",
+      "[y%]",
+      0,
+      0
+     ],
+     [
+      2,
+      "[x%]",
+      "[y%]",
+      0,
+      0
+     ],
+     [
+      3,
+      "[x%]",
+      "[y%]",
+      0,
+      0
+     ]
+    ]
+   },
+   {
+    "name": "TCO",
+    "title": "Five-lever TCO · INDICATIVE (client inputs in yellow)",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "Cost lever",
+     "Today (annual)",
+     "Target (annual)",
+     "Change",
+     "Basis / source"
+    ],
+    "rows": [
+     [
+      "Licences",
+      0,
+      0,
+      "",
+      "[client input]"
+     ],
+     [
+      "Infrastructure",
+      0,
+      0,
+      "",
+      "[client input]"
+     ],
+     [
+      "ETL tooling",
+      0,
+      0,
+      "",
+      "[client input]"
+     ],
+     [
+      "BI tooling",
+      0,
+      0,
+      "",
+      "[client input]"
+     ],
+     [
+      "Run effort",
+      0,
+      0,
+      "",
+      "[client input]"
+     ],
+     [
+      "Total",
+      0,
+      0,
+      "",
+      ""
+     ]
+    ]
+   },
+   {
+    "name": "ROI",
+    "title": "ROI and payback over the program window · count only client-retained value",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "Value line",
+     "Amount",
+     "Funded by",
+     "Counts as client value?"
+    ],
+    "rows": [
+     [
+      "[Run-cost savings in window]",
+      0,
+      "Client",
+      "Yes"
+     ],
+     [
+      "[Partner funding]",
+      0,
+      "Partner",
+      "No (show separately)"
+     ],
+     [
+      "[Niche Consulting-funded roles]",
+      0,
+      "Niche Consulting",
+      "No (show separately)"
+     ],
+     [
+      "Program price",
+      0,
+      "Client",
+      "Cost"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "stage": "07 Trust, security and MSA",
+  "file": "Trust, security and MSA readiness.xlsx",
+  "format": "xlsx",
+  "sample": false,
+  "sheets": [
+   {
+    "name": "Trust claims",
+    "title": "Brand trust and CSAT claims (sourced only)",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "Claim",
+     "Value",
+     "Source (URL / corporate deck page)",
+     "Date",
+     "Public use OK?"
+    ],
+    "rows": [
+     [
+      "[Forbes ranking]",
+      "[#X]",
+      "[URL]",
+      "[date]",
+      "Yes"
+     ]
+    ]
+   },
+   {
+    "name": "Security controls",
+    "title": "Security and compliance · certified vs proposed · FOR JOINT REVIEW",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "Control / certification",
+     "Status",
+     "Evidence",
+     "Applies to this program?"
+    ],
+    "rows": [
+     [
+      "[ISO/IEC 27701]",
+      "Certified",
+      "[certificate ref]",
+      "Yes"
+     ],
+     [
+      "[Least-privilege RBAC on platform]",
+      "Proposed",
+      "",
+      "Yes"
+     ]
+    ]
+   },
+   {
+    "name": "MSA terms",
+    "title": "MSA readiness · FOR REVIEW: Niche Consulting Legal",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "Term",
+     "Niche Consulting position",
+     "Value to agree",
+     "Client paper position",
+     "Status"
+    ],
+    "rows": [
+     [
+      "IP ownership",
+      "",
+      "[value]",
+      "",
+      "Open"
+     ],
+     [
+      "Data residency",
+      "",
+      "[value]",
+      "",
+      "Open"
+     ],
+     [
+      "Incident notification",
+      "",
+      "[value]",
+      "",
+      "Open"
+     ],
+     [
+      "SLAs and service credits",
+      "",
+      "[value]",
+      "",
+      "Open"
+     ],
+     [
+      "Warranty",
+      "",
+      "[value]",
+      "",
+      "Open"
+     ],
+     [
+      "Limitation of liability",
+      "",
+      "[value]",
+      "",
+      "Open"
+     ],
+     [
+      "Insurance",
+      "",
+      "[value]",
+      "",
+      "Open"
+     ],
+     [
+      "Key people and substitution",
+      "",
+      "[value]",
+      "",
+      "Open"
+     ],
+     [
+      "Exit and transition",
+      "",
+      "[value]",
+      "",
+      "Open"
+     ],
+     [
+      "Audit rights",
+      "",
+      "[value]",
+      "",
+      "Open"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "stage": "08 Assemble, brand and red team",
+  "file": "Red team, brand audit and section rubric.xlsx",
+  "format": "xlsx",
+  "sample": false,
+  "sheets": [
+   {
+    "name": "Deck sweep",
+    "title": "Deck sweep checklist",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "Check",
+     "Pass?",
+     "Where it fails",
+     "Fix"
+    ],
+    "rows": [
+     [
+      "Titles ≤3 words, message in subtitle",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Unique dividers; agenda = divider titles",
+      "",
+      "",
+      ""
+     ],
+     [
+      "No slide-number references",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Same figures and dates everywhere",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Every RFP must-have mapped to a slide",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Every unvalidated item stamped",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Scope guardrails on affected slides",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Every external claim sourced",
+      "",
+      "",
+      ""
+     ],
+     [
+      "No competitor or rival-platform names",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Logos approved / listed",
+      "",
+      "",
+      ""
+     ],
+     [
+      "ROI counts only client-retained value",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Plain-language pass done",
+      "",
+      "",
+      ""
+     ]
+    ]
+   },
+   {
+    "name": "Brand audit",
+    "title": "Brand audit (niche-brand-guardian)",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "Rule",
+     "Where",
+     "Issue",
+     "Fix",
+     "Severity"
+    ],
+    "rows": [
+     [
+      "[Colour]",
+      "[slide / element]",
+      "[issue]",
+      "[fix]",
+      "Amber"
+     ]
+    ]
+   },
+   {
+    "name": "Section rubric",
+    "title": "Section rubric · points = weight × score / 4 · threshold 90 · missing must-have caps at 89",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "Criterion",
+     "Weight",
+     "Score (0–4)",
+     "Points",
+     "Evidence"
+    ],
+    "rows": [
+     [
+      "Specificity",
+      15,
+      0,
+      0,
+      ""
+     ],
+     [
+      "Coverage",
+      15,
+      0,
+      0,
+      ""
+     ],
+     [
+      "Differentiation",
+      10,
+      0,
+      0,
+      ""
+     ],
+     [
+      "Evidence",
+      10,
+      0,
+      0,
+      ""
+     ],
+     [
+      "Storyline",
+      10,
+      0,
+      0,
+      ""
+     ],
+     [
+      "Feasibility",
+      10,
+      0,
+      0,
+      ""
+     ],
+     [
+      "Outcomes",
+      10,
+      0,
+      0,
+      ""
+     ],
+     [
+      "Visual",
+      10,
+      0,
+      0,
+      ""
+     ],
+     [
+      "Risk",
+      5,
+      0,
+      0,
+      ""
+     ],
+     [
+      "Next action",
+      5,
+      0,
+      0,
+      ""
+     ],
+     [
+      "Total",
+      100,
+      "",
+      0,
+      "[Must-haves all met? Yes/No]"
+     ]
+    ]
+   },
+   {
+    "name": "Pending actions",
+    "title": "Pending actions only (from rfp-win-scorecard)",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "ID",
+     "Action",
+     "Lifts which stakeholder",
+     "Owner",
+     "Due",
+     "RAG"
+    ],
+    "rows": [
+     [
+      "A1",
+      "[action]",
+      "[stakeholder]",
+      "[owner]",
+      "[date]",
+      "Red"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "stage": "09 Submit, orals and learn",
+  "file": "Orals Q&A bank and retrospective.xlsx",
+  "format": "xlsx",
+  "sample": false,
+  "sheets": [
+   {
+    "name": "Q&A bank",
+    "title": "Ten hardest questions",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "#",
+     "Question",
+     "Likely asker",
+     "Answer (≤60 words)",
+     "Proof / slide",
+     "Owner",
+     "Rehearsed?"
+    ],
+    "rows": [
+     [
+      1,
+      "",
+      "",
+      "",
+      "",
+      "",
+      "No"
+     ],
+     [
+      2,
+      "",
+      "",
+      "",
+      "",
+      "",
+      "No"
+     ],
+     [
+      3,
+      "",
+      "",
+      "",
+      "",
+      "",
+      "No"
+     ],
+     [
+      4,
+      "",
+      "",
+      "",
+      "",
+      "",
+      "No"
+     ],
+     [
+      5,
+      "",
+      "",
+      "",
+      "",
+      "",
+      "No"
+     ],
+     [
+      6,
+      "",
+      "",
+      "",
+      "",
+      "",
+      "No"
+     ],
+     [
+      7,
+      "",
+      "",
+      "",
+      "",
+      "",
+      "No"
+     ],
+     [
+      8,
+      "",
+      "",
+      "",
+      "",
+      "",
+      "No"
+     ],
+     [
+      9,
+      "",
+      "",
+      "",
+      "",
+      "",
+      "No"
+     ],
+     [
+      10,
+      "",
+      "",
+      "",
+      "",
+      "",
+      "No"
+     ]
+    ]
+   },
+   {
+    "name": "Submission pack",
+    "title": "Submission checklist · gate G8",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "Item",
+     "Format",
+     "Final version",
+     "Approved by",
+     "Done?"
+    ],
+    "rows": [
+     [
+      "Proposal deck",
+      "",
+      "",
+      "",
+      "No"
+     ],
+     [
+      "Executive cut (12 slides)",
+      "",
+      "",
+      "",
+      "No"
+     ],
+     [
+      "Commercial workbook",
+      "",
+      "",
+      "",
+      "No"
+     ],
+     [
+      "Compliance matrix",
+      "",
+      "",
+      "",
+      "No"
+     ],
+     [
+      "MSA mark-up",
+      "",
+      "",
+      "",
+      "No"
+     ],
+     [
+      "Orals deck",
+      "",
+      "",
+      "",
+      "No"
+     ]
+    ]
+   },
+   {
+    "name": "Retrospective",
+    "title": "Win / loss retrospective",
+    "guidance": "Yellow cells are inputs. Replace [bracketed] values; delete example rows before use.",
+    "columns": [
+     "Question",
+     "Answer",
+     "Lesson",
+     "Skill / template to update"
+    ],
+    "rows": [
+     [
+      "Outcome and decisive reason",
+      "",
+      "",
+      ""
+     ],
+     [
+      "What the client said about us",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Where we lost points",
+      "",
+      "",
+      ""
+     ],
+     [
+      "Which stage took longest",
+      "",
+      "",
+      ""
+     ],
+     [
+      "What to change in the method",
+      "",
+      "",
+      ""
+     ]
+    ]
+   }
+  ]
+ }
+]
