@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { api } from '../api'
 import { Chip, Empty } from '../components/ui'
 
-export default function Kit({ me, focus }) {
+export default function Kit({ me, focus, onNavigate }) {
   const [kit, setKit] = useState(null)
   const [tid, setTid] = useState(focus ? Number(focus) : null)
   const [sheetId, setSheetId] = useState(null)
@@ -85,12 +85,25 @@ export default function Kit({ me, focus }) {
                     {t.sheets.map((s) => <button key={s.id} className={s.id === sheetId ? 'on' : ''} onClick={() => setSheetId(s.id)}>{s.name} <small>{s.rows}</small></button>)}
                   </div>
                 )}
-                {sheet && <Sheet sheet={sheet} reload={loadSheet} />}
+                {t.file.startsWith('Commercials and value model') && <CommercialsRun reload={loadSheet} onNavigate={onNavigate} />}
+                {sheet && <Sheet key={sheet.id + ':' + (sheet.rows || []).map((r) => JSON.stringify(r.data)).join('|').length} sheet={sheet} reload={loadSheet} />}
               </>
             )}
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function CommercialsRun({ reload, onNavigate }) {
+  const [r, setR] = useState(null)
+  const go = async () => { setR(await api.post('/api/skills/rfp-commercials-model/run', { params: {} })); reload() }
+  return (
+    <div className="engine-bar">
+      <button className="btn primary" onClick={go}>Run rfp-commercials-model</button>
+      <span className="small">{r ? r.summary : 'Prices the options from hours and the rate card, applies term discounts, totals TCO and computes client-retained ROI. INDICATIVE.'}</span>
+      <button className="link" onClick={() => onNavigate('skills', 'rfp-commercials-model')}>Open skill →</button>
     </div>
   )
 }

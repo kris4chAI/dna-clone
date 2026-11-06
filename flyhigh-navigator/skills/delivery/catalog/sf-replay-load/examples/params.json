@@ -1,0 +1,8 @@
+{
+  "pipe": "FLYHIGH_PRD_BRONZE.WAREHOUSE.PIPE_WMS_TASKS",
+  "stage": "@FLYHIGH_PRD_BRONZE.WAREHOUSE.STG_WMS_TASKS",
+  "table": "FLYHIGH_PRD_BRONZE.WAREHOUSE.WMS_TASKS_RAW",
+  "files": "2026/11/04/tasks_0900.csv",
+  "since": "2026-11-04 08:00:00",
+  "key": "TASK_ID"
+}

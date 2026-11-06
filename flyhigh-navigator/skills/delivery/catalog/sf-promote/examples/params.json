@@ -1,0 +1,5 @@
+{
+  "envs": "DEV\nSTG\nPRD",
+  "prefix": "FLYHIGH",
+  "approvers": "release-manager"
+}

@@ -1,30 +1,59 @@
+# FlyHigh Navigator · one command:  docker compose up -d --build   →  http://localhost:8080
+# Optional settings live in .env (copy .env.example). Without .env everything runs; the LLM is simply off.
+name: flyhigh-navigator
+
 services:
   db:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_USER: flyhigh
-      POSTGRES_PASSWORD: flyhigh
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-flyhigh}
       POSTGRES_DB: flyhigh
-    ports: ["5432:5432"]
-    volumes: [pgdata:/var/lib/postgresql/data]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U flyhigh"]
+      test: ["CMD-SHELL", "pg_isready -U flyhigh -d flyhigh"]
       interval: 3s
-      retries: 20
+      timeout: 3s
+      retries: 30
 
-  api:
-    build: ./backend
-    environment:
-      DATABASE_URL: postgresql://flyhigh:flyhigh@db:5432/flyhigh
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: flyhigh-navigator:3.1
+    restart: unless-stopped
     depends_on:
-      db: { condition: service_healthy }
-    ports: ["8000:8000"]
-
-  web:
-    build: ./frontend
-    depends_on: [api]
-    ports: ["5173:80"]
+      db:
+        condition: service_healthy
+    ports:
+      - "${FLYHIGH_PORT:-8080}:8000"
+    environment:
+      DATABASE_URL: postgresql://flyhigh:${POSTGRES_PASSWORD:-flyhigh}@db:5432/flyhigh
+      FLYHIGH_PORT: ${FLYHIGH_PORT:-8080}
+      RESET_DB: ${RESET_DB:-false}
+      # --- LLM of choice (optional) ---
+      LLM_PROVIDER: ${LLM_PROVIDER:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      AZURE_OPENAI_API_VERSION: ${AZURE_OPENAI_API_VERSION:-}
+      CHAT_USE_LLM: ${CHAT_USE_LLM:-true}
+      # --- Snowflake DEV account for "Execute on Snowflake" (optional) ---
+      SNOWFLAKE_ACCOUNT: ${SNOWFLAKE_ACCOUNT:-}
+      SNOWFLAKE_USER: ${SNOWFLAKE_USER:-}
+      SNOWFLAKE_ROLE: ${SNOWFLAKE_ROLE:-}
+      SNOWFLAKE_WAREHOUSE: ${SNOWFLAKE_WAREHOUSE:-}
+      SNOWFLAKE_DATABASE: ${SNOWFLAKE_DATABASE:-}
+      SNOWFLAKE_PRIVATE_KEY_FILE: ${SNOWFLAKE_PRIVATE_KEY_FILE:-}
+      SNOWFLAKE_PRIVATE_KEY_FILE_PWD: ${SNOWFLAKE_PRIVATE_KEY_FILE_PWD:-}
+      SNOWFLAKE_PASSWORD: ${SNOWFLAKE_PASSWORD:-}
+      SNOWFLAKE_ALLOW_EXECUTE: ${SNOWFLAKE_ALLOW_EXECUTE:-false}
+    volumes:
+      - ./secrets:/srv/secrets:ro          # Snowflake private keys (never baked into the image)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # lets the app reach a local LLM such as Ollama
 
 volumes:
   pgdata:

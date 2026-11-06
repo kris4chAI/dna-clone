@@ -1,0 +1,7 @@
+{
+  "table": "FLYHIGH_PRD_GOLD.CUSTOMER.FACT_ORDER_RELEASE",
+  "column": "CUSTOMER_ID",
+  "policy_schema": "GOVERNANCE.POLICIES",
+  "admin_roles": "FR_EXEC\nFR_DATA_ENG",
+  "entitlements": "role,value\nFR_PORTAL_ACME,C-1001\nFR_PORTAL_GLOBEX,C-2002\nFR_DC_OPS,*"
+}

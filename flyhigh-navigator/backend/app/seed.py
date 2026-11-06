@@ -1,4 +1,4 @@
-"""Create schema and load the reference content. Usage: python -m app.seed [--if-empty]"""
+"""Create schema and load the proposal content. Usage: python -m app.seed [--if-empty]"""
 import json
 import sys
 from pathlib import Path
@@ -111,14 +111,21 @@ def seed(c):
     seed_pursuit(c)
 
 
+SCHEMA_VERSION = "3.1"
+
+
 def main():
     with psycopg.connect(DATABASE_URL, row_factory=dict_row) as c:
         if "--if-empty" in sys.argv:
-            exists = c.execute("SELECT to_regclass('public.stage') AS t").fetchone()["t"]
-            if exists and c.execute("SELECT count(*) AS n FROM stage").fetchone()["n"] > 0:
-                print("Database already seeded; skipping.")
+            exists = c.execute("SELECT to_regclass('public.app_meta') AS t").fetchone()["t"]
+            ver = c.execute("SELECT value FROM app_meta WHERE key='schema_version'").fetchone() if exists else None
+            if ver and ver["value"] == SCHEMA_VERSION:
+                print(f"Database already seeded (schema {SCHEMA_VERSION}); skipping. Set RESET_DB=true to reload.")
                 return
+            print("Empty database or older schema: loading FlyHigh content.")
         seed(c)
+        c.execute("CREATE TABLE IF NOT EXISTS app_meta (key TEXT PRIMARY KEY, value TEXT)")
+        c.execute("INSERT INTO app_meta VALUES ('schema_version', %s) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value", (SCHEMA_VERSION,))
         c.commit()
         counts = c.execute("""SELECT (SELECT count(*) FROM stage) stages,
             (SELECT count(*) FROM component WHERE kind='agent') agents,

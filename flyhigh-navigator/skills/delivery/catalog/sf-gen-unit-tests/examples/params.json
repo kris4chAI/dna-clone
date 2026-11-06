@@ -1,0 +1,9 @@
+{
+  "table": "FLYHIGH_DEV_GOLD.WAREHOUSE.FACT_WAREHOUSE_TASK",
+  "pk": "TASK_ID",
+  "not_null": "SITE_KEY\nITEM_KEY\nTASK_TYPE_KEY\nTASK_DATE_KEY",
+  "accepted": "EXCEPTION_FLAG | Y,N",
+  "relationships": "SITE_KEY | FLYHIGH_DEV_GOLD.WAREHOUSE.DIM_SITE.SITE_KEY",
+  "freshness_col": "LOAD_TS",
+  "schedule": "TRIGGER_ON_CHANGES"
+}

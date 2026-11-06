@@ -1,0 +1,8 @@
+{
+  "name": "FLYHIGH_PRD_GOLD.WAREHOUSE.SV_SITE_OPS",
+  "tables": "task | FLYHIGH_PRD_GOLD.WAREHOUSE.FACT_WAREHOUSE_TASK | TASK_ID\nsite | FLYHIGH_PRD_GOLD.WAREHOUSE.DIM_SITE | SITE_KEY\ndt | FLYHIGH_PRD_GOLD.WAREHOUSE.DIM_DATE | DATE_KEY",
+  "relationships": "task(SITE_KEY) -> site\ntask(TASK_DATE_KEY) -> dt",
+  "facts": "task.units = UNITS_HANDLED\ntask.direct_hours = DURATION_MIN / 60\ntask.error_qty = SHORT_ERROR_QTY\ntask.pick_lines = LINES_HANDLED",
+  "dimensions": "site.site_name = SITE_NAME\nsite.region = REGION\ndt.fiscal_week = FISCAL_WEEK\ndt.calendar_date = CALENDAR_DATE",
+  "metrics": "task.uph = SUM(task.units) / NULLIF(SUM(task.direct_hours), 0)\ntask.pick_accuracy = 1 - SUM(task.error_qty) / NULLIF(SUM(task.pick_lines), 0)"
+}

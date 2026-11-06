@@ -1,0 +1,4 @@
+{
+  "inventory": "object,type,depends_on,complexity,usage\nDIM_DATE,TABLE,,low,high\nDIM_SITE,TABLE,,low,high\nDIM_ITEM,TABLE,,low,high\nDIM_CUSTOMER,TABLE,,medium,high\nFACT_WAREHOUSE_TASK,TABLE,DIM_DATE;DIM_SITE;DIM_ITEM;DIM_CUSTOMER,medium,high\nFACT_INVENTORY_DAILY,TABLE,DIM_ITEM;DIM_SITE,medium,high\nPKG_LABOR_CALC,PACKAGE,FACT_WAREHOUSE_TASK,high,medium\nDIM_CARRIER,TABLE,,low,high\nFACT_SHIPMENT_LEG,TABLE,DIM_CARRIER;DIM_DATE;DIM_CUSTOMER,high,high\nV_OTIF,VIEW,FACT_SHIPMENT_LEG,medium,high",
+  "max_per_wave": "4"
+}

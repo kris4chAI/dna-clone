@@ -1,0 +1,8 @@
+{
+  "component": "WMS tasks ingestion",
+  "task": "FLYHIGH_PRD_BRONZE.WAREHOUSE.TSK_MERGE_WMS_TASKS",
+  "table": "FLYHIGH_PRD_SILVER.WAREHOUSE.WAREHOUSE_TASK | TASK_END",
+  "sla_minutes": "30",
+  "email": "data-oncall@abcretail.example",
+  "integration": "NI_EMAIL"
+}

@@ -1,0 +1,8 @@
+{
+  "warehouse": "WH_BI",
+  "size": "MEDIUM",
+  "avg_queued": "0.4",
+  "spill_gb": "0",
+  "monthly_credits": "800",
+  "users_peak": "60"
+}

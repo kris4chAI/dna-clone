@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
+import { Md } from '../components/ui'
 
-export default function Quality({ me }) {
+export default function Quality({ me, onNavigate }) {
   const [d, setD] = useState(null)
   const [sel, setSel] = useState(null)
   useEffect(() => { api.get('/api/quality').then((r) => { setD(r); const ed = r.sections.filter((x) => x.editable); setSel((ed.length ? ed : r.sections).slice().sort((a, b) => a.baseline - b.baseline)[0].id) }) }, [])
@@ -89,9 +90,28 @@ export default function Quality({ me }) {
               <div className="note"><b>Highest-leverage fixes:</b> {s.fixes}<br /><b>Blocked by:</b> {s.blocked_by}</div>
             </div>
             {s.editable && s.scored && <button className="btn ghost" onClick={reset}>Reset to baseline</button>}
+            <LoopPanel key={s.id} s={s} onNavigate={onNavigate} />
           </section>
         )}
       </div>
+    </div>
+  )
+}
+
+function LoopPanel({ s, onNavigate }) {
+  const [r, setR] = useState(null)
+  const [fixes, setFixes] = useState('')
+  const call = async (record) => setR(await api.post('/api/skills/rfp-section-loop/run', { params: { section: String(s.num), record: record ? 'yes' : 'no', fixes } }))
+  useEffect(() => { call(false) }, []) // eslint-disable-line
+  return (
+    <div className="loop-panel">
+      <h5>Loop (rfp-section-loop) · generate → score → revise, max four rounds</h5>
+      {r && <><b className={`loop-status st-${r.loop.status.split(' ')[0].toLowerCase()}`}>{r.loop.status}</b><Md text={Object.values(r.files)[0].split('\n').slice(4).join('\n')} compact /></>}
+      {s.editable && <div className="run-bar">
+        <input placeholder="Fixes made this round" value={fixes} onChange={(e) => setFixes(e.target.value)} style={{ flex: 1 }} />
+        <button className="btn primary" onClick={() => call(true)}>Record round</button>
+        <button className="link" onClick={() => onNavigate('skills', 'rfp-section-builder')}>Section brief →</button>
+      </div>}
     </div>
   )
 }

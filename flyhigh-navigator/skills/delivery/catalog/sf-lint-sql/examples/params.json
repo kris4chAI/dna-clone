@@ -1,0 +1,4 @@
+{
+  "sql": "create or replace table FLYHIGH_PRD_GOLD.WAREHOUSE.T as select * from X order by 1;",
+  "max_line": "140"
+}

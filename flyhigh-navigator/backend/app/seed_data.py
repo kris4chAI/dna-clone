@@ -1,10 +1,10 @@
 """Seed content for FlyHigh Navigator.
 
-Source: FlyHigh reference content
-  - persona journeys
-  - insight dashboards
-  - logistics data model, schemas, KPI library
-  - engineering accelerators: agents, skills, tools, frameworks
+Source: Niche Consulting Proposal to ABC Retail - FlyHigh v.6
+  - Slides 18-20  persona journeys
+  - Slides 21-24  insight dashboards
+  - Slides 25-29  logistics data model, schemas, KPI library
+  - Slides 30-37  engineering accelerators: agents, skills, tools, frameworks
 Everything here is a starting point. All rows are editable from the UI ("curation").
 """
 
@@ -558,7 +558,7 @@ ENTITIES = [
     ("Automation & labor", "FACT_LABOR_SHIFT", "fact", "Snapshot", "planning system WFM and UKG / Dayforce: scheduled vs clocked hours, absence, overtime", "Workforce & HR", []),
     ("Automation & labor", "FACT_LABOR_PERFORMANCE", "fact", "Accumulating", "Discovery only · labor management system: performance to standard per associate and shift", "Labour, Dock & Yard", []),
     ("Automation & labor", "FACT_WAVE_PROGRESS", "fact", "Accumulating", "WMS waves from release to ship: planned vs actual units and cut-off risk", "Outbound & Fulfilment", []),
-    ("Automation & labor", "FACT_ACTION_LOG", "fact", "Transaction", "Every write-back to WMS, planning system, labor management system or the WCS, and each alert: who, what, outcome", "Service Cases", []),
+    ("Automation & labor", "FACT_ACTION_LOG", "fact", "Transaction", "Every write-back to WMS, planning system, labor management system or the WCS, and each AiOn alert: who, what, outcome", "Service Cases", []),
 ]
 
 # Dimension descriptions become attributes too

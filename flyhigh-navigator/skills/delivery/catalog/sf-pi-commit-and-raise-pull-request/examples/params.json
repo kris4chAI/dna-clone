@@ -1,0 +1,7 @@
+{
+  "artefact": "docs/prd/site-daily-operations.md",
+  "kind": "prd",
+  "title": "Site daily operations PRD",
+  "reviewers": "product-owner\narchitecture-lead",
+  "ticket": "FH-101"
+}

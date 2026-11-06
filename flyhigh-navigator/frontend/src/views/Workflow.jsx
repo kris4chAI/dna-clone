@@ -111,7 +111,7 @@ export default function Workflow({ code, onSelect, onAsk, onNavigate }) {
 
           <div className="stage-head">
             <div>
-              <div className="eyebrow">Phase {stage.phase} · slide {stage.slide}</div>
+              <div className="eyebrow">Phase {stage.phase}</div>
               <h2>{stage.seq}. {stage.name}</h2>
               <p>{stage.summary}</p>
             </div>
@@ -166,7 +166,7 @@ export default function Workflow({ code, onSelect, onAsk, onNavigate }) {
                           <div className="chips">
                             {st.snowflake.map((x) => <Chip key={x} tone="snow">{x}</Chip>)}
                             <Chip tone="agent">{st.agent}</Chip>
-                            {(st.skills || []).map((x) => <Chip key={x} tone="skill">{x}</Chip>)}
+                            {(st.skills || []).map((x) => <Chip key={x} tone="skill" onClick={() => onNavigate('skills', x.replace('/', ''))}>{x} ↗</Chip>)}
                             {st.framework && <Chip tone="fw">{st.framework}</Chip>}
                             {st.output && <Chip tone="out">→ {st.output}</Chip>}
                           </div>
@@ -186,7 +186,7 @@ export default function Workflow({ code, onSelect, onAsk, onNavigate }) {
                       <div className="agent-name">{a.name}</div>
                       <div className="agent-desc">{a.description}</div>
                       <div className="chips">
-                        {a.skills.map((s) => <Chip key={s.id} tone="skill">{s.name}</Chip>)}
+                        {a.skills.map((s) => <Chip key={s.id} tone="skill" title="Open in the skills studio" onClick={() => onNavigate('skills', s.name.replace('/', ''))}>{s.name} ↗</Chip>)}
                         {a.tools.map((t) => <Chip key={t.id} tone="tool" title={t.category}>{t.name}</Chip>)}
                       </div>
                     </div>

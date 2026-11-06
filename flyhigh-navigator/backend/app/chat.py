@@ -7,8 +7,7 @@ import json
 import os
 import re
 
-import httpx
-
+from . import llm
 from .db import one, q
 
 STAGE_WORDS = {
@@ -197,7 +196,8 @@ def answer(message: str, context: dict | None = None, lens: str = "delivery"):
                  (sk.group(0) + "%",))
         if rows:
             reply = f"`{rows[0]['skill']}` is invoked by:\n" + "\n".join(f"- **{r['agent']}** in {r['stage']}" for r in rows)
-            cards = [_card("stage", r["stage"], r["agent"], "workflow", r["code"]) for r in {r["code"]: r for r in rows}.values()]
+            cards = [_card("skill", f"/{rows[0]['skill'].lstrip('/')}", "Run it in the skills studio", "skills", rows[0]["skill"].lstrip("/"))]
+            cards += [_card("stage", r["stage"], r["agent"], "workflow", r["code"]) for r in {r["code"]: r for r in rows}.values()]
             return {"reply": reply, "cards": cards, "suggestions": ["Which skills are used most?"]}
 
     if impl_ok and "skills" in m and ("most" in m or "all" in m or "list" in m):
@@ -324,18 +324,15 @@ def answer(message: str, context: dict | None = None, lens: str = "delivery"):
 
 
 def llm_polish(message, result):
-    key = os.getenv("ANTHROPIC_API_KEY")
-    if not key:
+    """Rephrase the rule-based answer with the configured LLM (any provider); keep the original on any failure."""
+    if not llm.available() or os.getenv("CHAT_USE_LLM", "true").lower() == "false":
         return result
-    ctx = result["reply"]
     try:
-        r = httpx.post("https://api.anthropic.com/v1/messages", timeout=30, headers={
-            "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json"},
-            json={"model": os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5"), "max_tokens": 600,
-                  "system": "You are the FlyHigh Navigator guide for a Niche Consulting pursuit and Snowflake modernization program. Answer only from the CONTEXT, which is already filtered to the user's persona lens; never add content beyond it. Be concise; use short markdown bullets.",
-                  "messages": [{"role": "user", "content": f"CONTEXT:\n{ctx}\n\nQUESTION: {message}"}]})
-        r.raise_for_status()
-        result["reply"] = "".join(b.get("text", "") for b in r.json()["content"])
+        result["reply"] = llm.complete(
+            "You are the FlyHigh Navigator guide for a Niche Consulting pursuit and Snowflake modernization program. "
+            "Answer only from the CONTEXT, which is already filtered to the user's persona lens; never add content beyond it. "
+            "Be concise; use short markdown bullets.",
+            f"CONTEXT:\n{result['reply']}\n\nQUESTION: {message}", max_tokens=600)
         result["llm"] = True
     except Exception as e:  # keep the rule-based answer
         result["llm_error"] = str(e)[:200]

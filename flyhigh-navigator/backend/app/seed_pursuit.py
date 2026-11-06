@@ -1,10 +1,9 @@
 """Load the pursuit lifecycle, kit, rubric and persona lens. Called from seed.py."""
 import json
-from pathlib import Path
-
 from . import pursuit_data as P
+from .paths import SEED
+from .skills_api import seed_skill_access
 
-DATA = Path(__file__).parent / "data"
 
 
 def seed_pursuit(c):
@@ -13,6 +12,8 @@ def seed_pursuit(c):
 
     for code, label, s, d, reason in P.SCREEN_ACCESS:
         c.execute("INSERT INTO access_rule VALUES ('screen',%s,%s,%s,%s,%s)", (code, label, s, d, reason))
+
+    seed_skill_access(c)
 
     for st in P.P_STAGES:
         shared = st["audience"] == "shared"
@@ -39,7 +40,7 @@ def seed_pursuit(c):
     c.execute("INSERT INTO pursuit_ref(kind,seq,data) VALUES ('method',0,%s)", (json.dumps(P.METHOD),))
 
     # Kit: templates and editable sheets
-    kit = json.loads((DATA / "pursuit_kit.json").read_text())
+    kit = json.loads((SEED / "pursuit_kit.json").read_text())
     for t in kit:
         dl = None if t["sample"] else f"{t['stage']}/{t['file']}"
         tid = c.execute("""INSERT INTO kit_template(stage_num,folder,file,format,sample,download)

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api, sessionId } from '../api'
 import { Chip, Empty } from '../components/ui'
+import { GatePanel } from './Skills'
 
 const LOOPS = [['Build', [1, 2, 3, 4, 5, 6]], ['Review', [7, 8]], ['Fix', [9]]]
 
@@ -129,6 +130,7 @@ export default function Pursuit({ me, code, onSelect, onAsk, onNavigate }) {
                     ))}
                   </ol>
                 </section>
+                <GateCheck code={code} />
                 <section className="panel">
                   <h4>Input tiers</h4>
                   <div className="tier must"><b>Must have</b><span>{stage.inputs.must}</span><small>Blocks the gate; missing caps a section at 89</small></div>
@@ -162,10 +164,11 @@ export default function Pursuit({ me, code, onSelect, onAsk, onNavigate }) {
                   <h4>Skills and tools</h4>
                   <div className="agents">
                     {stage.skill_detail.map((s) => (
-                      <div key={s.id} className="agent skillcard">
+                      <div key={s.id} className="agent skillcard clickable" title="Open in the skills studio" onClick={() => onNavigate('skills', s.name)}>
                         <div className="agent-cap">{s.type} · stages {s.stages}</div>
                         <div className="agent-name mono">{s.name}</div>
                         <div className="agent-desc">{s.contributes}</div>
+                        {s.type !== 'Tool' && <span className="link small">Run in skills studio →</span>}
                       </div>
                     ))}
                   </div>
@@ -206,6 +209,23 @@ export default function Pursuit({ me, code, onSelect, onAsk, onNavigate }) {
 
       {tab === 'method' && <Method ov={ov} lens={me.lens} />}
     </div>
+  )
+}
+
+function GateCheck({ code }) {
+  const [r, setR] = useState(null)
+  const [busy, setBusy] = useState(false)
+  useEffect(() => { setR(null) }, [code])
+  const check = async () => {
+    setBusy(true)
+    try { setR(await api.post('/api/skills/rfp-response-orchestrator/run', { params: { stage: code }, session_id: sessionId() })) } finally { setBusy(false) }
+  }
+  return (
+    <section className="panel">
+      <h4>Gate readiness <span className="muted small" style={{ textTransform: 'none', letterSpacing: 0 }}>rfp-response-orchestrator</span></h4>
+      {!r && <button className="btn primary block" disabled={busy} onClick={check}>{busy ? 'Checking…' : 'Check readiness and record the gate'}</button>}
+      {r && <><p className="small">{r.summary}</p><GatePanel gate={r.gate} /><button className="link small" onClick={check}>Re-check</button></>}
+    </section>
   )
 }
 

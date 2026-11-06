@@ -1,0 +1,7 @@
+{
+  "days": "90",
+  "cron": "0 7 * * *",
+  "email": "cutover-team@abcretail.example",
+  "integration": "NI_EMAIL",
+  "exit": "Zero unexplained variances for 10 consecutive business days\nAll critical reports signed off by business owners\nRunbook rehearsed twice"
+}

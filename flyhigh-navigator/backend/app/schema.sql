@@ -1,7 +1,7 @@
 -- FlyHigh Navigator schema (PostgreSQL 14+)
--- `origin` = 'seed' for rows loaded from the reference content, 'curated' for rows added or edited in the UI.
+-- `origin` = 'seed' for rows loaded from the proposal, 'curated' for rows added or edited in the UI.
 
-DROP TABLE IF EXISTS lens_role, access_rule, pursuit_stage, pursuit_artefact, pursuit_skill, pursuit_ref,
+DROP TABLE IF EXISTS skill_execution, skill_run, gate_decision, section_round, lens_role, access_rule, pursuit_stage, pursuit_artefact, pursuit_skill, pursuit_ref,
   kit_template, kit_sheet, kit_row, response_section, rubric_criterion, section_score, section_musthave,
   chat_message, guide_progress, stage_component, component, stage, phase,
   journey_step, persona, insight_question, insight_dashboard,
@@ -49,7 +49,7 @@ CREATE TABLE guide_progress (
   PRIMARY KEY (session_id, stage_code, step_index)
 );
 
--- Persona journeys
+-- Persona journeys (slides 18-20)
 CREATE TABLE persona (
   id SERIAL PRIMARY KEY, code TEXT UNIQUE, segment TEXT, name TEXT NOT NULL, roles TEXT, wants TEXT,
   journey TEXT, goals TEXT, pains TEXT, kpis TEXT, note TEXT, slide INT, origin TEXT DEFAULT 'seed'
@@ -60,7 +60,7 @@ CREATE TABLE journey_step (
   origin TEXT DEFAULT 'seed'
 );
 
--- Insights
+-- Insights (slides 21-24)
 CREATE TABLE insight_dashboard (
   id SERIAL PRIMARY KEY, code TEXT UNIQUE, name TEXT NOT NULL, audience TEXT, roles TEXT, surface TEXT,
   headline TEXT, guardrail TEXT, persona_code TEXT, slide INT, origin TEXT DEFAULT 'seed'
@@ -70,7 +70,7 @@ CREATE TABLE insight_question (
   seq INT, kind TEXT, question TEXT, answer TEXT, origin TEXT DEFAULT 'seed'
 );
 
--- Industry data model
+-- Industry data model (slides 25-29)
 CREATE TABLE domain (id SERIAL PRIMARY KEY, name TEXT UNIQUE NOT NULL, source TEXT, origin TEXT DEFAULT 'seed');
 CREATE TABLE subject_area (
   id SERIAL PRIMARY KEY, domain_id INT REFERENCES domain(id) ON DELETE CASCADE,
@@ -151,6 +151,24 @@ CREATE TABLE section_score (
 );
 CREATE TABLE section_musthave (
   section_id INT REFERENCES response_section(id) ON DELETE CASCADE, idx INT, met BOOLEAN, PRIMARY KEY (section_id, idx)
+);
+
+-- Skills studio
+CREATE TABLE skill_run (
+  id SERIAL PRIMARY KEY, skill TEXT, kind TEXT, persona TEXT, mode TEXT, params JSONB, summary TEXT, output JSONB,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE TABLE skill_execution (
+  id SERIAL PRIMARY KEY, run_id INT REFERENCES skill_run(id) ON DELETE CASCADE, file TEXT, persona TEXT, result JSONB,
+  executed_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE TABLE gate_decision (
+  id SERIAL PRIMARY KEY, stage_code TEXT, gate_code TEXT, approver TEXT NOT NULL, decision TEXT, conditions TEXT,
+  recorded_by TEXT, decided_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE TABLE section_round (
+  id SERIAL PRIMARY KEY, section_id INT REFERENCES response_section(id) ON DELETE CASCADE, round INT, score NUMERIC,
+  musts_met BOOLEAN, fixes TEXT, recorded_by TEXT, created_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- One searchable index across everything, used by the conversational assistant

@@ -1,0 +1,3 @@
+{
+  "mapping": "idp_group,snowflake_role,default_warehouse\nSF-DC-OPS,FR_DC_OPS,WH_BI\nSF-TRANSPORT,FR_TRANSPORT,WH_BI\nSF-EXEC,FR_EXEC,WH_BI\nSF-DATA-ENG,FR_DATA_ENG,WH_TRANSFORM"
+}

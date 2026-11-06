@@ -1,0 +1,5 @@
+{
+  "schemas": "WMS_DW\nOTM_DW\nBI_STAGE",
+  "days": "90",
+  "database": "FLYHIGH_DEV_BRONZE"
+}

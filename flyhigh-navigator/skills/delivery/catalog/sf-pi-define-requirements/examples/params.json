@@ -1,0 +1,9 @@
+{
+  "need": "Give DC general managers a live view of wave progress and labour against plan so every order ships by cut-off.",
+  "persona": "Warehouse, DC & site ops (DC GM \u00b7 shift managers)",
+  "pain_points": "Bottlenecks found after the shift\nLabour planned in spreadsheets\nNumbers differ between WMS and BI",
+  "outcomes": "Ship on time | On-time ship % | 98%\nRecover backlog before cut-off | Units at risk at 14:00 | < 500\nLabour to standard | UPH | +8%",
+  "data_needs": "warehouse task\nwave\nlabor activity\ndock appointment\nengineered standard",
+  "scope_out": "Robot telemetry (discovery only)\nPayroll",
+  "database": "FLYHIGH_PRD_GOLD"
+}

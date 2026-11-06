@@ -1,0 +1,11 @@
+{
+  "feed": "wms_tasks",
+  "pattern": "file",
+  "s3_url": "s3://flyhigh-landing/wms/tasks/",
+  "role_arn": "arn:aws:iam::123456789012:role/flyhigh-snowflake-s3",
+  "bronze_table": "FLYHIGH_PRD_BRONZE.WAREHOUSE.WMS_TASKS_RAW",
+  "silver_table": "FLYHIGH_PRD_SILVER.WAREHOUSE.WAREHOUSE_TASK",
+  "key": "TASK_ID",
+  "columns": "TASK_ID NUMBER\nSITE_ID VARCHAR\nTASK_TYPE VARCHAR\nTASK_START TIMESTAMP_NTZ\nTASK_END TIMESTAMP_NTZ\nUNITS NUMBER\nOP_TYPE VARCHAR",
+  "topic": "wms.tasks.v1"
+}

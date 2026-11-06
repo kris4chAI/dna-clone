@@ -1,0 +1,6 @@
+{
+  "stage": "@FLYHIGH_PRD_BRONZE.ADMIN.STG_HISTORY",
+  "tables": "FLYHIGH_PRD_BRONZE.WAREHOUSE.FACT_WAREHOUSE_TASK | wms/fact_warehouse_task/\nFLYHIGH_PRD_BRONZE.TRANSPORT.FACT_SHIPMENT_LEG | otm/fact_shipment_leg/",
+  "format": "parquet",
+  "clone_to": "FLYHIGH_STG_BRONZE"
+}

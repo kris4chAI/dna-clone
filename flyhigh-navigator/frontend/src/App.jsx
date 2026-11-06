@@ -12,9 +12,11 @@ import Catalog from './views/Catalog'
 import Journeys from './views/Journeys'
 import Insights from './views/Insights'
 import DataModels from './views/DataModels'
+import Skills from './views/Skills'
 
 const NAV = [
-  { group: 'Start', items: [{ id: 'lifecycle', label: 'Lifecycle overview', hint: 'Pursuit → implementation', icon: '⟿' }] },
+  { group: 'Start', items: [{ id: 'lifecycle', label: 'Lifecycle overview', hint: 'Pursuit → implementation', icon: '⟿' },
+    { id: 'skills', label: 'Skills studio', hint: 'Run pursuit + Snowflake skills', icon: '⚡' }] },
   { group: 'Pursuit lifecycle', items: [
     { id: 'pursuit', label: 'Pursuit stages', hint: 'G0 → G8 · signal to orals', icon: '◈' },
     { id: 'kit', label: 'Pursuit kit', hint: 'Templates · aids · skills', icon: '▤' },
@@ -98,9 +100,10 @@ export default function App() {
       <main className="main">
         {v === 'lifecycle' && <Lifecycle me={me} onNavigate={go} />}
         {v === 'pursuit' && <Pursuit me={me} code={pStage} onSelect={(c) => go('pursuit', c)} onAsk={askGuide} onNavigate={go} />}
-        {v === 'kit' && <Kit me={me} focus={nav.ref} />}
-        {v === 'winroom' && <WinRoom />}
-        {v === 'quality' && <Quality me={me} />}
+        {v === 'kit' && <Kit me={me} focus={nav.ref} onNavigate={go} />}
+        {v === 'winroom' && <WinRoom onNavigate={go} />}
+        {v === 'quality' && <Quality me={me} onNavigate={go} />}
+        {v === 'skills' && <Skills me={me} focus={nav.ref} onNavigate={go} />}
         {v === 'workflow' && <Workflow code={stageCode} onSelect={(c) => go('workflow', c)} onAsk={askGuide} onNavigate={go} />}
         {v === 'catalog' && <Catalog focus={nav.ref} onNavigate={go} />}
         {v === 'journeys' && <Journeys focus={nav.ref} onAsk={askGuide} onNavigate={go} />}

@@ -12,7 +12,9 @@ from pydantic import BaseModel
 from . import chat
 from .access import allowed, persona, require_stage, screen
 from .db import one, pool, q
+from .paths import FRONTEND_DIST as DIST
 from .pursuit_api import router as pursuit_router
+from .skills_api import router as skills_router
 
 
 @asynccontextmanager
@@ -22,13 +24,15 @@ async def lifespan(_):
     pool.close()
 
 
-app = FastAPI(title="FlyHigh Navigator API", version="2.0", lifespan=lifespan)
+app = FastAPI(title="FlyHigh Navigator API", version="3.1", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
 @app.get("/api/health")
 def health():
-    return {"ok": one("SELECT 1 AS ok")["ok"] == 1}
+    from . import llm
+    return {"ok": one("SELECT 1 AS ok")["ok"] == 1, "version": app.version, "llm": llm.status(),
+            "ui": DIST.exists()}
 
 
 @app.get("/api/overview")
@@ -232,14 +236,16 @@ def chat_history(session_id: str, p: dict = Depends(persona)):
 
 
 app.include_router(pursuit_router)
+app.include_router(skills_router)
 
 
 # ---------------- Serve the built React app (single-container mode) ----------------
-DIST = Path(os.getenv("FRONTEND_DIST", Path(__file__).resolve().parents[2] / "frontend" / "dist"))
 if DIST.exists():
     app.mount("/assets", StaticFiles(directory=DIST / "assets"), name="assets")
 
     @app.get("/{path:path}")
     def spa(path: str):
+        if path.startswith("api/"):
+            raise HTTPException(404)
         f = DIST / path
         return FileResponse(f if path and f.is_file() else DIST / "index.html")

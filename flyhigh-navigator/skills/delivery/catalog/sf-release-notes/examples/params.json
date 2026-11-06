@@ -1,0 +1,6 @@
+{
+  "version": "2.0.0",
+  "highlights": "Site Daily Operations shows live UPH by zone\nCustomer portal shows only each shipper's orders",
+  "objects": "FLYHIGH_PRD_GOLD.WAREHOUSE.FACT_WAVE_PROGRESS (new)\nFLYHIGH_PRD_GOLD.WAREHOUSE.SV_SITE_OPS (new)\nGOVERNANCE.POLICIES.RAP_CUSTOMER_ID (changed)",
+  "evidence": "Golden queries: 14/14 PASS\nReconciliation wave 2: 0 open variances"
+}

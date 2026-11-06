@@ -1,0 +1,6 @@
+{
+  "prefix": "FLYHIGH",
+  "envs": "DEV\nSTG\nPRD\nSBX",
+  "layers": "BRONZE | yes | 1\nSILVER | no | 7\nGOLD | no | 30",
+  "domains": "WAREHOUSE\nTRANSPORT\nCUSTOMER\nWORKFORCE"
+}

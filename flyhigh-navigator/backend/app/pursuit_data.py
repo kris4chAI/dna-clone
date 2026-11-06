@@ -35,6 +35,7 @@ LENS_ROLES = [
 
 # screen access (resource 'screen') and pursuit stage access (resource 'pursuit_stage')
 SCREEN_ACCESS = [
+    ("skills", "Skills studio", True, True, "Each lens sees its own skills: pursuit skills for sales (shared ones for delivery), Snowflake delivery skills for delivery."),
     ("lifecycle", "Lifecycle overview", True, True, "Both lenses see the end-to-end map; locked segments are greyed out."),
     ("pursuit", "Pursuit lifecycle", True, True, "Sales sees all nine stages. Delivery sees only the shared final stages (5, 8, 9); the rest show as locked."),
     ("kit", "Pursuit kit", True, True, "Templates are filtered by stage access."),

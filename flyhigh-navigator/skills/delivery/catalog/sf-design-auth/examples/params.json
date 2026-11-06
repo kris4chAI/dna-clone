@@ -1,0 +1,6 @@
+{
+  "idp": "azure",
+  "allowed_ips": "10.20.0.0/16\n203.0.113.10/32",
+  "service_users": "SVC_DBT\nSVC_TABLEAU\nSVC_INGEST",
+  "idle_minutes": "60"
+}

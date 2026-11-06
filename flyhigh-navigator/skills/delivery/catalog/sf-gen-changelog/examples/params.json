@@ -1,0 +1,4 @@
+{
+  "last_version": "1.2.0",
+  "commits": "feat(gold): add FACT_WAVE_PROGRESS [FH-212]\nfix(rls): include wildcard entitlement [FH-219]\nfeat(semantic): SV_SITE_OPS with UPH and pick accuracy [FH-220]\nchore(ci): pin schemachange\nfeat!: rename DIM_SITE.REGION to REGION_CODE [FH-230]"
+}

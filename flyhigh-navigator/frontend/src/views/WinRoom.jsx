@@ -7,8 +7,10 @@ const VENDORS = ['Niche Consulting', 'Boutique Snowflake firm', 'Tier-1 consulti
 const STATUS = ['Not started', 'In progress', 'Done']
 const rag = (v) => (v >= 4 ? 'g' : v >= 3 ? 'a' : 'r')
 
-export default function WinRoom() {
+export default function WinRoom({ onNavigate }) {
   const [w, setW] = useState(null)
+  const [run, setRun] = useState(null)
+  const [busy, setBusy] = useState(false)
   const load = () => api.get('/api/winroom').then(setW)
   useEffect(() => { load() }, [])
   if (!w) return <div className="page">Loading…</div>
@@ -22,6 +24,17 @@ export default function WinRoom() {
   const red = people.filter((p) => p['Overall (1–5)'] < 3).length
   const group = summary.find((s) => s.Measure.startsWith('Whole buying group'))
 
+  const rerun = async (newRound) => {
+    setBusy(true)
+    try { setRun(await api.post('/api/skills/rfp-win-scorecard/run', { params: { new_round: newRound ? 'yes' : 'no' } })); await load() } finally { setBusy(false) }
+  }
+  const setScore = async (pp, dim, val) => {
+    const n = Number(val)
+    if (Number.isNaN(n) || n < 1 || n > 5 || n === pp[dim]) return
+    const { id, group, ...data } = pp
+    await api.put(`/api/kit/rows/${id}`, { ...data, [dim]: n })
+    await rerun(false)
+  }
   const setStatus = async (a, status) => {
     const { id, ...data } = a
     await api.put(`/api/kit/rows/${id}`, { ...data, Status: status }); load()
@@ -42,10 +55,17 @@ export default function WinRoom() {
         </div>
       </header>
 
+      <div className="run-bar" style={{ marginBottom: 12 }}>
+        <button className="btn primary" disabled={busy} onClick={() => rerun(false)}>{busy ? 'Scoring…' : 'Rescore (rfp-win-scorecard)'}</button>
+        <button className="btn ghost" disabled={busy} onClick={() => rerun(true)}>Start a new scoring round</button>
+        <button className="link" onClick={() => onNavigate('skills', 'rfp-win-scorecard')}>Open skill →</button>
+        {run && <span className="small"><b>{run.summary}</b>{run.notes?.length ? ` · ${run.notes.length} score changes` : ''}</span>}
+      </div>
+      <p className="muted small">Edit any 1–5 score in the buying-group table; the scorecard reruns and the averages, RAG and G7 test update.</p>
       <div className="tiles">
         {summary.map((s) => (
           <div key={s.Measure} className={`tile rag-${rag(s['Score (1–5)'])}`}>
-            <b>{s['Score (1–5)'].toFixed(2)}</b>
+            <b>{Number(s['Score (1–5)']).toFixed(2)}</b>
             <span>{s.Measure}</span>
             <small>{s.Change > 0 ? `▲ ${s.Change}` : s.Change < 0 ? `▼ ${s.Change}` : '—'} vs previous run</small>
           </div>
@@ -63,7 +83,7 @@ export default function WinRoom() {
                   <td><b>{p.Stakeholder}</b><small className="block muted">{p.group}</small></td>
                   <td className="small">{p.Role}</td>
                   <td>{p['Influence (1–3)']}</td>
-                  {DIMS.map((d) => <td key={d} className={`h h-${rag(p[d])}`}>{p[d]}</td>)}
+                  {DIMS.map((d) => <td key={d} className={`h h-${rag(p[d])}`}><input className="cell" defaultValue={p[d]} onBlur={(e) => setScore(p, d, e.target.value)} /></td>)}
                   <td><span className={`ragpill ${rag(p['Overall (1–5)'])}`}>{p['Overall (1–5)']}</span></td>
                   <td className="small muted">{p['Gap to close']}</td>
                   <td className="small mono">{p['Action IDs']}</td>

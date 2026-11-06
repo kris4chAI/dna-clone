@@ -1,23 +1,45 @@
 import { useState } from 'react'
 
-/** Tiny markdown: **bold**, *italic*, `code`, "- " bullets, blank lines. */
-export function Md({ text }) {
-  const inline = (s, k) => {
-    const parts = s.split(/(\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*)/g)
-    return parts.map((p, i) =>
-      p.startsWith('**') ? <strong key={k + i}>{p.slice(2, -2)}</strong>
-        : p.startsWith('`') ? <code key={k + i}>{p.slice(1, -1)}</code>
-          : p.startsWith('*') && p.length > 2 ? <em key={k + i}>{p.slice(1, -1)}</em>
-            : p)
-  }
+const inlineMd = (s, k) => {
+  const parts = String(s).split(/(\*\*[^*]+\*\*|`[^`]+`|\*[^*\s][^*]*\*)/g)
+  return parts.map((p, i) =>
+    p.startsWith('**') ? <strong key={k + '-' + i}>{p.slice(2, -2)}</strong>
+      : p.startsWith('`') ? <code key={k + '-' + i}>{p.slice(1, -1)}</code>
+        : p.startsWith('*') && p.length > 2 ? <em key={k + '-' + i}>{p.slice(1, -1)}</em>
+          : p)
+}
+
+/** Small markdown renderer: headings, paragraphs, bullet and numbered lists, tables, code fences, frontmatter. */
+export function Md({ text, compact }) {
+  const lines = String(text || '').replace(/^---\n[\s\S]*?\n---\n/, '').split('\n')
   const out = []
-  let list = []
-  const flush = () => { if (list.length) { out.push(<ul key={'u' + out.length}>{list}</ul>); list = [] } }
-  ;(text || '').split('\n').forEach((line, i) => {
-    if (/^\s*-\s+/.test(line)) list.push(<li key={i}>{inline(line.replace(/^\s*-\s+/, ''), i)}</li>)
-    else { flush(); if (line.trim()) out.push(<p key={i}>{inline(line, i)}</p>) }
-  })
-  flush()
+  let i = 0
+  while (i < lines.length) {
+    const l = lines[i]
+    if (l.startsWith('```')) {
+      const buf = []; i++
+      while (i < lines.length && !lines[i].startsWith('```')) buf.push(lines[i++])
+      out.push(<pre key={i} className="code">{buf.join('\n')}</pre>); i++; continue
+    }
+    const h = l.match(/^(#{1,4})\s+(.*)/)
+    if (h) { const T = `h${Math.min(h[1].length + (compact ? 3 : 1), 6)}`; out.push(<T key={i} className="md-h">{inlineMd(h[2], i)}</T>); i++; continue }
+    if (/^\s*\|/.test(l)) {
+      const rows = []
+      while (i < lines.length && /^\s*\|/.test(lines[i])) rows.push(lines[i++])
+      const cells = rows.filter((r) => !/^\s*\|[\s:|-]+\|\s*$/.test(r)).map((r) => r.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim()))
+      out.push(<div key={i} className="md-table"><table className="tbl"><thead><tr>{cells[0].map((c, j) => <th key={j}>{inlineMd(c, j)}</th>)}</tr></thead>
+        <tbody>{cells.slice(1).map((r, x) => <tr key={x}>{r.map((c, j) => <td key={j}>{inlineMd(c, `${x}-${j}`)}</td>)}</tr>)}</tbody></table></div>)
+      continue
+    }
+    if (/^\s*([-*]|\d+\.)\s+/.test(l)) {
+      const ordered = /^\s*\d+\./.test(l); const items = []
+      while (i < lines.length && /^\s*([-*]|\d+\.)\s+/.test(lines[i])) items.push(lines[i++].replace(/^\s*([-*]|\d+\.)\s+/, ''))
+      const L = ordered ? 'ol' : 'ul'
+      out.push(<L key={i}>{items.map((t, j) => <li key={j}>{inlineMd(t.replace(/^\[( |x)\]\s*/, (m) => (m.includes('x') ? '☑ ' : '☐ ')), j)}</li>)}</L>); continue
+    }
+    if (l.trim()) out.push(<p key={i}>{inlineMd(l, i)}</p>)
+    i++
+  }
   return <div className="md">{out}</div>
 }
 

@@ -1,0 +1,9 @@
+{
+  "dimension": "FLYHIGH_DEV_GOLD.CUSTOMER.DIM_CUSTOMER",
+  "natural_key": "CUSTOMER_ID",
+  "surrogate": "CUSTOMER_KEY",
+  "from_col": "EFFECTIVE_FROM",
+  "to_col": "EFFECTIVE_TO",
+  "current_col": "IS_CURRENT",
+  "fact": "FLYHIGH_DEV_GOLD.WAREHOUSE.FACT_WAREHOUSE_TASK | CUSTOMER_KEY | TASK_START"
+}

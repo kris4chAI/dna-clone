@@ -1,0 +1,4 @@
+{
+  "roles": "Platform operations | Run book drills, Alerts and task history, Resource monitors, Rollback with Time Travel\nData engineer | dbt and dynamic tables, Streams and tasks, Data metric functions, Reconciliation\nBI developer | Semantic views, Tableau live connections, Row access testing\nBusiness analyst | Cortex Analyst questions, Certified KPIs, Dashboard navigation",
+  "weeks": "2 / 2"
+}

@@ -1,0 +1,10 @@
+{
+  "model": "fact_shipment_leg",
+  "source": "otm_bronze.shipment_stop s",
+  "joins": "LEFT JOIN otm_bronze.carrier c ON c.carrier_gid = s.servprov_gid",
+  "columns": "shipment_leg_id = s.shipment_gid || '-' || s.stop_num\ncarrier_key = c.carrier_key\nplanned_arrival = s.planned_arrival\nactual_arrival = s.actual_arrival\ndelay_hours = DATEDIFF(minute, s.planned_arrival, s.actual_arrival) / 60\nupdated_at = s.update_date",
+  "filter": "s.domain_name = 'FLYHIGH'",
+  "unique_key": "shipment_leg_id",
+  "watermark": "updated_at",
+  "target_lag": "30 minutes"
+}

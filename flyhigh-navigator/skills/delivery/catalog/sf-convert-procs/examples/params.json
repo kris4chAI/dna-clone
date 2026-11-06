@@ -1,0 +1,4 @@
+{
+  "plsql": "CREATE OR REPLACE PROCEDURE WMS_DW.P_LOAD_LABOR(p_site IN NUMBER, p_day IN DATE) IS\n  v_rows NUMBER := 0;\nBEGIN\n  DELETE FROM WMS_DW.FACT_LABOR_ACTIVITY WHERE site_key = p_site AND work_date = TRUNC(p_day);\n  INSERT INTO WMS_DW.FACT_LABOR_ACTIVITY (site_key, work_date, direct_hours, load_ts)\n  SELECT site_key, TRUNC(task_start), SUM(NVL(duration_min,0))/60, SYSDATE\n  FROM WMS_DW.FACT_WAREHOUSE_TASK WHERE site_key = p_site AND TRUNC(task_start) = TRUNC(p_day)\n  GROUP BY site_key, TRUNC(task_start);\n  v_rows := SQL%ROWCOUNT;\n  DBMS_OUTPUT.PUT_LINE('rows ' || v_rows);\n  COMMIT;\nEXCEPTION\n  WHEN OTHERS THEN\n    ROLLBACK;\n    RAISE;\nEND;",
+  "target_schema": "FLYHIGH_DEV_SILVER.WAREHOUSE"
+}

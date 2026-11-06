@@ -10,9 +10,9 @@ from pydantic import BaseModel
 
 from .access import allowed, allowed_codes, persona, require_stage, screen, stage_code_for_num
 from .db import one, q
+from .paths import TEMPLATES
 
 router = APIRouter(prefix="/api")
-TEMPLATES = Path(__file__).parent / "data" / "templates"
 LOCKED_FIELDS = ("code", "num", "name", "loop", "gate_code", "lane", "critical")
 
 

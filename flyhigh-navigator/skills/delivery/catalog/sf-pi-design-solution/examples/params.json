@@ -1,0 +1,6 @@
+{
+  "prd_title": "Site daily operations",
+  "requirements": "R1 | Live UPH by zone every 15 minutes\nR2 | Burn-down of units at risk against cut-off\nR3 | Row access per site",
+  "components": "FACT_WAVE_PROGRESS | gold table | R1,R2\nSV_SITE_OPS | semantic view | R1,R2\nRAP_SITE | row access policy | R3\nSite Daily Operations | tableau workbook | R1,R2,R3",
+  "project_key": "FH"
+}

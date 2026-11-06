@@ -1,0 +1,8 @@
+{
+  "number": "007",
+  "title": "Use dynamic tables for near-real-time Silver",
+  "context": "Warehouse task data must reach Silver within 30 minutes; dbt runs every hour today.",
+  "options": "dbt incremental every 15 minutes\nStreams + tasks with MERGE\nDynamic tables with TARGET_LAG = 30 minutes",
+  "decision": "Dynamic tables with TARGET_LAG = 30 minutes",
+  "consequences": "Less orchestration code\nRefresh cost visible in DYNAMIC_TABLE_REFRESH_HISTORY\nComplex non-deterministic logic stays in dbt"
+}

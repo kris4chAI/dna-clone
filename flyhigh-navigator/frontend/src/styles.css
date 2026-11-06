@@ -495,3 +495,45 @@ i.v { display: inline-block; width: 12px; height: 10px; border-radius: 2px; marg
 @media (max-width: 1280px) { .q-split { grid-template-columns: 1fr; } .tiles { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 760px) { .gate-cols, .tiles { grid-template-columns: 1fr; } .rub-row { grid-template-columns: 1fr; } }
 .lc-node.locked .lc-gate.small { display: none; } .lc-lock, .lc-shared { white-space: nowrap; }
+
+/* =================== v3: skills studio =================== */
+.status-pills { display: flex; flex-wrap: wrap; gap: 6px; max-width: 360px; justify-content: flex-end; }
+.spill { background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; font-size: 12px; color: var(--muted); }
+.spill b { color: var(--coal); } .spill.on { border-color: #b9dda7; background: var(--green-soft); color: #3c7a20; }
+.skills-split { grid-template-columns: 290px 1fr; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-grid .field.wide { grid-column: 1 / -1; }
+.field em { font-weight: 400; font-style: normal; color: var(--muted); }
+textarea.mono, .mono textarea { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+.run-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
+.err { color: var(--rose); font-size: 12.5px; }
+.result-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.notes { margin: 8px 0; padding-left: 18px; font-size: 12.5px; color: #8a5608; }
+.tabs.files { margin: 10px 0 6px; } .tabs.files button { font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; }
+.file-bar { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin-bottom: 6px; }
+.vbadge { font-size: 11px; color: var(--muted); background: #f6f4f9; border-radius: 6px; padding: 3px 8px; }
+pre.code { background: #1d1b22; color: #e9e6f0; border-radius: 10px; padding: 12px 14px; font-size: 12px; line-height: 1.5; overflow: auto; max-height: 340px; white-space: pre; }
+pre.code.big { max-height: 520px; }
+.panel.inner { background: #fbfafd; margin-top: 8px; }
+.md-h { margin: 10px 0 6px; } .md h4.md-h { font-size: 13px; text-transform: none; letter-spacing: 0; color: var(--coal); }
+.md h5.md-h, .md h6.md-h { font-size: 12px; text-transform: uppercase; color: var(--purple); }
+.md-table { overflow-x: auto; margin: 6px 0 10px; } .md ol, .md ul { padding-left: 20px; } .md li { margin-bottom: 3px; }
+.skillmd { max-height: 640px; overflow: auto; }
+.exec { margin-top: 10px; display: grid; gap: 8px; padding: 10px; border: 1px dashed var(--snow); border-radius: 10px; background: var(--snow-soft); font-size: 12.5px; }
+.exec label { display: flex; gap: 8px; align-items: center; }
+details.prompt { margin-top: 10px; } details.prompt summary { cursor: pointer; color: var(--purple); font-weight: 600; font-size: 12.5px; }
+.gatebox { border: 1px solid var(--line); border-left: 4px solid #e2a63c; border-radius: 10px; padding: 10px; margin: 8px 0; display: grid; gap: 6px; font-size: 13px; }
+.gatebox.ready { border-left-color: var(--green); }
+.gate-form { display: grid; grid-template-columns: 1fr; gap: 6px; }
+.gate-form > * { min-width: 0; }
+.gate-form input, .gate-form select { font: inherit; font-size: 12.5px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 7px; }
+.gate-form .btn { grid-column: 1 / -1; }
+.agent.clickable { cursor: pointer; } .agent.clickable:hover { border-color: var(--purple-2); }
+input.cell { width: 42px; text-align: center; border: 1px solid transparent; background: transparent; font: inherit; font-weight: 700; border-radius: 5px; }
+input.cell:focus { border-color: var(--purple-2); background: #fff; outline: none; }
+.engine-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: var(--green-soft); border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
+.loop-panel { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 10px; }
+.loop-status { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #eee; margin-bottom: 4px; }
+.st-pass { background: var(--green); color: #fff; } .st-plateau, .st-blocked, .st-escalate { background: var(--rose-soft); color: var(--rose); } .st-in { background: var(--amber-soft); color: #8a5608; }
+.loop-panel .run-bar input { font: inherit; font-size: 12.5px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 7px; }
+@media (max-width: 1280px) { .form-grid { grid-template-columns: 1fr; } }
