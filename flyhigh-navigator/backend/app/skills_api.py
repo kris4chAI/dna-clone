@@ -1,6 +1,6 @@
 """Skills studio API.
 
-Pursuit skills (the nine AI Native Sales Engineering skills) run as engines over the app's own data:
+Pursuit skills (the nine AI Native Pursuit Engineering skills) run as engines over the app's own data:
 gate readiness, scorecard recompute, commercials, section fixes, loop log, JD drafting, brand audit,
 deck spec. Delivery skills (46 Snowflake generators in `snowskills`) emit reviewable Snowflake artefacts.
 Every skill can also produce a ready-to-paste prompt for Claude, or call Claude when a key is configured.
@@ -27,9 +27,15 @@ from snowskills.skillmd import render as render_skill_md
 from . import llm
 from .access import allowed, allowed_codes, persona, require_stage
 from .db import one, q
+from .pmo_api import PMO_ENGINES, PMO_SKILLS
 
 router = APIRouter(prefix="/api")
 PURSUIT_MD = paths.PURSUIT_SKILLS
+PMO_MD = paths.PMO_SKILLS
+
+
+def _md_path(name):
+    return (PMO_MD if name in PMO_SKILLS else PURSUIT_MD) / name / "SKILL.md"
 PH = re.compile(r"^\[.*\]$")
 
 # ---------------------------------------------------------------------------
@@ -39,10 +45,10 @@ PURSUIT = {
     "rfp-response-orchestrator": {"title": "Pursuit orchestrator", "stages": [1, 2, 3, 4, 5, 6, 7, 8, 9], "lens": "shared",
         "engine": "Gate readiness: questions closed, template placeholders left, artefacts, stamps and the named approver; records gate decisions.",
         "fields": [{"key": "stage", "label": "Pursuit stage", "kind": "pstage", "default": "signal"}]},
-    "rfp-win-scorecard": {"title": "Win scorecard", "stages": [3, 8], "lens": "sales",
+    "rfp-win-scorecard": {"title": "Win scorecard", "stages": [3, 8], "lens": "pursuit",
         "engine": "Recomputes every person's overall score and RAG, simple and influence-weighted averages, competitor totals and the projected score, then lists pending actions by lift.",
         "fields": [{"key": "new_round", "label": "Start a new round (current overall becomes previous)", "kind": "choice", "default": "no", "options": ["no", "yes"]}]},
-    "rfp-commercials-model": {"title": "Commercials model", "stages": [6], "lens": "sales",
+    "rfp-commercials-model": {"title": "Commercials model", "stages": [6], "lens": "pursuit",
         "engine": "Prices scope options from hours and the rate card, applies term discounts, totals TCO levers and computes client-retained ROI and payback in the kit workbook.",
         "fields": []},
     "rfp-section-rubric": {"title": "Section rubric", "stages": [8], "lens": "shared",
@@ -73,22 +79,31 @@ PURSUIT = {
 
 
 def _skill_ok(name: str, lens: str) -> bool:
-    if name in PURSUIT:
+    if name in PURSUIT or name in PMO_SKILLS:
         return allowed("skill", name, lens)
     if name in snowskills.REGISTRY:
         return allowed("skill", name, lens)
     return False
 
 
+PMO_DELIVERY_SKILLS = {"plan-waves", "parallel-run", "gen-changelog", "release-notes", "gen-runbook", "gen-training", "kt-checklist"}
+PMO_PURSUIT_SKILLS = {"rfp-response-orchestrator", "proposal-to-job-descriptions"}
+
+
 def seed_skill_access(c):
-    """Called from the seeder: pursuit skills follow their stages; delivery skills are delivery-only."""
+    """Called from the seeder: pursuit skills follow their stages, delivery skills are delivery's
+    (plus the planning and release skills the PMO uses), PMO skills are the PMO's."""
+    ins = "INSERT INTO access_rule VALUES ('skill',%s,%s,%s,%s) ON CONFLICT DO NOTHING"
     for n, m in PURSUIT.items():
-        c.execute("INSERT INTO access_rule VALUES ('skill',%s,%s,TRUE,%s,%s) ON CONFLICT DO NOTHING",
-                  (n, m["title"], m["lens"] == "shared",
-                   "Shared: used in the final pursuit stages." if m["lens"] == "shared" else "Sales only: buyer intelligence and pricing."))
+        lenses = ["pursuit"] + (["delivery"] if m["lens"] == "shared" else []) + (["pmo"] if n in PMO_PURSUIT_SKILLS else [])
+        c.execute(ins, (n, m["title"], lenses,
+                        "Shared: used in the final pursuit stages." if m["lens"] == "shared" else "Pursuit only: buyer intelligence and pricing."))
+    for n, m in PMO_SKILLS.items():
+        c.execute(ins, (n, m["title"], ["pmo"], "PMO skill: runs over the delivery playbook data."))
     for n, s in snowskills.REGISTRY.items():
-        c.execute("INSERT INTO access_rule VALUES ('skill',%s,%s,FALSE,TRUE,%s) ON CONFLICT DO NOTHING",
-                  (n, f"/{n}", "Implementation skill for delivery personas."))
+        pm = n in PMO_DELIVERY_SKILLS
+        c.execute(ins, (n, f"/{n}", ["delivery", "pmo"] if pm else ["delivery"],
+                        "Planning and release skill shared with the PMO." if pm else "Implementation skill for delivery personas."))
 
 
 # ---------------------------------------------------------------------------
@@ -310,8 +325,8 @@ def eng_loop(params, p, session):
     _, secs, overall, _ = _section_scores()
     num = int(params.get("section") or 14)
     s = next(x for x in secs if x["num"] == num)
-    if p["lens"] != "sales" and s["owner_lens"] != "shared":
-        raise HTTPException(403, f"Section '{s['name']}' is looped by the sales team.")
+    if p["lens"] != "pursuit" and s["owner_lens"] != "shared":
+        raise HTTPException(403, f"Section '{s['name']}' is looped by the pursuit team.")
     if params.get("record") == "yes":
         n = one("SELECT COALESCE(MAX(round),0)+1 AS n FROM section_round WHERE section_id=%s", (s["id"],))["n"]
         one("INSERT INTO section_round(section_id, round, score, musts_met, fixes, recorded_by) VALUES (%s,%s,%s,%s,%s,%s) RETURNING 1",
@@ -474,6 +489,12 @@ def list_skills(p: dict = Depends(persona)):
             out.append({"name": n, "kind": "pursuit", "title": m["title"], "engine": m["engine"],
                         "stages": [{"num": x, "name": stages[x]["name"]} for x in m["stages"]],
                         "description": _frontmatter(n).get("description", "")})
+    screens = {r["code"]: r["label"] for r in q("SELECT code, label FROM access_rule WHERE resource='screen'")}
+    for n, m in PMO_SKILLS.items():
+        if _skill_ok(n, lens):
+            out.append({"name": n, "kind": "pmo", "title": m["title"], "engine": m["engine"],
+                        "screens": [{"code": x, "label": screens.get(x, x)} for x in m["screens"]],
+                        "description": _frontmatter(n).get("description", "")})
     for n, s in snowskills.REGISTRY.items():
         if _skill_ok(n, lens):
             st = impl.get(s.stage, {})
@@ -483,7 +504,7 @@ def list_skills(p: dict = Depends(persona)):
 
 
 def _frontmatter(n):
-    t = (PURSUIT_MD / n / "SKILL.md").read_text()
+    t = _md_path(n).read_text()
     m = re.search(r'description:\s*"(.*?)"', t)
     return {"description": m.group(1) if m else ""}
 
@@ -502,6 +523,10 @@ def get_skill(name: str, p: dict = Depends(persona)):
             fields = [{**fields[0], "options": [s["code"] for s in q("SELECT code FROM pursuit_stage ORDER BY num") if s["code"] in ok],
                        "default": "signal" if "signal" in ok else "delivery"}]
         return {"name": name, "kind": "pursuit", "title": m["title"], "engine": m["engine"], "skill_md": md, "fields": fields, "runs": runs}
+    if name in PMO_SKILLS:
+        m = PMO_SKILLS[name]
+        return {"name": name, "kind": "pmo", "title": m["title"], "engine": m["engine"], "screens": m["screens"],
+                "skill_md": _md_path(name).read_text(), "fields": m["fields"], "runs": runs}
     s = snowskills.REGISTRY[name]
     return {"name": name, "kind": "delivery", "title": s.title, "description": s.description, "agent": s.agent, "stage": s.stage,
             "gate": s.gate, "package": s.package, "snowflake": s.snowflake, "skill_md": render_skill_md(s),
@@ -524,12 +549,17 @@ def run_skill(name: str, body: RunIn, p: dict = Depends(persona)):
         params.update({k: v for k, v in (body.params or {}).items() if v not in (None, "")})
         res = ENGINES[name](params, p, body.session_id)
         md_text = (PURSUIT_MD / name / "SKILL.md").read_text()
+    elif name in PMO_SKILLS:
+        params = {f["key"]: f.get("default", "") for f in PMO_SKILLS[name]["fields"]}
+        params.update({k: v for k, v in (body.params or {}).items() if v not in (None, "")})
+        res = PMO_ENGINES[name](params, p, body.session_id)
+        md_text = _md_path(name).read_text()
     else:
         res = snowskills.run(name, body.params)
         md_text = render_skill_md(snowskills.REGISTRY[name])
     res["validation"] = {f: v for f, b in res["files"].items() if (v := validate_sql(f, b))}
     context = "\n\n".join(f"### {f}\n```\n{b[:6000]}\n```" for f, b in res["files"].items())
-    prompt = (f"Use the `{name if name in PURSUIT else snowskills.REGISTRY[name].package}` skill.\n\n"
+    prompt = (f"Use the `{snowskills.REGISTRY[name].package if name in snowskills.REGISTRY else name}` skill.\n\n"
               f"Inputs:\n```json\n{json.dumps(body.params or {}, indent=2, default=str)[:4000]}\n```\n\n"
               f"Deterministic draft from FlyHigh Navigator:\n{context}\n\n"
               f"{body.instruction or 'Review the draft against the skill, fill anything marked as a placeholder only where the inputs support it, and list what still needs a human decision.'}")
@@ -540,7 +570,7 @@ def run_skill(name: str, body: RunIn, p: dict = Depends(persona)):
         except Exception as e:
             res["claude_error"] = str(e)
     row = one("""INSERT INTO skill_run(skill, kind, persona, mode, params, summary, output) VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
-              (name, "pursuit" if name in PURSUIT else "delivery", p["code"], body.mode, json.dumps(body.params, default=str), res.get("summary", ""),
+              (name, "pursuit" if name in PURSUIT else "pmo" if name in PMO_SKILLS else "delivery", p["code"], body.mode, json.dumps(body.params, default=str), res.get("summary", ""),
                json.dumps({k: v for k, v in res.items() if k != "prompt"}, default=str)))
     res["run_id"] = row["id"]
     return res
@@ -568,8 +598,8 @@ def skill_package(name: str, persona_code: str):
         raise HTTPException(403)
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
-        if name in PURSUIT:
-            z.writestr(f"{name}/SKILL.md", (PURSUIT_MD / name / "SKILL.md").read_text())
+        if name in PURSUIT or name in PMO_SKILLS:
+            z.writestr(f"{name}/SKILL.md", _md_path(name).read_text())
             fname = f"{name}.skill"
         else:
             from snowskills.package import add_to_zip

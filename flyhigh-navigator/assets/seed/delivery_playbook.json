@@ -1,0 +1,4159 @@
+{
+ "accelerators": [
+  {
+   "name": "Discovery and Design",
+   "what": "Estate scan, source-to-dashboard lineage, report rationalization, PRDs and target design"
+  },
+  {
+   "name": "Foundation",
+   "what": "Zones and medallion layers, RBAC with SSO, masking and row access, accounts built with Terraform"
+  },
+  {
+   "name": "Code Promotion",
+   "what": "CI/CD across dev, test and prod with GitHub, Terraform and schemachange; BI content promotion"
+  },
+  {
+   "name": "Platform Migration",
+   "what": "Complements Snowflake AIM and SnowConvert AI: ETL split into SQL and non-SQL logic, conversion, unit tests, data migration"
+  },
+  {
+   "name": "Platform Assurance",
+   "what": "Generated test scenarios for ETL, DW, pipelines, dashboards and performance; reconciliation to legacy"
+  },
+  {
+   "name": "BI Modernization",
+   "what": "Reverse-engineers OAC RPD, Power BI DAX and Klipfolio logic into Snowflake semantic views; rationalize, convert, generate, validate"
+  },
+  {
+   "name": "Data Harness",
+   "what": "Requirement in, governed pipeline out: nine agents propose, deterministic harnesses compile to Snowflake"
+  }
+ ],
+ "primer": [
+  {
+   "code": "why",
+   "title": "Why data delivery is changing",
+   "body": "Each generation of data delivery changed who does the work and where the logic lives. The AI-native lifecycle keeps the warehouse disciplines (conformed dimensions, SCD history, reconciliation) and changes the executor.\n\n| Dimension | Appliance EDW + ETL tool | Cloud ELT (dbt era) | AI-assisted data engineering | AI-native data delivery on Snowflake |\n|---|---|---|---|---|\n| Core philosophy | Central warehouse, GUI mappings (ODI, Informatica), nightly batch. | SQL-first transformations in version control, cloud warehouse elasticity. | Engineers write SQL faster with copilots; same process. | Intent and context drive agents that profile, convert, build, test and reconcile; people own the gates. |\n| Primary executor | ETL developer and DBA. | Analytics engineer. | Analytics engineer accepting inline suggestions. | Agents (Cortex Code, Claude Code, Niche Accelerate services) supervised by AI-native engineers. |\n| Unit of work | Mapping, stored procedure, report. | dbt model, test, exposure. | Prompt, snippet, single model. | PRD, solution design, scope.yaml, component change spec, data product spec. |\n| Migration approach | Manual rewrite, spreadsheet mapping. | Lift and shift, then refactor. | Copilot-assisted rewrite. | SnowConvert AI and AIM convert; agents handle the residue; every object reconciled before cut-over. |\n| Quality | End-of-project UAT, manual spot checks. | dbt tests, CI. | Generated test stubs. | Generated unit, reconciliation, RLS and performance tests run every sprint; reconciliation ledger per wave. |\n| Where business logic lives | RPDs, ETL tools, report calculations, spreadsheets. | dbt models plus BI tools. | Same as before. | One certified semantic layer (semantic views) that grounds dashboards, Cortex Analyst and agents alike. |\n| Human judgment | Everything. | Modeling, review, release. | Review of suggestions. | Intent, KPI definitions, architecture and security, gate approvals, variance sign-off. |\n\nThe shift: AI stops being a faster keyboard and becomes part of a governed delivery system. On Snowflake that system is unusually complete: conversion (SnowConvert AI, AIM), governance (Horizon), semantics (Semantic Views) and AI (Cortex) all sit where the data lives.",
+   "summary": "From hand-built ETL and appliance warehouses, to cloud ELT, to AI-assisted SQL, and now to agent-orchestrated data delivery on Snowflake."
+  },
+  {
+   "code": "shifts",
+   "title": "The six mindset shifts",
+   "body": "Move from \"what SQL do I need to write?\" to \"what trusted outcome do I need, and how do I design the people and agent system that produces it?\"\n### 1. From pipelines to data products\nDescribe the data product once (grain, owners, quality rules, masking) and let the Data Harness compile Bronze, Silver and Gold, tests, lineage and the schedule.\n### 2. From writing SQL to engineering intent\nEffort moves to specifying grain, conformed dimensions, SCD behaviour, freshness SLAs and acceptance criteria that an agent can verify before raising a pull request.\n### 3. From documentation to semantic context\nLineage in Horizon, certified KPI definitions in semantic views, SOPs in Cortex Search and ADRs in the repo are the context agents read at the point of work.\n### 4. From migration to reconciled migration\nConversion is cheap now; trust is not. Success is every measure matching legacy, or the variance explained and signed off, before a report is switched.\n### 5. From reports to questions\nDesign starts with persona questions (what happened, why, what will happen, what to do) and works back to dashboards, Cortex Analyst and agents on the same certified metrics.\n### 6. From individual to pod productivity\nMeasure the pod: conversion rate, reconciliation pass rate, first-pass acceptance and time from PRD to verified-in-production, not lines of SQL accepted.",
+   "summary": "Six shifts: pipelines to data products, SQL to intent, documentation to semantic context, migration to reconciled migration, reports to questions, and individual to pod productivity."
+  },
+  {
+   "code": "stays",
+   "title": "What changes and what does not",
+   "body": "### Stays human\n- Accountability for every number a business user or customer sees\n- KPI definitions and the named KPI arbiter when teams disagree\n- Architecture: medallion design, conformed dimensions, security model\n- Compliance decisions: SOX or HIPAA controls, Snowflake edition, masking rules approved by data owners\n- Go / no-go for cut-over and legacy decommissioning\n- Code ownership: the client owns every model, script and document\n### Changes fundamentally\n- Execution: agents convert DDL, procedures and ETL, and draft dbt models, tests and semantic views\n- Discovery: estate scans and lineage are generated, not interviewed into spreadsheets\n- Quality: reconciliation and RLS tests are generated and run every sprint\n- BI: report logic is extracted and normalized into one semantic layer\n- Team shape: a small AI Native core pod builds frameworks; AI-Assisted track pods apply them per wave\n- Economics: effort follows unit models with explicit AI speed-up, validated in the pilot\n### Accountability in an agentic world\nAn agent can convert 300 procedures overnight. It does not sign off a reconciliation variance, approve masking on payroll data or decide to switch off Oracle. Those decisions sit with named people at G1, G2 and G3, and in the steering forum.",
+   "summary": "What stays with people, what changes fundamentally, and who answers for a number when an agent built the pipeline."
+  },
+  {
+   "code": "model",
+   "title": "The data engineering mental model",
+   "body": "Intent→Context→Agents→Snowflake tools→Evaluation→Human gate→Trusted outcome\n\n| Component | On a Snowflake program | Human role | Agent role |\n|---|---|---|---|\n| Intent | PRD per wave: personas, questions, KPIs, grain, freshness, NFRs (filters under 5 s). | Product owner states outcomes and numeric targets; signs G1. | PRD Agent drafts from one prompt and clarifying questions. |\n| Context | Legacy lineage, ODI or Informatica repository, OAC RPD, KPI dictionary, data classification, ADRs. | Curates authoritative sources; resolves conflicts. | Estate Analyzer and Horizon catalog index and summarize. |\n| Agents | Code Converter, Zone Mapper, RBAC Designer, Report Converter, ETL Test Agent, Promotion Agent. | Selects and supervises; invokes skills by hand. | Multi-step conversion, generation and testing; raises pull requests. |\n| Snowflake tools | SnowConvert AI, AIM, Cortex Code, dbt, schemachange, Terraform, Snowpipe, dynamic tables. | Configures access, warehouses and policies. | Calls tools through CLI, MCP and APIs. |\n| Evaluation | Reconciliation ledger, dbt tests, SCD checks, RLS tests, golden queries, performance at production volume. | Defines thresholds and the evidence standard. | Generates, runs and triages tests. |\n| Human gate | G1 PRD approved · G2 solution design approved · G3 verified in production. | Approves, rejects or signs off variance. | Presents evidence packs and change summaries. |\n| Outcome | Legacy retired on date, certified KPIs, AI-ready Gold layer. | Owns the business value. | Delivers the work product for review. |",
+   "summary": "Intent, context, agents, Snowflake tools, evaluation, human gate and outcome: what people and agents each do."
+  },
+  {
+   "code": "roles",
+   "title": "From AI user to AI-native data engineer",
+   "body": "| Role | What they do on a Snowflake program | Typical pod |\n|---|---|---|\n| AI-assisted engineer | Uses Cortex Code or Copilot inline to write SQL and dbt faster. | Track pod (entry) |\n| Agent-assisted engineer | Hands bounded tasks to skills: /convert-ddl, /gen-unit-tests, /reconcile, /compare-reports. | Track pod |\n| Agent orchestrator | Runs a wave end to end: conversion, ingestion, Gold models and dashboards through the Build Agents. | Track pod lead |\n| AI-native data engineer | Builds and adapts Niche Accelerate services, skills and harnesses; tunes conversion rates in the pilot. | Core pod (often partner-funded) |\n| AI-native data architect | Owns medallion, semantic layer, security model and the guardrails agents run inside. | Core pod |\n| AI-native delivery lead | Manages human and agent capacity, unit effort, gate throughput and credit spend. | Core pod |\n| AI program manager | Runs the integrated plan back from licence dates, RAID with integration and platform vendors, steering. | Delivery leadership |\n\nFlyHigh shape: Core pod (AI Native: solution architect, BI analyst, program manager, senior data engineer, testing lead, DevOps) plus two AI-Assisted track pods (senior data engineer, BI engineer, QA, DevOps). Peak 12 FTE plus 3 Niche-funded AI engineers, with a Snowflake architect, AI engineering SME, logistics domain architect and Tableau expert on demand.",
+   "summary": "Seven roles along the maturity curve, and how they staff an AI Native core pod and AI-Assisted track pods."
+  },
+  {
+   "code": "good",
+   "title": "What good looks like",
+   "body": "### Good intent\nPRDs with personas, questions, KPI targets, grain and freshness that an agent can test against.\n### Good context\nLineage, KPI dictionary, classification and ADRs current and in the repo or Horizon, not in someone's head.\n### Good agents\nNarrow roles (converter, reconciler, promoter) with only the roles and warehouses they need.\n### Good orchestration\nStaggered waves (build, SIT, UAT one month apart) so pods keep moving while gates are reviewed.\n### Good evaluation\nReconciliation, RLS and performance tests generated and run every sprint, with a ledger of results.\n### Good human intervention\nPeople spend time on KPI conflicts, variances, masking and go / no-go, not on boilerplate DDL.\nThe result: legacy retired on the licence date, 100% of measures reconciled or signed off, filters under 5 seconds on live data, 90%+ of committed stories accepted at show-and-tell, and a Gold layer ready for Cortex.",
+   "summary": "Six qualities of high-performing AI-native data delivery and the measures that prove them."
+  },
+  {
+   "code": "where",
+   "title": "Where it applies on Snowflake",
+   "body": "**Archetype 1**\n### Legacy warehouse migration\nOracle ADW, Netezza, Teradata, Greenplum, SQL Server to Snowflake with SnowConvert AI, AIM and Niche Accelerate Platform Migration; ETL tools to dbt and Snowpipe.\n**Archetype 2**\n### Data products and medallion build\nPOCs, point-to-point feeds and new sources rebuilt as governed Bronze, Silver and Gold data products with the Data Harness.\n**Archetype 3**\n### BI and semantic modernization\nOAC, Power BI, Cognos, Qlik, MicroStrategy and Klipfolio to Tableau Cloud or Power BI on live Snowflake connections and one semantic layer.\n**Archetype 4**\n### Cortex AI and agents\nCortex Analyst, Search and Agents on certified semantic views; AI functions in pipelines; Snowflake Intelligence for executives and customers.\nAcross all\n### Platform run and FinOps\nResource monitors, query insights and Cortex Code for run support, with incident and cost reviews after go-live.",
+   "summary": "Migration, data products, BI and semantics, Cortex AI and agents, and platform run with FinOps."
+  }
+ ],
+ "archetypes": [
+  {
+   "key": "migrate",
+   "lc": "DMLC · Data Migration Lifecycle",
+   "tag": "Existing warehouse",
+   "title": "Legacy warehouse migration",
+   "q": "Moving an existing warehouse and its ETL to Snowflake",
+   "summary": "Convert, reconcile and retire a legacy EDW and its ETL on a fixed date, keeping the data model and dashboards like for like.",
+   "intro": "Applies when an existing warehouse (Oracle ADW, Netezza, Teradata, Greenplum, SQL Server) and its ETL tool carry the critical path, usually because licence renewals fix the end date. The data model moves largely as-is; trust is earned through reconciliation and a parallel run.",
+   "chars": [
+    "A fixed decommission date driven by licence renewals",
+    "Large volume of repeatable objects: tables, procedures, ETL mappings",
+    "Existing facts and dimensions (often SCD2, MERGE-loaded) to preserve",
+    "History to move at terabyte scale alongside incremental loads",
+    "Users who distrust earlier migrations and compare numbers line by line"
+   ],
+   "types": [
+    "Oracle ADW or Exadata to Snowflake",
+    "Netezza or Teradata appliance exit",
+    "ODI, Informatica, DataStage or Ab Initio to dbt and Snowpipe",
+    "SQL Server or Greenplum consolidation",
+    "Hadoop or Databricks lake to Snowflake Iceberg tables"
+   ],
+   "method": "AIM assessment and wave plan → foundation as code → pilot proves conversion rate → staggered waves (build, SIT, UAT) → history load and reconciliation → parallel run → rehearsed cut-over → decommission.",
+   "artefacts": [
+    "Estate assessment and conversion-readiness score",
+    "Wave plan back from licence dates",
+    "Converted DDL, procedures and dbt models",
+    "Reconciliation ledger per wave",
+    "Performance results at production volume",
+    "Cut-over runbook and rollback plan",
+    "Decommission inputs"
+   ],
+   "tools": [
+    "Snowflake AIM and SnowConvert AI",
+    "Niche Accelerate Platform Migration and Platform Assurance",
+    "Cortex Code and Claude Code",
+    "AWS DMS or bulk unload to S3 for history",
+    "dbt, schemachange, Terraform, GitHub Actions"
+   ],
+   "example": "Track A: ODI → Oracle ADW (22 TB, 367 source tables, 13 facts, 35–40 dims) → OAC, moved to Snowflake and Tableau Cloud through a pilot and three staggered waves; ODI, ADW and OAC off by 31 Aug 2027.",
+   "phases": [
+    {
+     "name": "Assess and plan",
+     "rows": [
+      {
+       "role": "Solution architect, BI analyst",
+       "activity": "Scan the legacy estate: schemas, procedures, ETL mappings, dependencies",
+       "agent": "Estate Analyzer · AIM assessment",
+       "tools": "Snowflake AIM, ETL repository export, Horizon",
+       "human": "Confirms scope boundaries and what is discovery only"
+      },
+      {
+       "role": "Senior data engineer",
+       "activity": "Annotate the warehouse model: facts, dimensions, SCD type, load strategy",
+       "agent": "Estate Analyzer · /check-scd",
+       "tools": "Legacy DB, data dictionary",
+       "human": "Verifies SCD2 and MERGE behaviour against code"
+      },
+      {
+       "role": "Program manager, product owners",
+       "activity": "Plan waves back from licence dates; group objects by subject area and complexity",
+       "agent": "/plan-waves",
+       "tools": "Integrated plan, Jira",
+       "human": "Approves wave plan and pilot scope"
+      },
+      {
+       "role": "Solution architect",
+       "activity": "Score conversion readiness by pattern",
+       "agent": "AIM assessment",
+       "tools": "SnowConvert AI report",
+       "human": "Decides patterns needing manual design"
+      }
+     ]
+    },
+    {
+     "name": "Build the foundation",
+     "rows": [
+      {
+       "role": "DevOps engineer",
+       "activity": "Create zones, databases and warehouses as code",
+       "agent": "Zone Mapper · /map-zones · /gen-zone-ddl",
+       "tools": "Terraform, schemachange",
+       "human": "Reviews naming and isolation"
+      },
+      {
+       "role": "Solution architect",
+       "activity": "Design roles, grants, masking and row access",
+       "agent": "RBAC Designer · /design-rbac · /gen-grants",
+       "tools": "Horizon, Entra ID or Okta SCIM",
+       "human": "Client security review approves"
+      },
+      {
+       "role": "DevOps engineer",
+       "activity": "Set up promotion dev → stage → prod",
+       "agent": "Promotion Agent · /promote · /rollback",
+       "tools": "GitHub Actions",
+       "human": "Approves branch and release policy"
+      }
+     ]
+    },
+    {
+     "name": "Convert code",
+     "rows": [
+      {
+       "role": "Senior data engineer",
+       "activity": "Convert DDL and stored procedures",
+       "agent": "DDL Converter · Code Converter · /convert-ddl · /convert-procs",
+       "tools": "SnowConvert AI, Cortex Code, Claude Code",
+       "human": "Reviews every pull request; resolves residue"
+      },
+      {
+       "role": "Senior data engineer",
+       "activity": "Convert ETL mappings to dbt models and tasks; repoint ingestion",
+       "agent": "Pipeline Converter · /convert-etl · /repoint-ingest",
+       "tools": "AIM ETL conversion, dbt, Snowpipe",
+       "human": "Checks business rules survive conversion"
+      },
+      {
+       "role": "BI engineer",
+       "activity": "Repoint or rebuild dashboards like for like",
+       "agent": "BI Repointer · /repoint-bi",
+       "tools": "Tableau Cloud, semantic views",
+       "human": "Product owner checks layout parity"
+      },
+      {
+       "role": "QA engineer",
+       "activity": "Generate unit tests for converted objects",
+       "agent": "/gen-unit-tests",
+       "tools": "dbt tests, AIM unit test generation",
+       "human": "Reviews coverage of edge cases"
+      }
+     ]
+    },
+    {
+     "name": "Migrate data",
+     "rows": [
+      {
+       "role": "Senior data engineer",
+       "activity": "Unload history to S3 and load to Raw",
+       "agent": "Migration Runner",
+       "tools": "AWS DMS or bulk unload, COPY INTO",
+       "human": "Agrees unload windows with client DBAs"
+      },
+      {
+       "role": "Senior data engineer",
+       "activity": "Switch incremental loads: changed records to staging and raw",
+       "agent": "Pipeline Monitor · /test-cdc · /replay-load",
+       "tools": "Integration platform, Snowpipe, streams and tasks",
+       "human": "Approves late-data and rerun rules"
+      },
+      {
+       "role": "QA engineer",
+       "activity": "Validate keys, SCD history and late-arriving data",
+       "agent": "DW Validator · /check-scd",
+       "tools": "AIM data validation",
+       "human": "Signs off history completeness"
+      }
+     ]
+    },
+    {
+     "name": "Assure and reconcile",
+     "rows": [
+      {
+       "role": "Testing lead",
+       "activity": "Reconcile row counts and every measure against legacy",
+       "agent": "ETL Test Agent · /reconcile",
+       "tools": "Reconciliation ledger, golden queries",
+       "human": "Variances explained and signed off in UAT"
+      },
+      {
+       "role": "QA engineer",
+       "activity": "Compare dashboards with legacy: numbers, filters, visuals",
+       "agent": "BI Comparator · /compare-reports · /test-rls",
+       "tools": "Tableau, legacy BI",
+       "human": "Business users compare like for like"
+      },
+      {
+       "role": "DevOps engineer",
+       "activity": "Test filters under 5 s at production volume",
+       "agent": "Performance checks",
+       "tools": "Query Insights, warehouse sizing",
+       "human": "Approves warehouse size and cost"
+      }
+     ]
+    },
+    {
+     "name": "Parallel run and cut-over",
+     "rows": [
+      {
+       "role": "Program manager",
+       "activity": "Run legacy and Snowflake side by side with daily reconciliation",
+       "agent": "Reconciliation harness",
+       "tools": "Both platforms",
+       "human": "Go / no-go criteria agreed at mobilization"
+      },
+      {
+       "role": "DevOps engineer",
+       "activity": "Rehearse cut-over twice per track; freeze, final loads, deploy",
+       "agent": "Release Agent · /gen-changelog · /release-notes",
+       "tools": "CI/CD, runbook",
+       "human": "Change freeze and go / no-go approved"
+      },
+      {
+       "role": "Program manager, client IT",
+       "activity": "Hand over runbooks and support decommissioning",
+       "agent": "Docs agent",
+       "tools": "ADRs, runbooks, CHANGELOG",
+       "human": "Client owners accept handover"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "key": "product",
+   "lc": "DPLC · Data Product Lifecycle",
+   "tag": "New or rebuilt data",
+   "title": "Data products and medallion build",
+   "q": "Building new governed data products or replacing POCs and point-to-point feeds",
+   "summary": "Turn POCs, point-to-point feeds and new sources into governed Bronze, Silver and Gold data products with masking and row access from day one.",
+   "intro": "Applies when there is no mature warehouse to convert: a proof of concept with truncate-and-reload tables, SaaS sources landed by SFTP, spreadsheets with logic in them, or a new domain such as IoT and robotics data. The model is designed first, then reports are built on it.",
+   "chars": [
+    "Sources reach users directly (SFTP, Excel, replicated tables) with no governed store",
+    "Business logic lives in DAX, Power Query, spreadsheets or vendor tools",
+    "POC shortcuts to replace (full reloads, denormalized tables)",
+    "PII or customer data needing masking and per-customer row access",
+    "New source types: streaming, CDC files, data shares, IoT"
+   ],
+   "types": [
+    "POC to production on Snowflake",
+    "HR, operations or customer data products",
+    "Snowflake data share or Marketplace ingestion",
+    "Streaming and IoT data with Snowpipe Streaming",
+    "Customer-facing data products with secure sharing"
+   ],
+   "method": "Discover personas and sources → PRD (G1) → design medallion, contracts and security (G2) → Data Harness builds pipelines → semantic views → dashboards → assure → release (G3) → measure.",
+   "artefacts": [
+    "Source profiles and ingestion pattern per source",
+    "Data product specs (canonical HIR)",
+    "Medallion models and data contracts",
+    "Masking and row access policies",
+    "DQ rules and quarantine",
+    "Semantic views and certified metrics"
+   ],
+   "tools": [
+    "Niche Accelerate Harness (Streamlit in Snowflake)",
+    "Snowpipe, Snowpipe Streaming, streams, tasks, dynamic tables",
+    "Horizon: tags, classification, masking, row access",
+    "dbt and Snowflake semantic views",
+    "Boomi, Fivetran or file loads via S3"
+   ],
+   "example": "Track B: WMS WMS POC (7.5 TB, 61 tables) refactored from full reloads into medallion layers; UltiPro / Dayforce HR pack and engineering and ops apps rebuilt off Power BI with PII masking and customer row security.",
+   "phases": [
+    {
+     "name": "Discover",
+     "rows": [
+      {
+       "role": "BI analyst, product owner",
+       "activity": "Describe the need in one prompt; answer clarifying questions on personas, journeys, data",
+       "agent": "PRD Agent · /pi-define-requirements",
+       "tools": "VS Code + Claude Code",
+       "human": "Product owner confirms targets; G1"
+      },
+      {
+       "role": "Senior data engineer",
+       "activity": "Profile sources: volumes, keys, change capture, file formats",
+       "agent": "Data Harness profiling agents",
+       "tools": "Snowflake, sample files, APIs",
+       "human": "Source owners confirm access and SLAs"
+      },
+      {
+       "role": "Solution architect",
+       "activity": "Review POC shortcuts and point-to-point logic",
+       "agent": "Estate Analyzer",
+       "tools": "Power BI, Excel, POC tables",
+       "human": "Decides refactor versus rebuild"
+      }
+     ]
+    },
+    {
+     "name": "Design",
+     "rows": [
+      {
+       "role": "Solution architect",
+       "activity": "Draft the solution design from the approved PRD",
+       "agent": "Solution Design Agent · /pi-design-solution",
+       "tools": "GitHub pull request",
+       "human": "Architecture lead approves; G2"
+      },
+      {
+       "role": "Solution architect",
+       "activity": "Choose an ingestion pattern per source (integration platform, CDC files, data share, Snowpipe Streaming)",
+       "agent": "Ingestion agent",
+       "tools": "S3 external stages, Snowpipe, data shares",
+       "human": "Client IT approves pattern"
+      },
+      {
+       "role": "Data governance lead",
+       "activity": "Classify data; design masking and per-customer row access",
+       "agent": "RBAC Designer · /gen-masking",
+       "tools": "Horizon tags and classification",
+       "human": "HR or data owner approves masking rules"
+      }
+     ]
+    },
+    {
+     "name": "Build pipelines",
+     "rows": [
+      {
+       "role": "Senior data engineer",
+       "activity": "Turn the requirement into a canonical data product spec",
+       "agent": "Data Harness: nine agents propose with evidence",
+       "tools": "Streamlit in Snowflake",
+       "human": "Engineer validates the spec"
+      },
+      {
+       "role": "Senior data engineer",
+       "activity": "Compile Bronze, Silver and Gold with DQ rules and quarantine",
+       "agent": "Deterministic harnesses",
+       "tools": "Dynamic tables, streams and tasks, dbt",
+       "human": "Reviews generated models"
+      },
+      {
+       "role": "DevOps engineer",
+       "activity": "Decompose the design into Jira items and change specs",
+       "agent": "Decompose Agent · scope.yaml",
+       "tools": "Jira, GitHub",
+       "human": "No human gate; traceability checked"
+      }
+     ]
+    },
+    {
+     "name": "Model and semantics",
+     "rows": [
+      {
+       "role": "Senior data engineer",
+       "activity": "Build conformed dimensions shared with other tracks",
+       "agent": "Build Agents",
+       "tools": "dbt, Gold schemas",
+       "human": "Architect checks conformance"
+      },
+      {
+       "role": "BI analyst",
+       "activity": "Publish certified metrics as semantic views",
+       "agent": "Metric Normalizer",
+       "tools": "Semantic views, dbt metrics",
+       "human": "KPI arbiter certifies each metric"
+      },
+      {
+       "role": "BI engineer",
+       "activity": "Build dashboards from PRDs and journey maps",
+       "agent": "Report Generator",
+       "tools": "Tableau Cloud",
+       "human": "Users refine at show-and-tell"
+      }
+     ]
+    },
+    {
+     "name": "Assure",
+     "rows": [
+      {
+       "role": "QA engineer",
+       "activity": "Test DQ rules, quarantine and reconciliation to the old feed",
+       "agent": "ETL Test Agent · /reconcile",
+       "tools": "dbt tests, Data Harness",
+       "human": "Testing lead signs SIT"
+      },
+      {
+       "role": "QA engineer",
+       "activity": "Test masking per role and row access per customer",
+       "agent": "/test-rls",
+       "tools": "Horizon policies",
+       "human": "Data owner signs off"
+      },
+      {
+       "role": "Business users",
+       "activity": "UAT against acceptance criteria",
+       "agent": "",
+       "tools": "Tableau, test data",
+       "human": "UAT sign-off within 5 days"
+      }
+     ]
+    },
+    {
+     "name": "Release and operate",
+     "rows": [
+      {
+       "role": "DevOps engineer",
+       "activity": "Promote through environments; schedule jobs",
+       "agent": "Promotion Agent",
+       "tools": "GitHub Actions, tasks",
+       "human": "G3: verified in production"
+      },
+      {
+       "role": "DevOps engineer",
+       "activity": "Monitor freshness, failures and credits",
+       "agent": "Pipeline Monitor · Cortex Code",
+       "tools": "Alerts, resource monitors",
+       "human": "Owner per data product named"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "key": "bi",
+   "lc": "BMLC · BI Modernization Lifecycle",
+   "tag": "Reports and metrics",
+   "title": "BI and semantic modernization",
+   "q": "Consolidating dashboards and reports onto one BI tool and semantic layer",
+   "summary": "Rationalize, convert, generate and validate reports, with conflicting measures resolved into one certified semantic layer.",
+   "intro": "Applies when the estate is many BI tools with duplicated and conflicting measures. Most of the value comes before conversion: retiring unused reports and agreeing one definition per KPI. Layouts move like for like first so users can compare.",
+   "chars": [
+    "Several BI tools (OAC, Power BI, Klipfolio, Excel, Google Sheets)",
+    "Duplicated and conflicting measures; manual snapshots",
+    "Live-connection and sub-5-second filter targets",
+    "External customers consuming dashboards",
+    "A licence retirement that depends on BI moving"
+   ],
+   "types": [
+    "OAC, Cognos, MicroStrategy or Qlik to Tableau Cloud",
+    "Tableau Server to Cloud",
+    "Power BI consolidation on Snowflake",
+    "Semantic layer build with Snowflake semantic views and dbt metrics",
+    "Customer portal dashboards with row access per customer"
+   ],
+   "method": "Report catalog and rationalization → logic extraction and KPI certification → conversion like for like → generation of new dashboards from PRDs → validation (numbers, filters, RLS, under 5 s) → publish and adopt.",
+   "artefacts": [
+    "Rationalized report inventory (keep, merge, rebuild, retire)",
+    "KPI dictionary with owner, grain, source fact and golden query",
+    "Semantic views",
+    "Tableau workbooks per wave",
+    "Signed validation evidence"
+   ],
+   "tools": [
+    "Niche Accelerate BI Modernization: Report Analyzer, Logic Extractor, Metric Normalizer, Report Converter, Report Generator",
+    "Snowflake semantic views and Cortex Analyst",
+    "Tableau Cloud REST API",
+    "Query Insights and Tableau metadata"
+   ],
+   "example": "~100 dashboards and ~400 reports across seven BI tools; 32 certified KPIs; OAC and Power BI moved like for like to Tableau Cloud on live Snowflake connections with filters under 5 s.",
+   "phases": [
+    {
+     "name": "Rationalize",
+     "rows": [
+      {
+       "role": "BI analyst",
+       "activity": "Pull metadata from every BI tool into one report catalog",
+       "agent": "Report Analyzer",
+       "tools": "OAC, Power BI and Klipfolio APIs, SQL",
+       "human": "Confirms catalog completeness"
+      },
+      {
+       "role": "BI analyst, product owners",
+       "activity": "Flag duplicate, aged and unused reports; classify simple, medium, complex",
+       "agent": "Report Analyzer",
+       "tools": "Usage history, Query Insights",
+       "human": "Decide keep, merge, rebuild or retire before the wave"
+      },
+      {
+       "role": "Program manager",
+       "activity": "Sequence report groups by licence retirement and customer priority",
+       "agent": "/plan-waves",
+       "tools": "Integrated plan",
+       "human": "Steering approves priority"
+      }
+     ]
+    },
+    {
+     "name": "Build the semantic layer",
+     "rows": [
+      {
+       "role": "BI analyst",
+       "activity": "Extract DAX, OAC logical SQL and spreadsheet formulas",
+       "agent": "Logic Extractor",
+       "tools": "BI exports, RPD",
+       "human": "Reviews extracted logic"
+      },
+      {
+       "role": "BI analyst",
+       "activity": "Resolve conflicting measures into one certified definition",
+       "agent": "Metric Normalizer",
+       "tools": "KPI dictionary",
+       "human": "Named KPI arbiter decides"
+      },
+      {
+       "role": "Senior data engineer",
+       "activity": "Publish semantic views and metrics",
+       "agent": "Build Agents",
+       "tools": "Semantic views, dbt metrics",
+       "human": "Architect approves structure"
+      }
+     ]
+    },
+    {
+     "name": "Convert",
+     "rows": [
+      {
+       "role": "BI engineer",
+       "activity": "Map layouts, calculations, filters and parameters to the target tool",
+       "agent": "Report Converter",
+       "tools": "Tableau Cloud",
+       "human": "Keeps layout like for like for comparison"
+      },
+      {
+       "role": "BI engineer",
+       "activity": "Publish sites, folders and permissions",
+       "agent": "/repoint-bi",
+       "tools": "Tableau REST API",
+       "human": "Client BI owner approves site design"
+      }
+     ]
+    },
+    {
+     "name": "Generate",
+     "rows": [
+      {
+       "role": "BI engineer",
+       "activity": "Draft new dashboards from PRDs and journey maps",
+       "agent": "Report Generator",
+       "tools": "Tableau, semantic views",
+       "human": "Users refine wireframes"
+      },
+      {
+       "role": "BI engineer",
+       "activity": "Add natural-language questions",
+       "agent": "",
+       "tools": "Cortex Analyst",
+       "human": "Product owner tests golden questions"
+      }
+     ]
+    },
+    {
+     "name": "Validate",
+     "rows": [
+      {
+       "role": "QA engineer",
+       "activity": "Compare numbers, filters and visuals with legacy",
+       "agent": "BI Comparator · /compare-reports",
+       "tools": "Legacy BI, Tableau",
+       "human": "Business users sign off parity"
+      },
+      {
+       "role": "QA engineer",
+       "activity": "Test row-level security and masking per persona and customer",
+       "agent": "/test-rls",
+       "tools": "Horizon, Tableau user filters",
+       "human": "Data owner signs off"
+      },
+      {
+       "role": "DevOps engineer",
+       "activity": "Check filters under 5 s at production volume",
+       "agent": "Performance checks",
+       "tools": "Query Insights, search optimization",
+       "human": "Approves warehouse size"
+      }
+     ]
+    },
+    {
+     "name": "Publish and adopt",
+     "rows": [
+      {
+       "role": "Program manager",
+       "activity": "Train users by role; communicate to external customers",
+       "agent": "/gen-training · Enablement agent",
+       "tools": "Training paths, recordings",
+       "human": "Client owns change management"
+      },
+      {
+       "role": "BI analyst",
+       "activity": "Track adoption and retire legacy reports",
+       "agent": "Adoption dashboard",
+       "tools": "Tableau usage, legacy usage",
+       "human": "Owner signs retirement list"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "key": "ai",
+   "lc": "AILC · Snowflake Intelligence Lifecycle",
+   "tag": "Questions and actions",
+   "title": "Cortex AI and agents",
+   "q": "Adding conversational analytics, AI functions or agents on Snowflake data",
+   "summary": "Put Cortex Analyst, Search and Agents on certified semantic views, evaluated with golden questions and governed by the same access policies as users.",
+   "intro": "Applies when a trusted Gold layer exists (or is being built) and the goal is to let people ask questions, get briefings or have agents recommend actions. The rule: ground every answer in certified semantic views, never raw tables, and keep a human on every action.",
+   "chars": [
+    "Persona questions already captured in journeys and dashboards",
+    "Certified KPIs in semantic views",
+    "Unstructured content: SOPs, contracts, SLAs, BOLs, invoices",
+    "Actions that need human approval (re-tender, move labour)",
+    "Cost and quality that must be monitored per agent"
+   ],
+   "types": [
+    "Cortex Analyst for executives",
+    "Cortex Search over SOPs and contracts",
+    "AI_EXTRACT and AI_CLASSIFY in pipelines",
+    "Cortex Agents with human-approved actions",
+    "Customer portal assistant"
+   ],
+   "method": "Pick a persona question → ground in semantic views → build the agent and tools → evaluate with golden questions → inherit access policies → keep a human on actions → monitor cost and quality.",
+   "artefacts": [
+    "Use-case card per persona question",
+    "Semantic model and search corpus",
+    "Golden question set and evaluation report",
+    "Agent tool and permission design",
+    "Credit budget and monitoring"
+   ],
+   "tools": [
+    "Cortex Analyst, Cortex Search, Cortex Agents",
+    "Snowflake Intelligence",
+    "AI_EXTRACT, AI_CLASSIFY, AI_SENTIMENT",
+    "MCP and REST for agents",
+    "Snowpark ML and containers"
+   ],
+   "example": "Now: Cortex Code in every pod and semantic views on the KPI library. Next: Cortex Search over SOPs, freight invoice audit with AI_EXTRACT, Cortex Analyst pilot. Later: recovery agents with human approval and a customer portal assistant.",
+   "phases": [
+    {
+     "name": "Choose the use case",
+     "rows": [
+      {
+       "role": "Product owner, BI analyst",
+       "activity": "Pick a persona question from journeys and dashboards",
+       "agent": "PRD Agent",
+       "tools": "Journey maps",
+       "human": "Owner states the decision it supports"
+      },
+      {
+       "role": "Solution architect",
+       "activity": "Check data readiness: certified KPIs, documents, access",
+       "agent": "Estate Analyzer",
+       "tools": "Semantic views, Horizon",
+       "human": "Confirms Gold layer is trusted"
+      }
+     ]
+    },
+    {
+     "name": "Ground it",
+     "rows": [
+      {
+       "role": "BI analyst",
+       "activity": "Build or extend the semantic model with synonyms and verified queries",
+       "agent": "Metric Normalizer",
+       "tools": "Semantic views",
+       "human": "KPI arbiter approves"
+      },
+      {
+       "role": "Senior data engineer",
+       "activity": "Index SOPs, contracts and SLAs for search",
+       "agent": "",
+       "tools": "Cortex Search, Document AI",
+       "human": "Content owner approves corpus"
+      },
+      {
+       "role": "Senior data engineer",
+       "activity": "Add AI functions to pipelines (extract, classify, sentiment)",
+       "agent": "Build Agents",
+       "tools": "AI_EXTRACT, AI_CLASSIFY, AI_SENTIMENT",
+       "human": "Reviews precision on samples"
+      }
+     ]
+    },
+    {
+     "name": "Build the agent",
+     "rows": [
+      {
+       "role": "AI-native engineer",
+       "activity": "Configure the agent with tools: Analyst, Search, SQL, procedures",
+       "agent": "",
+       "tools": "Cortex Agents, MCP or REST",
+       "human": "Architect approves tool permissions"
+      },
+      {
+       "role": "AI-native engineer",
+       "activity": "Design actions as recommendations awaiting approval",
+       "agent": "",
+       "tools": "Streamlit, workflow",
+       "human": "Business owner defines who approves"
+      }
+     ]
+    },
+    {
+     "name": "Evaluate",
+     "rows": [
+      {
+       "role": "QA engineer",
+       "activity": "Run golden questions and score answers",
+       "agent": "Evaluation harness",
+       "tools": "Cortex evaluations, test sets",
+       "human": "Release only above the agreed threshold"
+      },
+      {
+       "role": "QA engineer",
+       "activity": "Test that agents see only what the user may see",
+       "agent": "/test-rls",
+       "tools": "RBAC, masking, row access",
+       "human": "Data owner signs off"
+      }
+     ]
+    },
+    {
+     "name": "Release and monitor",
+     "rows": [
+      {
+       "role": "DevOps engineer",
+       "activity": "Release behind roles; set credit budgets",
+       "agent": "Promotion Agent",
+       "tools": "Resource monitors, budgets",
+       "human": "Owner per agent named"
+      },
+      {
+       "role": "AI-native engineer",
+       "activity": "Monitor traces, feedback, cost and accuracy",
+       "agent": "Pipeline Monitor",
+       "tools": "Agent tracing, query history",
+       "human": "Monthly review of quality and spend"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "stages": [
+  {
+   "code": "primer",
+   "name": "Primer"
+  },
+  {
+   "code": "readiness",
+   "name": "Readiness"
+  },
+  {
+   "code": "plan",
+   "name": "Plan"
+  },
+  {
+   "code": "setup",
+   "name": "Setup"
+  },
+  {
+   "code": "execute",
+   "name": "Execute"
+  },
+  {
+   "code": "optimize",
+   "name": "Optimize"
+  }
+ ],
+ "stage_checks": {
+  "primer": [
+   "I understand AI-native data delivery is an operating model, not a coding copilot.",
+   "I understand agents convert and build, while named people approve G1, G2, G3 and every reconciliation variance.",
+   "I understand lineage, certified KPIs, guardrails and reconciliation evidence are required for trusted delivery.",
+   "I understand the archetype shapes the Plan guidance and the Execute activities; Setup is the same for every archetype."
+  ],
+  "readiness": [
+   "I have scored all readiness questions with the client team",
+   "Lagging dimensions have owners and remediation dates"
+  ],
+  "plan": [
+   "All 13 planning steps have been addressed",
+   "Inputs and templates are available or owned",
+   "Outputs are captured and owned",
+   "Readiness gaps are built into Plan, Setup and Execute actions"
+  ],
+  "setup": [
+   "Snowflake environments, identity and CI/CD are built as code",
+   "Harness, skills and guardrails are set up for the chosen AI tool",
+   "Quality gates, gate approvers and FinOps guardrails are in place",
+   "The team has merged a first small change through the pipeline"
+  ],
+  "execute": [
+   "I have reviewed the phases and activities for my archetype",
+   "I know the evidence each phase must produce",
+   "I am ready to measure and optimize"
+  ],
+  "optimize": [
+   "Outcomes reviewed against baseline and targets",
+   "Conversion rate, reconciliation pass rate, rework and AI contribution reviewed",
+   "Improvement actions prioritized and skills or guardrails updated",
+   "Reusable learning captured for the next wave"
+  ]
+ },
+ "readiness": {
+  "questions": [
+   {
+    "dim": "Program fundamentals",
+    "question": "Is the program scope clearly defined (sources, reports, in and out of scope)?",
+    "levels": [
+     "0: Not defined",
+     "1: Broad or unclear",
+     "2: Mostly defined",
+     "3: Clearly defined and baselined"
+    ]
+   },
+   {
+    "dim": "Program fundamentals",
+    "question": "Is a delivery lifecycle with waves and gates agreed?",
+    "levels": [
+     "0: No",
+     "1: Ad hoc",
+     "2: Partially defined",
+     "3: Waves and G1–G3 agreed"
+    ]
+   },
+   {
+    "dim": "Program fundamentals",
+    "question": "Is the team sized and stable, with client product owners named?",
+    "levels": [
+     "0: Unstaffed",
+     "1: Gaps in key roles",
+     "2: Adequate",
+     "3: Adequate, stable, owners named"
+    ]
+   },
+   {
+    "dim": "Program fundamentals",
+    "question": "Is there a fixed end date or roadmap for at least 6 months?",
+    "levels": [
+     "0: Under 3 months",
+     "1: 3–4 months",
+     "2: 4–6 months, some uncertainty",
+     "3: 6+ months, date known"
+    ]
+   },
+   {
+    "dim": "Data estate and work suitability",
+    "question": "Is the estate inventoried (sources, tables, TB, ETL jobs, reports with usage)?",
+    "levels": [
+     "0: None",
+     "1: Partial",
+     "2: Mostly",
+     "3: Complete with usage data"
+    ]
+   },
+   {
+    "dim": "Data estate and work suitability",
+    "question": "Is there a large volume of repeatable objects (DDL, procedures, mappings, dashboards)?",
+    "levels": [
+     "0: Very low",
+     "1: Low",
+     "2: Moderate",
+     "3: High"
+    ]
+   },
+   {
+    "dim": "Data estate and work suitability",
+    "question": "Are there clear high-value AI opportunities (conversion, testing, rationalization, Cortex)?",
+    "levels": [
+     "0: None",
+     "1: Limited",
+     "2: Some",
+     "3: Multiple clear opportunities"
+    ]
+   },
+   {
+    "dim": "KPIs and ways of working",
+    "question": "Are KPI definitions agreed, with a named arbiter for conflicts?",
+    "levels": [
+     "0: Conflicting, no owner",
+     "1: Significant conflicts",
+     "2: Mostly agreed",
+     "3: Certified with an arbiter"
+    ]
+   },
+   {
+    "dim": "KPIs and ways of working",
+    "question": "Are SMEs available (about 8 hours a week) and gate approvers named with a 5-day SLA?",
+    "levels": [
+     "0: No",
+     "1: Limited",
+     "2: Mostly",
+     "3: Yes, calendars booked"
+    ]
+   },
+   {
+    "dim": "KPIs and ways of working",
+    "question": "Is coordination across vendors (integration platform, Snowflake, client IT) governed?",
+    "levels": [
+     "0: Fragmented",
+     "1: Coordination issues",
+     "2: Mixed but governed",
+     "3: Joint RAID and escalation"
+    ]
+   },
+   {
+    "dim": "Platform, people and governance",
+    "question": "Are Snowflake accounts and environments (prod, non-prod, sandbox) available or scheduled?",
+    "levels": [
+     "0: Not started",
+     "1: Edition or account undecided",
+     "2: Some environments",
+     "3: All environments, edition confirmed"
+    ]
+   },
+   {
+    "dim": "Platform, people and governance",
+    "question": "Are AI coding tools (Cortex Code, Claude Code, Copilot) approved for use on client code?",
+    "levels": [
+     "0: Prohibited",
+     "1: Major restrictions",
+     "2: Allowed with limits",
+     "3: Approved and provisioned"
+    ]
+   },
+   {
+    "dim": "Platform, people and governance",
+    "question": "Are data classification, masking rules and compliance needs (SOX, HIPAA, PII) known?",
+    "levels": [
+     "0: Unknown",
+     "1: Unclear",
+     "2: Partly classified",
+     "3: Classified with approved rules"
+    ]
+   },
+   {
+    "dim": "Platform, people and governance",
+    "question": "Is service-account access to legacy sources, ETL repositories and BI catalogs available?",
+    "levels": [
+     "0: None",
+     "1: Requested",
+     "2: Partial",
+     "3: Granted"
+    ]
+   },
+   {
+    "dim": "Platform, people and governance",
+    "question": "Is the team trained in AI-native data delivery and the harness?",
+    "levels": [
+     "0: No training",
+     "1: A few people",
+     "2: Most people or underway",
+     "3: Team trained"
+    ]
+   },
+   {
+    "dim": "Measurement and value",
+    "question": "Are legacy baselines (row counts, KPI values, query times) available for reconciliation?",
+    "levels": [
+     "0: None",
+     "1: Limited",
+     "2: Several",
+     "3: Complete golden queries"
+    ]
+   },
+   {
+    "dim": "Measurement and value",
+    "question": "Is there a measurable outcome (licence retirement date, run cost, SLA, adoption)?",
+    "levels": [
+     "0: None",
+     "1: Indirect",
+     "2: Identifiable",
+     "3: Clear, owned and measurable"
+    ]
+   }
+  ],
+  "weights": {
+   "Program fundamentals": 30,
+   "Data estate and work suitability": 20,
+   "KPIs and ways of working": 15,
+   "Platform, people and governance": 25,
+   "Measurement and value": 10
+  },
+  "remedy": {
+   "Program fundamentals": [
+    "Baseline scope: sources, reports and the in-scope versus discovery-only list.",
+    "Agree waves and the three gates (G1 PRD, G2 design, G3 verified in production).",
+    "Name product owners per track and close critical role gaps.",
+    "Plan waves back from licence renewal dates."
+   ],
+   "Data estate and work suitability": [
+    "Run an AIM assessment and Niche Accelerate estate scan; get the dashboard catalog with usage by week 2.",
+    "Group objects by pattern and complexity to find the conversion volume.",
+    "Prioritize AI opportunities by effort saved and risk reduced."
+   ],
+   "KPIs and ways of working": [
+    "Run a KPI certification sprint with a named arbiter.",
+    "Agree 8 hours a week from key SMEs and a 5-business-day review SLA for gates.",
+    "Stand up a weekly joint RAID with the integration vendor and the Snowflake team."
+   ],
+   "Platform, people and governance": [
+    "Confirm the Snowflake edition (Business Critical if SOX or HIPAA requires) and provision environments with Terraform.",
+    "Get written approval for AI coding tools on client code and document boundaries.",
+    "Classify sensitive data and get owner approval for masking rules.",
+    "Request service accounts for legacy databases, ETL repositories and BI catalogs.",
+    "Complete role-based enablement on the harness and skills."
+   ],
+   "Measurement and value": [
+    "Capture golden queries and row counts from legacy before conversion starts.",
+    "Define the outcome, target, owner and data source for each success measure."
+   ]
+  },
+  "qualification": {
+   "status": "Conditional: qualified for the Track A and Track B pilots once environments and AI tool approval are in place.",
+   "gaps": "KPI definitions conflict across 7 BI tools; dashboard catalog with usage data pending; SCD2 status of dimensions to verify in code.",
+   "constraints": "Fixed cut-over (Jul 2027) from Oracle licence renewals; Snowflake edition for SOX not yet confirmed; Boomi coverage for 94 WMS tables.",
+   "remediation": "KPI certification sprint with a named arbiter; catalog by week 2; edition decision with Snowflake; written AI tool approval; service accounts for ADW, ODI and OAC.",
+   "owner": "AI Champion with the client program head"
+  }
+ },
+ "plan": [
+  {
+   "step": "Define outcomes and fixed dates",
+   "inputs": "Pre-read, sponsor brief, licence renewal dates",
+   "activity": "Agree the business outcomes, success criteria and the dates that cannot move (licence renewals, peak season).",
+   "tools": "Outcome framework; licence calendar",
+   "outputs": "Agreed outcomes and critical dates"
+  },
+  {
+   "step": "Inventory and size the estate",
+   "inputs": "Source list, schemas, ETL repository, BI catalogs",
+   "activity": "Profile sources, tables, TB and growth, ETL jobs and reports with usage; flag full-extract loads and schema drift.",
+   "tools": "AIM assessment; Niche Accelerate Discovery and Design; scoping workbook",
+   "outputs": "Sized estate and source profiles"
+  },
+  {
+   "step": "Choose archetypes and tracks",
+   "inputs": "Estate profile, outcomes",
+   "activity": "Split the program into tracks by archetype (migration, data product, BI, AI) and set what is built versus discovery only.",
+   "tools": "This playbook; scope template",
+   "outputs": "Track structure and scope baseline"
+  },
+  {
+   "step": "Estimate AI + human effort",
+   "inputs": "Object counts by complexity, framework list",
+   "activity": "Apply the unit-effort model: pilot at full effort, waves faster once patterns are proven; add framework build and validation.",
+   "tools": "Estimator (section 04); resource loading workbook",
+   "outputs": "Effort, loading by pod and month"
+  },
+  {
+   "step": "Plan waves back from the dates",
+   "inputs": "Effort, dependencies, licence dates",
+   "activity": "Sequence a pilot and staggered waves (build, SIT, UAT one month apart) with a 3–5 month parallel run and 30–45 days of change lead.",
+   "tools": "Integrated plan template",
+   "outputs": "Wave plan and milestones"
+  },
+  {
+   "step": "Map AI-applicable activities",
+   "inputs": "Activity catalogue for the archetype",
+   "activity": "Mark where agents assist, generate, convert or test, and where they should not.",
+   "tools": "Archetype activity master (Execute tab)",
+   "outputs": "AI applicability map"
+  },
+  {
+   "step": "Define AI usage and human gates",
+   "inputs": "AI applicability map, risk tolerance",
+   "activity": "Set the mode per activity and the approvers for G1, G2 and G3 and for reconciliation variances.",
+   "tools": "Human-in-the-loop model; RACI",
+   "outputs": "Activity-level AI usage model"
+  },
+  {
+   "step": "Define the target architecture",
+   "inputs": "Decisions made, NFRs, cloud provider",
+   "activity": "Snowflake on the chosen cloud, medallion zones, ingestion pattern per source, semantic layer, environments.",
+   "tools": "Reference architecture; ADR template",
+   "outputs": "Target architecture and ADRs"
+  },
+  {
+   "step": "Define the security and compliance model",
+   "inputs": "Classification, regulations, identity provider",
+   "activity": "RBAC with SSO and SCIM, masking and row access policies, edition decision for SOX or HIPAA, residency.",
+   "tools": "Horizon; security model template",
+   "outputs": "Security model approved by client IT"
+  },
+  {
+   "step": "Set team topology and RACI",
+   "inputs": "Effort, tracks, partner model",
+   "activity": "AI Native core pod plus AI-Assisted track pods, client counterparts per role, on-demand experts.",
+   "tools": "Team structure; RACI build and run",
+   "outputs": "Team structure and RACI"
+  },
+  {
+   "step": "Agree responsible AI and guardrails",
+   "inputs": "Client AI policy, data handling rules",
+   "activity": "Which tools may see which code and data; agents inherit user access; humans approve actions; audit trail.",
+   "tools": "Responsible AI checklist",
+   "outputs": "Signed guardrails"
+  },
+  {
+   "step": "Select the toolkit",
+   "inputs": "Approved tools, archetype needs",
+   "activity": "Niche Accelerate services, SnowConvert AI and AIM, Cortex Code or Claude Code, dbt, Terraform, GitHub, BI tool.",
+   "tools": "Tool catalogue; harness readiness (section 03)",
+   "outputs": "Toolkit and access list"
+  },
+  {
+   "step": "Set success measures and funding",
+   "inputs": "Outcomes, baselines",
+   "activity": "Reconciliation parity, story acceptance, filter latency, freshness SLA, plan confidence; file Snowflake and cloud partner funding nominations.",
+   "tools": "KPI scorecard; partner funding plan",
+   "outputs": "Success scorecard and funding nominations"
+  }
+ ],
+ "setup": [
+  {
+   "step": "Provision Snowflake as code",
+   "inputs": "Edition decision, cloud region, naming standard",
+   "activity": "Create accounts and databases for prod, non-prod and sandbox with Terraform and schemachange; set warehouses per workload.",
+   "outputs": "Isolated environments, reproducible from Git"
+  },
+  {
+   "step": "Connect identity and access",
+   "inputs": "Identity provider groups, role design",
+   "activity": "SSO and SCIM from Entra ID or Okta; functional and access roles; key-pair auth for service users; network policies.",
+   "outputs": "Users and services authenticate with least privilege"
+  },
+  {
+   "step": "Set up repository and CI/CD",
+   "inputs": "GitHub organization, branch policy",
+   "activity": "Repo layout for dbt, schemachange, Terraform and BI content; GitHub Actions for lint (SQLFluff), test and promotion dev → stage → prod.",
+   "outputs": "Every change moves by pull request"
+  },
+  {
+   "step": "Install the harness for your AI tool",
+   "inputs": "Approved tool (Claude Code, Cortex Code, Copilot)",
+   "activity": "Generate the project constitution, agents, skills and guard hooks; deploy the Data Harness app in Streamlit in Snowflake.",
+   "outputs": "Agents and skills available to every engineer"
+  },
+  {
+   "step": "Connect migration tooling",
+   "inputs": "Legacy read access, ETL repository export",
+   "activity": "Configure SnowConvert AI and AIM, the Estate Analyzer and history unload path (DMS or bulk unload to S3).",
+   "outputs": "Conversion and history paths ready for the pilot"
+  },
+  {
+   "step": "Set quality gates and FinOps guardrails",
+   "inputs": "Evidence standard, approvers, budgets",
+   "activity": "Reconciliation ledger, coverage and lint thresholds, named approvers for G1–G3; resource monitors and credit budgets per workload.",
+   "outputs": "Gates enforced and costs capped"
+  },
+  {
+   "step": "Onboard the team",
+   "inputs": "Configured repo, approvers",
+   "activity": "Run a first small change (one table, one model, one test) through the full pipeline, then walk product owners and engineers through the gates.",
+   "outputs": "A first change merged and verified"
+  }
+ ],
+ "onboarding": [
+  {
+   "phase": "Align",
+   "activities": "Kickoff, primer, decisions and fixed dates",
+   "output": "Shared objectives and wave principles",
+   "owner": "AI Champion / Program manager",
+   "timeline": "Month 1, weeks 1–2"
+  },
+  {
+   "phase": "Qualify",
+   "activities": "Readiness scorecard and blockers",
+   "output": "Qualification decision per track",
+   "owner": "AI Champion",
+   "timeline": "Month 1"
+  },
+  {
+   "phase": "Discover",
+   "activities": "Estate scan, lineage, report rationalization, KPI dictionary",
+   "output": "Rationalization matrix; KPI dictionary v1",
+   "owner": "Solution architect / BI analyst",
+   "timeline": "Months 1–2"
+  },
+  {
+   "phase": "Design",
+   "activities": "Target architecture, security model, gates, harness",
+   "output": "Architecture and ADRs; pilot PRDs (G1) and designs (G2)",
+   "owner": "Solution architect",
+   "timeline": "Months 1–2"
+  },
+  {
+   "phase": "Prepare",
+   "activities": "Environments as code, CI/CD, seven frameworks, training",
+   "output": "Frameworks ready for the pilot",
+   "owner": "Core pod",
+   "timeline": "Months 1.5–3"
+  },
+  {
+   "phase": "Pilot",
+   "activities": "Track A and Track B pilots",
+   "output": "Pilots accepted in UAT; conversion rate proven",
+   "owner": "Track pods",
+   "timeline": "Months 3–5"
+  },
+  {
+   "phase": "Waves",
+   "activities": "Three staggered waves per track; history load",
+   "output": "All waves accepted in UAT",
+   "owner": "Track pods",
+   "timeline": "Months 4–8"
+  },
+  {
+   "phase": "Cut-over",
+   "activities": "Parallel run, rehearsals, cut-over, training",
+   "output": "Legacy retired on schedule",
+   "owner": "Program manager / client",
+   "timeline": "Months 5–9"
+  },
+  {
+   "phase": "Transition",
+   "activities": "Hypercare, handover, decommission support",
+   "output": "Client owns the platform; exit criteria met",
+   "owner": "Program leadership",
+   "timeline": "Month 10"
+  }
+ ],
+ "program": [
+  {
+   "parameter": "Account and program",
+   "value": "ABC Retail · FlyHigh (BI and data modernization)",
+   "guidance": "Business unit, executive sponsor and the tracks in scope."
+  },
+  {
+   "parameter": "Archetypes by track",
+   "value": "Track A: DMLC (Oracle ADW + ODI → Snowflake) and BMLC (OAC → Tableau Cloud). Track B: DPLC (WMS POC, HR, engineering and ops apps). Roadmap: AILC (Cortex).",
+   "guidance": "The archetype per track decides the method, artefacts and team shape."
+  },
+  {
+   "parameter": "Data estate",
+   "value": "~47 TB growing ~10% a year; ~10 sources; Oracle ADW 22 TB, 367 source tables, 13 facts, 35–40 dims; ~100 dashboards and ~400 reports across 7 BI tools.",
+   "guidance": "Sizes waves and the unit-effort estimate."
+  },
+  {
+   "parameter": "Target platform",
+   "value": "Snowflake Enterprise on AWS (Business Critical under review for SOX); S3 landing; Boomi for incremental loads; AWS DMS for history; dbt, Snowpipe, dynamic tables; Tableau Cloud.",
+   "guidance": "Snowflake-native options first."
+  },
+  {
+   "parameter": "Repository and toolchain",
+   "value": "GitHub and GitHub Actions; Terraform and schemachange; Jira; Claude Code, Cortex Code and GitHub Copilot (client approval required).",
+   "guidance": "Integration targets for agent pull requests and CI quality gates."
+  },
+  {
+   "parameter": "Classification and compliance",
+   "value": "SOX in scope; PII in HR data; sensitive rates; customer data needing per-customer row access.",
+   "guidance": "Drives masking, row access, the Snowflake edition and AI tool boundaries."
+  },
+  {
+   "parameter": "Accountability model",
+   "value": "Single owner: Niche Consulting program manager; client owner: program head; gate approvers named per wave.",
+   "guidance": "One accountable owner per wave and gate, 5-business-day review SLA."
+  },
+  {
+   "parameter": "AI Champion and core pod",
+   "value": "AI Champion plus the AI Native core pod: solution architect, BI analyst, program manager, senior data engineer, testing lead, DevOps, plus 3 Niche-funded AI engineers.",
+   "guidance": "The core pod builds frameworks once; track pods reuse them."
+  },
+  {
+   "parameter": "Team size",
+   "value": "Peak 12 FTE across 3 pods (core 6, Track A 3.5, Track B 3.5); 105 person-months over 10 months.",
+   "guidance": "Sets enablement targets and AI tool licence allocation."
+  },
+  {
+   "parameter": "Cadence and dates",
+   "value": "Kickoff Nov 2026; pilots from month 3; parallel run months 5–9; cut-over Jul 2027; hypercare Aug 2027.",
+   "guidance": "Plan waves back from licence dates."
+  }
+ ],
+ "autonomy": [
+  {
+   "activity": "Convert Oracle DDL and PL/SQL",
+   "use_case": "SnowConvert AI with Code Converter (/convert-procs)",
+   "mode": "Agentic",
+   "autonomy": "Tier 2: agent converts, engineer reviews every PR",
+   "human": "Review and approve PR"
+  },
+  {
+   "activity": "Convert ODI mappings to dbt",
+   "use_case": "Pipeline Converter (/convert-etl) with AIM ETL conversion",
+   "mode": "Agentic",
+   "autonomy": "Tier 2",
+   "human": "Review; confirm business rules"
+  },
+  {
+   "activity": "Reconcile to Oracle ADW and OAC",
+   "use_case": "ETL Test Agent (/reconcile) and BI Comparator",
+   "mode": "Agentic",
+   "autonomy": "Tier 3: runs every sprint unattended",
+   "human": "Sign off variances in UAT"
+  },
+  {
+   "activity": "Draft PRDs and designs",
+   "use_case": "PRD Agent and Solution Design Agent",
+   "mode": "AI-assisted",
+   "autonomy": "Tier 1: draft only",
+   "human": "Approve at G1 and G2"
+  },
+  {
+   "activity": "Build the WMS medallion data product",
+   "use_case": "Data Harness: nine agents and deterministic harnesses",
+   "mode": "Agentic",
+   "autonomy": "Tier 2",
+   "human": "Approve the spec at the harness gate"
+  },
+  {
+   "activity": "Promote to production",
+   "use_case": "Promotion Agent (/promote)",
+   "mode": "AI-assisted",
+   "autonomy": "Tier 1: no direct production writes",
+   "human": "Release manager approves at G3"
+  }
+ ],
+ "context": [
+  {
+   "area": "Requirements and personas",
+   "required": "PRDs, persona journeys, report catalog with usage",
+   "availability": "Partial",
+   "action": "Run discovery workshops; PRD Agent drafts pilot PRDs"
+  },
+  {
+   "area": "Architecture",
+   "required": "Target architecture, ADRs, medallion and ingestion patterns",
+   "availability": "Partial",
+   "action": "Finalize in month 1; client architecture and security review"
+  },
+  {
+   "area": "Legacy code and lineage",
+   "required": "ODI repository, PL/SQL, ADW schemas, OAC RPD, Power BI DAX",
+   "availability": "Available once access is granted",
+   "action": "Service accounts; Estate Analyzer scan; Horizon lineage"
+  },
+  {
+   "area": "Interfaces and sources",
+   "required": "Boomi feeds, CDC files, planning system data share, Dayforce API or SFTP",
+   "availability": "Partial",
+   "action": "Decide the Dayforce route by week 4; confirm data share timing"
+  },
+  {
+   "area": "Testing and baselines",
+   "required": "Golden queries, row counts, legacy KPI values, production-like test data",
+   "availability": "Missing",
+   "action": "Capture legacy baselines before conversion; open the reconciliation ledger"
+  },
+  {
+   "area": "KPI and domain knowledge",
+   "required": "KPI dictionary, business rules, SOPs, customer-specific logic",
+   "availability": "Partial",
+   "action": "KPI certification sprint with a named arbiter"
+  },
+  {
+   "area": "Delivery and operations",
+   "required": "CI/CD, environments, query history, monitoring",
+   "availability": "Missing",
+   "action": "Terraform environments; GitHub Actions; resource monitors"
+  }
+ ],
+ "ways": [
+  {
+   "area": "Task selection",
+   "practice": "Route repeatable, high-volume objects (DDL, procedures, mappings, dashboards) to agents; keep design decisions and variances with people."
+  },
+  {
+   "area": "Requirement definition",
+   "practice": "PRDs per wave with personas, KPIs, grain, freshness and NFRs, approved at G1."
+  },
+  {
+   "area": "Context and prompting",
+   "practice": "Use the project constitution, skills and curated context (lineage, KPI dictionary, ADRs)."
+  },
+  {
+   "area": "AI output validation",
+   "practice": "Every conversion is reviewed by an engineer and reconciled to legacy before sign-off."
+  },
+  {
+   "area": "Code and PRs",
+   "practice": "All changes move by pull request, with SQLFluff lint, dbt tests and promotion dev → stage → prod."
+  },
+  {
+   "area": "Testing",
+   "practice": "Generated unit, reconciliation, row access and performance tests run every sprint; results go to the ledger."
+  },
+  {
+   "area": "Escalation",
+   "practice": "Low-conversion patterns and failed reconciliations go to the solution architect within the sprint."
+  },
+  {
+   "area": "Knowledge and learning",
+   "practice": "Capture new skills, conversion patterns and lessons in the repository after every wave."
+  }
+ ],
+ "optimize": [
+  {
+   "measure": "Reconciliation parity",
+   "target": "100% of measures match legacy, or variance signed off",
+   "where": "Ledger, per sprint"
+  },
+  {
+   "measure": "Story acceptance",
+   "target": "90%+ of committed stories accepted at show-and-tell",
+   "where": "Demo, per sprint"
+  },
+  {
+   "measure": "Conversion rate",
+   "target": "Share of objects converted without manual rewrite; proven in the pilot",
+   "where": "Pilot, then per wave"
+  },
+  {
+   "measure": "First-pass acceptance",
+   "target": "AI-generated changes merged without rework",
+   "where": "Pull requests"
+  },
+  {
+   "measure": "Report performance",
+   "target": "Filters under 5 s on live data at production volume",
+   "where": "Performance tests"
+  },
+  {
+   "measure": "Data freshness",
+   "target": "Every feed lands within its agreed SLA",
+   "where": "Monitors"
+  },
+  {
+   "measure": "Cost to run",
+   "target": "Credits per workload within budget",
+   "where": "Resource monitors"
+  },
+  {
+   "measure": "Plan confidence",
+   "target": "Burndown and velocity on track to the fixed date",
+   "where": "Steering, monthly"
+  }
+ ],
+ "harness": {
+  "what": [
+   "A governed engineering environment around your AI coding assistant and Snowflake: agents, reusable skills, commands, guard hooks and quality checks, packaged per program.",
+   "Two harness layers: the delivery harness (PRD → design → decompose → build with G1, G2, G3) and the Data Harness (requirement → nine agents → canonical spec → deterministic compilers → Snowflake).",
+   "Agents draft, convert and test. Specs and certified KPIs are the source of truth. People approve at the gates."
+  ],
+  "why": [
+   "Every wave follows the same lifecycle, standards and evidence, so wave unit effort falls after the pilot.",
+   "Same spec, same result, every run: deterministic harnesses compile pipelines, DQ, masking, tests and lineage.",
+   "Agents run with the same access as users; masking and row access apply to them too.",
+   "The client owns every artefact: it runs in the client tenant with no licence fee."
+  ],
+  "tools": [
+   [
+    "Cortex Code",
+    "Snowflake-native coding agent",
+    "Conversion residue, dbt models, tests, semantic views, run support",
+    "Inside Snowflake; inherits RBAC"
+   ],
+   [
+    "Claude Code",
+    "Agentic CLI in VS Code",
+    "PRD, design and decompose agents; skills and hooks",
+    "Project constitution in CLAUDE.md"
+   ],
+   [
+    "GitHub Copilot",
+    "IDE assistant and agents",
+    "Inline SQL and dbt; named agents for lanes",
+    "AGENTS.md and copilot-instructions.md"
+   ],
+   [
+    "SnowConvert AI",
+    "Snowflake code conversion",
+    "DDL, procedures, views from Oracle, Teradata, Netezza, SQL Server and more",
+    "Assessment report drives wave plan"
+   ],
+   [
+    "Snowflake AIM",
+    "AI migration workflow",
+    "Assessment, conversion, ETL to dbt, unit tests, data migration and validation",
+    "Pairs with Niche Accelerate Platform Migration"
+   ]
+  ],
+  "blocks": [
+   [
+    "Project constitution",
+    "One entry file of rules: medallion zones, naming, SCD policy, test-first, gate rules."
+   ],
+   [
+    "Agents",
+    "Narrow roles per step: PRD, Solution Design, Decompose, Build, Estate Analyzer, Code Converter, Reconciler, Promotion."
+   ],
+   [
+    "Skills",
+    "Reusable steps invoked by hand: /convert-ddl, /convert-etl, /reconcile, /gen-unit-tests, /design-rbac, /compare-reports."
+   ],
+   [
+    "Hooks",
+    "Automatic checks before and after every action: block prod writes, secrets, PII in output."
+   ],
+   [
+    "Data Harness app",
+    "Streamlit in Snowflake front end: describe a data product, review agent proposals, run and see lineage."
+   ],
+   [
+    "Canonical spec (HIR)",
+    "Typed, versioned, platform-neutral description of a data product; Snowflake is the first adapter."
+   ],
+   [
+    "Templates",
+    "PRD, solution design, scope.yaml, component change spec, reconciliation ledger, cut-over runbook."
+   ],
+   [
+    "Evidence",
+    "Pull requests, test results, reconciliation ledger and release notes linked to the Jira item and PRD."
+   ]
+  ],
+  "flow": [
+   {
+    "label": "Discover",
+    "who": "PRD Agent",
+    "what": "One prompt, clarifying questions, persona confirmed against the catalogue, each data need mapped to a data concept or logged as a gap.",
+    "out": "PRD"
+   },
+   {
+    "label": "G1 · PRD approved",
+    "gate": 1,
+    "who": "Product owner",
+    "what": "Numeric targets confirmed with the business; pull request merged.",
+    "out": "Approved PRD"
+   },
+   {
+    "label": "Design",
+    "who": "Solution Design Agent",
+    "what": "Target behaviour, architecture, data models, interfaces, NFRs; reviewers proposed; checklist run.",
+    "out": "Solution design · scope.yaml"
+   },
+   {
+    "label": "G2 · Design approved",
+    "gate": 1,
+    "who": "Architecture lead",
+    "what": "Standards and ADRs linked, decisions captured, traceability to Jira reviewed.",
+    "out": "Approved design"
+   },
+   {
+    "label": "Decompose",
+    "who": "Decompose Agent",
+    "what": "Epics and stories per component, a change specification per component, all linked to PRD and design.",
+    "out": "Jira items · change specs"
+   },
+   {
+    "label": "Build",
+    "who": "Build Agents + pod",
+    "what": "Implement, integrate, test (unit, integration, reconciliation) and deploy through CI/CD.",
+    "out": "Code · tests · evidence"
+   },
+   {
+    "label": "G3 · Verified in production",
+    "gate": 1,
+    "who": "Release manager, product owner",
+    "what": "UAT and reconciliation signed; release evidence complete.",
+    "out": "Release evidence"
+   }
+  ],
+  "dataFlow": [
+   {
+    "label": "Requirement",
+    "who": "You",
+    "what": "Plain English: \"Customer 360 revenue product. Customer ID not null. Order amount > 0. Mask email.\"",
+    "out": "Requirement"
+   },
+   {
+    "label": "Nine agents",
+    "who": "Discovery · profiling · pipeline design · transformation · DQ · governance · testing · validation · docs",
+    "what": "Each proposes with evidence from the data.",
+    "out": "Proposals"
+   },
+   {
+    "label": "Canonical HIR",
+    "who": "Harness",
+    "what": "One typed, versioned, platform-neutral spec.",
+    "out": "Spec"
+   },
+   {
+    "label": "Gate",
+    "gate": 1,
+    "who": "Validator + engineer",
+    "what": "Automatic validation and human approval of the spec.",
+    "out": "Approved spec"
+   },
+   {
+    "label": "Deterministic harnesses",
+    "who": "Compilers",
+    "what": "Ingestion and schema, DQ and quarantine, transformation, PII tags and masking, tests and reconciliation, observability, docs and lineage.",
+    "out": "Artefacts"
+   },
+   {
+    "label": "Snowflake adapter",
+    "who": "Harness",
+    "what": "Bronze, Silver, Gold pipeline, policies, scheduled job.",
+    "out": "Running data product"
+   }
+  ],
+  "skills": [
+   [
+    "Platform foundation",
+    "Platform engineer",
+    [
+     [
+      "Zone Mapper",
+      "/map-zones · /gen-zone-ddl"
+     ],
+     [
+      "DDL Converter",
+      "/convert-ddl · /gen-migration"
+     ],
+     [
+      "RBAC Designer",
+      "/design-rbac · /gen-grants"
+     ],
+     [
+      "Identity Mapper",
+      "/map-groups · /gen-scim"
+     ]
+    ]
+   ],
+   [
+    "Platform migration",
+    "Migration lead",
+    [
+     [
+      "Estate Analyzer",
+      "AIM assessment · /plan-waves"
+     ],
+     [
+      "Code Converter",
+      "SnowConvert AI · /convert-procs"
+     ],
+     [
+      "Pipeline Converter",
+      "/convert-etl · /repoint-ingest"
+     ],
+     [
+      "BI Repointer",
+      "semantic views · /repoint-bi"
+     ]
+    ]
+   ],
+   [
+    "Platform assurance",
+    "QA lead",
+    [
+     [
+      "ETL Test Agent",
+      "/gen-etl-tests · /reconcile"
+     ],
+     [
+      "DW Validator",
+      "/gen-unit-tests · /check-scd"
+     ],
+     [
+      "Pipeline Monitor",
+      "/test-cdc · /replay-load"
+     ],
+     [
+      "BI Comparator",
+      "/compare-reports · /test-rls"
+     ]
+    ]
+   ],
+   [
+    "Platform operations",
+    "Release manager",
+    [
+     [
+      "Build Agent",
+      "/build-artifacts"
+     ],
+     [
+      "Quality Gate",
+      "/lint-sql · /pr-template"
+     ],
+     [
+      "Promotion Agent",
+      "/promote · /rollback"
+     ],
+     [
+      "Release Agent",
+      "/gen-changelog · /release-notes"
+     ]
+    ]
+   ]
+  ],
+  "guardrails": [
+   [
+    "No direct production writes",
+    "Hook",
+    "DDL, DML and grants against production are blocked from agents; changes reach prod only by pull request and promotion."
+   ],
+   [
+    "Inherited access",
+    "Snowflake policy",
+    "Agents and Cortex run under roles no wider than the requesting user; masking and row access apply."
+   ],
+   [
+    "Secrets and PII scan",
+    "Hook",
+    "Writes, outputs and prompts are scanned for keys, tokens, credentials and personal data; matches are blocked."
+   ],
+   [
+    "Cost guard",
+    "Snowflake policy",
+    "Resource monitors and credit budgets per warehouse and per agent; suspend at threshold."
+   ],
+   [
+    "Approved tools only",
+    "Program policy",
+    "Only AI tools approved in writing for client code are configured; usage boundaries documented."
+   ],
+   [
+    "Untrusted content",
+    "Review-time policy",
+    "Source data, documents and API responses are data, never instructions to an agent."
+   ]
+  ],
+  "readiness": [
+   [
+    "AI tool approved and licensed",
+    "Cortex Code, Claude Code or Copilot approved for client code and authenticated."
+   ],
+   [
+    "Snowflake environments exist",
+    "Prod, non-prod and sandbox, built with Terraform; edition confirmed."
+   ],
+   [
+    "Repository and CI/CD ready",
+    "GitHub organization, branch rules, Actions runners with Snowflake key-pair auth."
+   ],
+   [
+    "Legacy read access granted",
+    "Service accounts for legacy DB, ETL repository and BI catalogs."
+   ],
+   [
+    "Context assembled",
+    "KPI dictionary v1, classification, ADRs and source profiles in the repo or Horizon."
+   ],
+   [
+    "Gate approvers named",
+    "Owners for G1, G2, G3 and reconciliation variances, with a 5-day review SLA."
+   ],
+   [
+    "Guardrails tested",
+    "Hooks block a prod write and a planted secret in a dry run."
+   ],
+   [
+    "Budgets set",
+    "Resource monitors on every warehouse the harness uses."
+   ]
+  ]
+ },
+ "practices": [
+  {
+   "title": "Rationalize before you migrate",
+   "detail": "Decide keep, merge, rebuild or retire for every report before its wave. About 400 reports rarely means 400 builds."
+  },
+  {
+   "title": "Reconcile every measure",
+   "detail": "Row counts and measures match legacy, or the variance is explained and signed off. Keep a reconciliation ledger per wave."
+  },
+  {
+   "title": "Like for like first, then improve",
+   "detail": "Keep layouts so users compare numbers, not designs. Redesign comes after trust, or as a change request."
+  },
+  {
+   "title": "Prove the conversion rate in the pilot",
+   "detail": "Estimates assume high automated conversion. Profile the estate, run the pilot, then reset wave unit effort from evidence."
+  },
+  {
+   "title": "Plan back from licence dates",
+   "detail": "Sequence waves from renewal dates; start the parallel run by month 5; allow 30–45 days of business change lead time."
+  },
+  {
+   "title": "Certify KPIs once, with an arbiter",
+   "detail": "One owner, grain, source fact and golden query per KPI, published as a semantic view that dashboards and Cortex share."
+  },
+  {
+   "title": "Keep history off the integration tool",
+   "detail": "Move terabyte-scale history with DMS or bulk unload to S3; keep the integration platform for incremental loads."
+  },
+  {
+   "title": "Secure from day one",
+   "detail": "Masking, row access and SSO in the foundation, not after UAT. Decide the Snowflake edition early when SOX or HIPAA apply."
+  },
+  {
+   "title": "Humans own three gates",
+   "detail": "G1 PRD, G2 design, G3 verified in production, with a 5-business-day review SLA. Decompose needs no gate."
+  },
+  {
+   "title": "FinOps from the first sprint",
+   "detail": "Resource monitors, workload warehouses and cost per workload reviewed at every steering, including agent spend."
+  }
+ ],
+ "artefacts": [
+  {
+   "group": "A. Foundations and planning",
+   "items": [
+    {
+     "name": "Proposal storyline",
+     "what": "Understanding, solution, delivery plan, team and governance, commercials.",
+     "source": "FlyHigh proposal v7.pptx"
+    },
+    {
+     "name": "Scoping and discovery workbook",
+     "what": "Questions by source, report group and NFR, with client responses.",
+     "source": "FlyHigh_Scoping_Discovery_Responses.xlsx"
+    },
+    {
+     "name": "Resource loading and unit effort",
+     "what": "FTE by pod and month, unit effort model, effort reconciliation.",
+     "source": "FlyHigh — Resource Loading.xlsx"
+    }
+   ]
+  },
+  {
+   "group": "B. Team and readiness",
+   "items": [
+    {
+     "name": "Role descriptions by pod",
+     "what": "AI Native and AI-Assisted roles with responsibilities, skills and deliverables.",
+     "source": "FlyHigh — Team Structure JD.docx"
+    },
+    {
+     "name": "RACI: build and run",
+     "what": "Responsible, accountable, consulted and informed across client business, client IT, Niche Consulting and Snowflake.",
+     "source": "Proposal v7, appendix"
+    },
+    {
+     "name": "Workshop playbook",
+     "what": "Session flow from play-back to architecture to demos and Q&A.",
+     "source": "FlyHigh_Workshop_v3.pptx"
+    }
+   ]
+  },
+  {
+   "group": "C. Quality and evaluation",
+   "items": [
+    {
+     "name": "Win scorecard",
+     "what": "Proposal scored against buyer, evaluator and competitor archetypes.",
+     "source": "FlyHigh_Proposal_Scorecard.xlsx"
+    },
+    {
+     "name": "Current-state architecture",
+     "what": "Live data paths, BI tools and known issues, ready for client annotation.",
+     "source": "FlyHigh_Current_State_Architecture.pptx"
+    },
+    {
+     "name": "Meeting notes to decisions",
+     "what": "Follow-up Q&A turned into design decisions and actions.",
+     "source": "ABC Retail FlyHigh follow-up Q&A notes"
+    }
+   ]
+  }
+ ],
+ "cases": [
+  {
+   "k": "flyhigh",
+   "arch": "Migration · Data product · BI · AI",
+   "title": "FlyHigh — ABC Retail",
+   "sum": "Oracle ADW, ODI and OAC plus point-to-point Power BI moved to Snowflake on AWS and Tableau Cloud in ten months, on two tracks with three pods.",
+   "stats": [
+    [
+     "22 TB",
+     "Oracle ADW retired"
+    ],
+    [
+     "~400",
+     "reports rationalized"
+    ],
+    [
+     "10",
+     "months to go-live"
+    ]
+   ],
+   "worked": true
+  },
+  {
+   "k": "az",
+   "arch": "Data product · AI",
+   "title": "Global biopharma — agentic data engineering",
+   "sum": "Cortex Code workflows for stored procedures, dbt, Airflow and ontology design across five IT business units; AI-assisted moves from Databricks and AWS lakes into Snowflake Iceberg tables.",
+   "stats": [
+    [
+     "30–50%",
+     "faster time to value (target)"
+    ],
+    [
+     "20+",
+     "AI engineers"
+    ],
+    [
+     "4",
+     "workstreams"
+    ]
+   ]
+  },
+  {
+   "k": "fleet",
+   "arch": "Migration",
+   "title": "Logistics and fleet — EDW modernization",
+   "sum": "Greenplum, Oracle and SAP BODS workloads moved to Snowflake with dbt and automated pipelines; AS/400 monoliths re-engineered into APIs for real-time fleet, parts and supply-chain data.",
+   "stats": [
+    [
+     "40–60%",
+     "faster data processing"
+    ],
+    [
+     "10–12 h",
+     "a week saved per engineer"
+    ],
+    [
+     "30%",
+     "pod productivity"
+    ]
+   ]
+  },
+  {
+   "k": "clin",
+   "arch": "Data product",
+   "title": "Life sciences SaaS — AWS + Snowflake lakehouse",
+   "sum": "Incremental processing for 3,000+ clinical source databases: S3 landing, Snowpipe loads and incremental transforms, with lineage, schema controls and CI/CD from day one.",
+   "stats": [
+    [
+     "3,000+",
+     "source databases"
+    ],
+    [
+     "200 TB+",
+     "a month"
+    ],
+    [
+     "~40 min",
+     "processing window, from 6–10 h"
+    ]
+   ]
+  },
+  {
+   "k": "pay",
+   "arch": "Migration · BI",
+   "title": "Payments — Netezza to Snowflake",
+   "sum": "Integrated warehouse moved off Netezza, Ab Initio logic refactored, batch and reporting isolated, client-facing Tableau and Power BI reports repointed with data protection kept.",
+   "stats": [
+    [
+     "40–60%",
+     "better throughput"
+    ],
+    [
+     "Isolated",
+     "batch and reporting"
+    ],
+    [
+     "Kept",
+     "Voltage protection"
+    ]
+   ]
+  }
+ ],
+ "worked": {
+  "title": "FlyHigh — ABC Retail",
+  "summary": "Oracle ADW, ODI and OAC plus point-to-point Power BI move to Snowflake on AWS and Tableau Cloud in ten months, on two tracks with three pods. Oracle licence renewals fix the date: cut-over in July 2027, Oracle off by 31 August 2027.",
+  "stats": [
+   [
+    "~47 TB",
+    "estate, +10% a year"
+   ],
+   [
+    "~10",
+    "source systems"
+   ],
+   [
+    "~100 / ~400",
+    "dashboards / reports"
+   ],
+   [
+    "33K",
+    "views a month, ~175 users"
+   ]
+  ],
+  "tracks": [
+   [
+    "Track A",
+    "Legacy warehouse migration + BI modernization",
+    "ODI → ADW (22 TB, 367 source tables, 13 facts, 35–40 dims) → OAC: 50 dashboards, 200 warehouse reports, ~20 transportation reports",
+    "Retires ODI, ADW and OAC"
+   ],
+   [
+    "Track B · B1",
+    "Data product build",
+    "WMS WMS POC (7.5 TB, 61 tables, full reloads) → medallion; 20 customer-facing dashboards",
+    "External customers, highest priority"
+   ],
+   [
+    "Track B · B3",
+    "Data product build + BI",
+    "HR pack (29 pages), engineering and ops apps (17 dashboards) off Power BI",
+    "Unlocks Power BI retirement"
+   ],
+   [
+    "Roadmap",
+    "Cortex AI and agents",
+    "Semantic views on 32 certified KPIs now; Cortex Search, AI_EXTRACT freight audit, Cortex Analyst next",
+    "AI-ready foundation"
+   ]
+  ],
+  "timeline": [
+   [
+    "Mobilize",
+    1,
+    1
+   ],
+   [
+    "Discovery",
+    1,
+    2
+   ],
+   [
+    "Frameworks",
+    1,
+    3
+   ],
+   [
+    "Track A pilot",
+    3,
+    5
+   ],
+   [
+    "Track A waves 1–3",
+    4,
+    8
+   ],
+   [
+    "Track B pilot",
+    3,
+    5
+   ],
+   [
+    "Track B waves 1–3",
+    4,
+    8
+   ],
+   [
+    "Parallel run",
+    5,
+    9
+   ],
+   [
+    "Cut-over + training",
+    9,
+    9
+   ],
+   [
+    "Go-live + hypercare",
+    10,
+    10
+   ]
+  ],
+  "months": [
+   "Nov",
+   "Dec",
+   "Jan",
+   "Feb",
+   "Mar",
+   "Apr",
+   "May",
+   "Jun",
+   "Jul",
+   "Aug"
+  ],
+  "pods": [
+   "Core pod (AI Native): solution architect, BI analyst, program manager, senior data engineer, testing lead, DevOps · peak 6 FTE · 52 person-months",
+   "Track A pod (AI-assisted): senior data engineer, BI engineer, QA, DevOps · peak 3.5 FTE",
+   "Track B pod (AI-assisted): same shape · peak 3.5 FTE",
+   "Peak 12 FTE, 105 person-months, plus 3 Niche-funded AI engineers"
+  ],
+  "decisions": [
+   "Boomi for incremental loads; AWS DMS for terabyte history into S3",
+   "GitHub with scripted CI/CD (Terraform, SQL); prod, non-prod and sandbox",
+   "Tableau UI kept for apples-to-apples comparison",
+   "Business Critical edition assessed with Snowflake for SOX",
+   "Dynamic masking replaces duplicate copies that hid sensitive rates",
+   "3–5 month parallel run; 30–45 day change lead time"
+  ],
+  "risks": [
+   [
+    "Code conversion rate",
+    "Profile ODI in discovery, prove in the pilot",
+    "Solution architect"
+   ],
+   [
+    "Late sign-offs",
+    "5-business-day SLA, named approvers",
+    "Program manager"
+   ],
+   [
+    "SME availability",
+    "8 hours a week, booked a sprint ahead",
+    "Client program head"
+   ],
+   [
+    "KPI conflicts",
+    "Certification sprint with a named arbiter",
+    "Product owner"
+   ],
+   [
+    "Data trust gap",
+    "Reconcile every measure, parallel run",
+    "Testing lead"
+   ],
+   [
+    "Vendor lock-in",
+    "Client owns all code, models and documents",
+    "Client program head"
+   ]
+  ]
+ },
+ "governance": {
+  "areas": [
+   {
+    "area": "AI usage",
+    "controls": "Approved AI tools and use cases on client code and data",
+    "owner": "Client program head"
+   },
+   {
+    "area": "Security and data",
+    "controls": "PII, SOX, masking, row access, data residency",
+    "owner": "Data governance lead"
+   },
+   {
+    "area": "Human oversight",
+    "controls": "G1, G2 and G3 approvers; variance sign-off; go / no-go",
+    "owner": "Product owners / steering"
+   },
+   {
+    "area": "AI and agent performance",
+    "controls": "Conversion rate, first-pass acceptance, reconciliation pass rate",
+    "owner": "Solution architect"
+   },
+   {
+    "area": "Cost and consumption",
+    "controls": "Credits per workload and per agent; resource monitors",
+    "owner": "Platform lead"
+   },
+   {
+    "area": "Compliance",
+    "controls": "SOX controls, Snowflake edition, audit evidence",
+    "owner": "Enterprise architect"
+   },
+   {
+    "area": "Exception management",
+    "controls": "Escalation path for failed conversions, variances and overrides",
+    "owner": "Program manager"
+   }
+  ],
+  "cadence": [
+   {
+    "cadence": "Daily",
+    "forum": "Pod stand-ups and AI Champion sync",
+    "who": "Pod leads"
+   },
+   {
+    "cadence": "Weekly",
+    "forum": "RAID review with the client, integration vendor and Snowflake",
+    "who": "Program manager"
+   },
+   {
+    "cadence": "Bi-weekly",
+    "forum": "Show-and-tell, wave and gate reviews (G1 to G3)",
+    "who": "Product owners, architecture lead, release manager"
+   },
+   {
+    "cadence": "Monthly",
+    "forum": "Steering committee on milestones, benefits and licence retirement",
+    "who": "Client sponsor, Niche Consulting leadership"
+   }
+  ],
+  "tiers": [
+   {
+    "tier": "Tier 1 · Steering and RAI council",
+    "role": "Client sponsor and Niche Consulting leadership set AI risk appetite and approve tool use."
+   },
+   {
+    "tier": "Tier 2 · Data and AI CoE",
+    "role": "Owns harness, skills, guardrails and gates; assures every wave."
+   },
+   {
+    "tier": "Tier 3 · Delivery pods",
+    "role": "Core and track pods apply controls and produce evidence per wave."
+   }
+  ],
+  "chain": "Steering committee → program head and program manager → solution architect and pod leads → track pods"
+ },
+ "rai": {
+  "pillars": [
+   {
+    "pillar": "Fairness and inclusivity",
+    "risk": "Skewed history or customer mix drives biased KPIs and forecasts",
+    "control": "Data profiling, fairness checks on ML features, KPI arbiter review"
+   },
+   {
+    "pillar": "Transparency and explainability",
+    "risk": "Converted logic with no lineage; unexplained AI answers",
+    "control": "Horizon lineage, PR change summaries, cited Cortex answers"
+   },
+   {
+    "pillar": "Privacy and security",
+    "risk": "PII or rates exposed, prompt injection via source data, agent overreach",
+    "control": "Classification, masking, row access, inherited RBAC, scan hooks"
+   },
+   {
+    "pillar": "Reliability and safety",
+    "risk": "Wrong numbers after conversion, unsafe DDL, silent pipeline failure",
+    "control": "Reconciliation ledger, golden queries, no prod writes, monitors"
+   },
+   {
+    "pillar": "Human oversight",
+    "risk": "Agents approve their own changes or cut over without sign-off",
+    "control": "G1, G2, G3 gates, variance sign-off, go / no-go by client"
+   },
+   {
+    "pillar": "Accountability",
+    "risk": "Unclear owner for a KPI, model or pipeline; no audit trail",
+    "control": "Named owners, KPI arbiter, RACI, query history and Git audit"
+   },
+   {
+    "pillar": "IP and data rights",
+    "risk": "Client code sent to unapproved tools; unclear artefact ownership",
+    "control": "Approved tools only, client tenant, client owns all artefacts"
+   },
+   {
+    "pillar": "Sustainability",
+    "risk": "Oversized warehouses, runaway Cortex and agent credits",
+    "control": "Resource monitors, credit budgets, warehouse right-sizing"
+   }
+  ],
+  "risks": [
+   {
+    "risk": "Unapproved AI tools on client code",
+    "control": "Written tool approval, inventory of agents and skills with named owners",
+    "stage": "Assess",
+    "standard": "NIST Map"
+   },
+   {
+    "risk": "Unclassified PII or regulated data",
+    "control": "Classification and tagging in Horizon; SOX / HIPAA edition decision before build",
+    "stage": "Assess",
+    "standard": "EU AI Act / ISO 42005"
+   },
+   {
+    "risk": "Ambiguous PRD or conflicting KPI",
+    "control": "PRD approved at G1, KPI arbiter, prompt-injection checks on source content",
+    "stage": "Assure",
+    "standard": "OWASP Agentic Top 10"
+   },
+   {
+    "risk": "Over-broad access to client data",
+    "control": "Agents inherit user roles; masking, row access and least-privilege warehouses",
+    "stage": "Architect",
+    "standard": "ISO 42001 / EU AI Act"
+   },
+   {
+    "risk": "Wrong conversion or flawed logic",
+    "control": "Generated unit and reconciliation tests in CI; golden queries vs legacy",
+    "stage": "Assure",
+    "standard": "NIST Measure"
+   },
+   {
+    "risk": "Unsafe DDL or prod write",
+    "control": "Hooks block prod DDL/DML; promotion by PR only; human approval at G3",
+    "stage": "Assure",
+    "standard": "OWASP Agentic Top 10"
+   },
+   {
+    "risk": "Variance or failure not detected",
+    "control": "Daily reconciliation, pipeline monitors, query history alerts, incident runbooks",
+    "stage": "Operate",
+    "standard": "NIST Manage / SR 11-7"
+   },
+   {
+    "risk": "Skill drift or stale context",
+    "control": "Versioned skills, refreshed lineage, golden-question re-evaluation each wave",
+    "stage": "Operate",
+    "standard": "NIST Manage"
+   }
+  ],
+  "lifecycle": [
+   {
+    "stage": "Assess and classify",
+    "controls": [
+     "AI tools approved in writing for client code",
+     "Data classification and PII tagging in Horizon",
+     "SOX / HIPAA needs drive the Snowflake edition"
+    ]
+   },
+   {
+    "stage": "Convert and build",
+    "controls": [
+     "SnowConvert AI and Cortex Code output reviewed by PR",
+     "Generated unit and reconciliation tests",
+     "Semantic views ground every Cortex answer"
+    ]
+   },
+   {
+    "stage": "Deploy in client Snowflake",
+    "controls": [
+     "Agents run under roles no wider than the user",
+     "Masking, row access and data residency",
+     "G1, G2, G3 human gates; no direct prod writes"
+    ]
+   },
+   {
+    "stage": "Monitor and assure",
+    "controls": [
+     "Secrets and PII scan hooks on every agent action and output",
+     "Query history, Horizon audit and credit monitors with alerts",
+     "Golden-question re-evaluation and incident response"
+    ]
+   }
+  ],
+  "principle": "Trusted numbers, not converted code, are the bottleneck to value. Agents may convert and build; people sign off every variance, masking rule and cut-over.",
+  "standards": "NIST AI RMF (Govern, Map, Measure, Manage) · ISO/IEC 42001 and 42005 · EU AI Act · OWASP LLM and Agentic Top 10 · SR 11-7"
+ },
+ "measurement": {
+  "dims": [
+   {
+    "dim": "Data trust",
+    "question": "Do users trust the numbers?",
+    "measures": [
+     "Reconciliation parity vs legacy",
+     "Certified KPIs in semantic views",
+     "Data quality rule pass rate",
+     "Masking and row access test pass"
+    ]
+   },
+   {
+    "dim": "Engineering productivity",
+    "question": "More objects with the same pods?",
+    "measures": [
+     "Objects converted per wave",
+     "AI-assisted work ratio",
+     "Wave unit effort vs pilot",
+     "Conversion rework reduction"
+    ]
+   },
+   {
+    "dim": "AI and agent contribution",
+    "question": "How much work do agents do?",
+    "measures": [
+     "Auto-conversion rate (SnowConvert AI)",
+     "Agent task completion (skills)",
+     "Generated tests and models accepted",
+     "Human review at G1, G2, G3"
+    ]
+   },
+   {
+    "dim": "Delivery and flow",
+    "question": "Waves landing on plan?",
+    "measures": [
+     "PRD (G1) to verified-in-prod (G3)",
+     "Waves accepted per month",
+     "Gate review within 5 days",
+     "Parallel-run defects closed"
+    ]
+   },
+   {
+    "dim": "Platform excellence",
+    "question": "Fast, governed, affordable?",
+    "measures": [
+     "Filters under 5 s on live data",
+     "Feed freshness within SLA",
+     "Credits per workload in budget",
+     "Pipeline stability and reruns"
+    ]
+   },
+   {
+    "dim": "Business outcomes",
+    "question": "Creating measurable value?",
+    "measures": [
+     "Legacy licences retired on date",
+     "Dashboard adoption and self-service",
+     "Run-cost reduction",
+     "AI-ready Gold layer (Cortex)"
+    ]
+   }
+  ],
+  "metrics": [
+   {
+    "category": "Wave commitment and throughput",
+    "name": "Story acceptance",
+    "what": "Committed stories accepted at show-and-tell",
+    "source": "Jira + sprint demo",
+    "target": "≥90%",
+    "cadence": "Sprint",
+    "capture": "AUTO"
+   },
+   {
+    "category": "Wave commitment and throughput",
+    "name": "Conversion rate",
+    "what": "Objects converted without manual rewrite",
+    "source": "SnowConvert AI / AIM reports",
+    "target": "Pilot baseline ↑",
+    "cadence": "Wave",
+    "capture": "AUTO"
+   },
+   {
+    "category": "Wave commitment and throughput",
+    "name": "PRD-to-production cycle time",
+    "what": "G1 PRD approved to G3 verified in prod",
+    "source": "Jira + CI/CD timestamps",
+    "target": "↓ wave over wave",
+    "cadence": "Wave",
+    "capture": "AUTO"
+   },
+   {
+    "category": "Wave commitment and throughput",
+    "name": "Plan confidence",
+    "what": "Burndown on track to cut-over date",
+    "source": "Integrated plan + Jira",
+    "target": "On track",
+    "cadence": "Monthly",
+    "capture": "AUTO"
+   },
+   {
+    "category": "Data quality and trust",
+    "name": "Reconciliation parity",
+    "what": "Measures matching legacy or variance signed off",
+    "source": "Reconciliation ledger",
+    "target": "100%",
+    "cadence": "Sprint / wave",
+    "capture": "AUTO"
+   },
+   {
+    "category": "Data quality and trust",
+    "name": "Rework rate",
+    "what": "Converted objects needing repeat work",
+    "source": "Jira + Git + PR telemetry",
+    "target": "↓ after pilot",
+    "cadence": "Sprint",
+    "capture": "AUTO"
+   },
+   {
+    "category": "Data quality and trust",
+    "name": "First-pass acceptance",
+    "what": "AI-generated DDL, dbt and tests merged unchanged",
+    "source": "Pull request review data",
+    "target": "≥80%",
+    "cadence": "Sprint",
+    "capture": "HYBRID"
+   },
+   {
+    "category": "Data quality and trust",
+    "name": "Masking and RLS tests",
+    "what": "Role and per-customer access behave as designed",
+    "source": "/test-rls results",
+    "target": "100% pass",
+    "cadence": "Wave",
+    "capture": "AUTO"
+   },
+   {
+    "category": "AI and platform efficiency",
+    "name": "AI contribution rate",
+    "what": "Share of conversion, build and test work done by agents",
+    "source": "Skill runs + work-item telemetry",
+    "target": "≥40%",
+    "cadence": "Sprint",
+    "capture": "AUTO"
+   },
+   {
+    "category": "AI and platform efficiency",
+    "name": "Report performance",
+    "what": "Dashboard filters under 5 s at production volume",
+    "source": "Query Insights + perf tests",
+    "target": "<5 s",
+    "cadence": "Wave",
+    "capture": "AUTO"
+   },
+   {
+    "category": "AI and platform efficiency",
+    "name": "Gate review hours",
+    "what": "Effort at G1, G2, G3 and variance sign-off",
+    "source": "Gate log + time capture",
+    "target": "↓ over waves",
+    "cadence": "Sprint",
+    "capture": "HYBRID"
+   },
+   {
+    "category": "AI and platform efficiency",
+    "name": "Credits per workload",
+    "what": "Warehouse and Cortex credits vs budget",
+    "source": "Resource monitors, metering",
+    "target": "Within budget",
+    "cadence": "Sprint",
+    "capture": "AUTO"
+   },
+   {
+    "category": "AI and platform efficiency",
+    "name": "Data freshness",
+    "what": "Feeds landing within agreed SLA",
+    "source": "Pipeline monitors, task history",
+    "target": "≥99% on SLA",
+    "cadence": "Daily / sprint",
+    "capture": "AUTO"
+   },
+   {
+    "category": "Team capability and enablement",
+    "name": "Skill coverage",
+    "what": "Wave activities run through harness skills",
+    "source": "Skill logs + activity map",
+    "target": "≥60%",
+    "cadence": "Sprint",
+    "capture": "HYBRID"
+   },
+   {
+    "category": "Team capability and enablement",
+    "name": "Harness proficiency",
+    "what": "Pod ability to run skills, gates and evidence",
+    "source": "Assessment + first-change evidence",
+    "target": "≥80% enabled",
+    "cadence": "Monthly",
+    "capture": "MANUAL"
+   },
+   {
+    "category": "Team capability and enablement",
+    "name": "Guardrail adherence",
+    "what": "No prod writes, RBAC inherited, approved tools only",
+    "source": "Hook logs + Horizon audit",
+    "target": "≥95%",
+    "cadence": "Sprint / monthly",
+    "capture": "HYBRID"
+   },
+   {
+    "category": "Program outcomes",
+    "name": "Legacy retired on date",
+    "what": "ETL, warehouse and BI licences switched off",
+    "source": "Decommission plan vs licence dates",
+    "target": "100% on date",
+    "cadence": "Monthly",
+    "capture": "MANUAL"
+   },
+   {
+    "category": "Program outcomes",
+    "name": "Engineering productivity gain",
+    "what": "Objects delivered per person-day vs pilot",
+    "source": "Unit effort model vs actuals",
+    "target": "Wave ≤ ⅓ pilot effort",
+    "cadence": "Wave",
+    "capture": "HYBRID"
+   },
+   {
+    "category": "Program outcomes",
+    "name": "Run-cost reduction",
+    "what": "Annual run cost after cut-over vs legacy",
+    "source": "Licence + credit + support costs",
+    "target": "↓ vs baseline",
+    "cadence": "Quarterly",
+    "capture": "HYBRID"
+   },
+   {
+    "category": "Program outcomes",
+    "name": "Time to value",
+    "what": "Months from kickoff to first wave live",
+    "source": "Integrated plan milestones",
+    "target": "Month 5",
+    "cadence": "Monthly",
+    "capture": "AUTO"
+   },
+   {
+    "category": "Program outcomes",
+    "name": "Dashboard adoption",
+    "what": "Active users on new dashboards vs legacy",
+    "source": "BI usage telemetry",
+    "target": "≥ legacy users",
+    "cadence": "Monthly",
+    "capture": "AUTO"
+   },
+   {
+    "category": "Program outcomes",
+    "name": "Self-service success",
+    "what": "Questions answered via Cortex Analyst or dashboards",
+    "source": "Cortex + BI telemetry",
+    "target": "↑ quarter on quarter",
+    "cadence": "Quarterly",
+    "capture": "AUTO"
+   },
+   {
+    "category": "Program outcomes",
+    "name": "Certified KPI coverage",
+    "what": "KPIs with owner, golden query, semantic view",
+    "source": "KPI dictionary",
+    "target": "100% in scope",
+    "cadence": "Wave",
+    "capture": "HYBRID"
+   },
+   {
+    "category": "Program outcomes",
+    "name": "Data trust score",
+    "what": "Users who trust reports without manual checks",
+    "source": "User survey after cut-over",
+    "target": "≥85%",
+    "cadence": "Quarterly",
+    "capture": "MANUAL"
+   }
+  ],
+  "principle": "Measure AI-native data modernization by trusted numbers and legacy retired on date, not by the volume of AI-converted code.",
+  "method": "Baseline legacy (row counts, golden queries, run cost) → track wave KPIs → connect to licence retirement and adoption → validate value."
+ },
+ "team": {
+  "topology": [
+   {
+    "principle": "Single human accountability at three gates",
+    "detail": "Agents convert DDL, procedures and ETL, draft dbt models and generate tests (R). Named humans approve PRDs (G1), designs (G2), releases (G3) and every reconciliation variance (A)."
+   },
+   {
+    "principle": "Core pod builds once, track pods reuse",
+    "detail": "Seven Niche Accelerate frameworks are built or adapted in months 1–3 by the core pod; track pods apply them per wave, so wave unit effort falls to about one-third of the pilot."
+   },
+   {
+    "principle": "Archetype-specific team tailoring",
+    "detail": "Migration pods convert and reconcile; data product pods model first; BI pods rationalize and certify KPIs; Cortex pods ground agents in semantic views and evaluate them."
+   },
+   {
+    "principle": "Multi-vendor alignment and access governance",
+    "detail": "Client IT, the integration vendor and the Snowflake team share one RAID log; AI tool approval, Snowflake roles and the context repo are governed centrally."
+   }
+  ],
+  "archetypes": [
+   {
+    "key": "product",
+    "name": "Data products",
+    "size": "7–10 FTE",
+    "roles": [
+     {
+      "role": "Product owner (client)",
+      "fte": "1.0"
+     },
+     {
+      "role": "BI analyst",
+      "fte": "1.0"
+     },
+     {
+      "role": "Solution architect",
+      "fte": "1.0"
+     },
+     {
+      "role": "Senior data engineers",
+      "fte": "2.0–3.0"
+     },
+     {
+      "role": "BI engineer",
+      "fte": "1.0"
+     },
+     {
+      "role": "QA engineer",
+      "fte": "1.0"
+     },
+     {
+      "role": "DevOps engineer",
+      "fte": "0.5"
+     },
+     {
+      "role": "Program manager",
+      "fte": "0.5"
+     },
+     {
+      "role": "AI Native engineer",
+      "fte": "0.5–1.0"
+     }
+    ],
+    "ai_native": "High in Sprint 0: deploys the Data Harness, ingestion patterns and DQ rules."
+   },
+   {
+    "key": "migrate",
+    "name": "Warehouse migration",
+    "size": "10–12 FTE",
+    "roles": [
+     {
+      "role": "Product owner (client)",
+      "fte": "1.0"
+     },
+     {
+      "role": "BI analyst",
+      "fte": "1.0"
+     },
+     {
+      "role": "Solution architect",
+      "fte": "1.0"
+     },
+     {
+      "role": "Senior data engineers",
+      "fte": "2.0–3.0"
+     },
+     {
+      "role": "BI engineers",
+      "fte": "1.0–2.0"
+     },
+     {
+      "role": "Testing lead / QA",
+      "fte": "1.5"
+     },
+     {
+      "role": "DevOps engineer",
+      "fte": "1.0"
+     },
+     {
+      "role": "Program manager",
+      "fte": "1.0"
+     },
+     {
+      "role": "AI Native engineer",
+      "fte": "1.0"
+     }
+    ],
+    "ai_native": "Runs AIM and SnowConvert AI on the estate; tunes conversion skills in the pilot."
+   },
+   {
+    "key": "bi",
+    "name": "BI and semantic",
+    "size": "6–8 FTE",
+    "roles": [
+     {
+      "role": "Product owner / KPI arbiter",
+      "fte": "0.5"
+     },
+     {
+      "role": "BI analyst",
+      "fte": "1.0"
+     },
+     {
+      "role": "Solution architect",
+      "fte": "0.5"
+     },
+     {
+      "role": "BI engineers",
+      "fte": "2.0–3.0"
+     },
+     {
+      "role": "QA engineer",
+      "fte": "1.0"
+     },
+     {
+      "role": "DevOps engineer",
+      "fte": "0.5"
+     },
+     {
+      "role": "Data governance (client)",
+      "fte": "0.25"
+     },
+     {
+      "role": "Program manager",
+      "fte": "0.5"
+     },
+     {
+      "role": "AI Native engineer",
+      "fte": "0.5"
+     }
+    ],
+    "ai_native": "Deploys report analyzer, logic extractor and BI comparator skills."
+   },
+   {
+    "key": "ai",
+    "name": "Cortex AI",
+    "size": "5–7 FTE",
+    "roles": [
+     {
+      "role": "Product owner (persona)",
+      "fte": "0.5"
+     },
+     {
+      "role": "BI analyst",
+      "fte": "0.5"
+     },
+     {
+      "role": "Data / AI architect",
+      "fte": "1.0"
+     },
+     {
+      "role": "AI Native engineers",
+      "fte": "1.0–2.0"
+     },
+     {
+      "role": "Senior data engineer",
+      "fte": "1.0"
+     },
+     {
+      "role": "QA / evaluation",
+      "fte": "0.5"
+     },
+     {
+      "role": "Data governance (client)",
+      "fte": "0.25"
+     },
+     {
+      "role": "Program manager",
+      "fte": "0.25"
+     },
+     {
+      "role": "Snowflake specialist",
+      "fte": "On call"
+     }
+    ],
+    "ai_native": "Builds the evaluation harness with golden questions and credit budgets per agent."
+   }
+  ],
+  "roles": [
+   {
+    "role": "Product owner (client)",
+    "traditional": "Report requester: gathers asks and accepts after manual checks.",
+    "ai_native": "Outcome and KPI owner: prioritizes waves by licence and customer value; decides at G1 and on variances.",
+    "contribution": "Own outcomes and KPIs: set priorities per track, name the KPI arbiter, sign off PRDs at G1 and UAT within five days, decide go / no-go with steering."
+   },
+   {
+    "role": "BI analyst",
+    "traditional": "Report documenter: inventories and maps by hand.",
+    "ai_native": "Semantic intent orchestrator: certifies one definition per KPI and grounds dashboards and Cortex.",
+    "contribution": "Turn reports into intent: build the report catalog, rationalize ~400 reports, draft PRDs and journey maps with the PRD Agent, own the KPI dictionary."
+   },
+   {
+    "role": "Solution architect",
+    "traditional": "Schema designer: manual target models and ETL designs.",
+    "ai_native": "Platform strategist: sets medallion, security and guardrails agents run inside; approves G2.",
+    "contribution": "Design the Snowflake foundation: medallion zones, ingestion patterns, RBAC with SSO, masking and row access, semantic layer and ADRs."
+   },
+   {
+    "role": "Senior data engineers",
+    "traditional": "Code rewriter: converts SQL and ETL by hand.",
+    "ai_native": "Agent orchestrator: runs conversion skills, reviews PRs and resolves residue patterns.",
+    "contribution": "Convert and build with agents: SnowConvert AI, AIM and Cortex Code on DDL, procedures and ETL; generate dbt models and tests; load history."
+   },
+   {
+    "role": "BI and QA engineers",
+    "traditional": "Manual testers: eyeball comparisons and spot checks.",
+    "ai_native": "Reconciliation engineers: generate and run parity, RLS and performance tests every sprint.",
+    "contribution": "Prove the numbers: convert dashboards like for like; reconciliation, RLS and performance tests; keep the reconciliation ledger per wave."
+   },
+   {
+    "role": "DevOps and platform",
+    "traditional": "Environment admins: tickets and manual deploys.",
+    "ai_native": "Platform-as-code engineers: Terraform, promotion by PR, hooks and FinOps guardrails.",
+    "contribution": "Build it as code: Terraform environments, schemachange, GitHub Actions promotion, resource monitors and cut-over rehearsals."
+   },
+   {
+    "role": "Program manager",
+    "traditional": "Delivery coordinator: schedules and status reports.",
+    "ai_native": "Wave orchestrator: plans back from licence dates; manages gates, RAID and value.",
+    "contribution": "Plan back from licence dates: run the integrated plan, gates, RAID with integration and Snowflake teams, steering and value tracking."
+   },
+   {
+    "role": "AI Native engineer",
+    "traditional": "No equivalent.",
+    "ai_native": "AI-native enablement: builds frameworks and skills once; track pods reuse them every wave.",
+    "contribution": "Seed the AI-native capability: build and adapt accelerator services, skills and guard hooks, prove the conversion rate in the pilot, coach track pods."
+   }
+  ],
+  "raci": [
+   {
+    "title": "Planning and onboarding",
+    "columns": [
+     "AI Champion",
+     "Program mgr",
+     "Solution architect",
+     "Client PO",
+     "Pod leads",
+     "Testing lead",
+     "Core pod"
+    ],
+    "rows": [
+     {
+      "activity": "Primer and alignment",
+      "detail": "",
+      "cells": [
+       "A",
+       "R",
+       "C",
+       "C",
+       "C",
+       "C",
+       "I"
+      ]
+     },
+     {
+      "activity": "Readiness assessment",
+      "detail": "",
+      "cells": [
+       "A",
+       "I",
+       "C",
+       "C",
+       "R",
+       "C",
+       "R"
+      ]
+     },
+     {
+      "activity": "Readiness gap remediation",
+      "detail": "",
+      "cells": [
+       "C",
+       "A",
+       "R",
+       "I",
+       "R",
+       "R",
+       "C"
+      ]
+     },
+     {
+      "activity": "Archetype selection per track",
+      "detail": "",
+      "cells": [
+       "C",
+       "I",
+       "A",
+       "C",
+       "R",
+       "I",
+       "C"
+      ]
+     },
+     {
+      "activity": "AI opportunity identification",
+      "detail": "",
+      "cells": [
+       "A",
+       "C",
+       "C",
+       "R",
+       "R",
+       "R",
+       "R"
+      ]
+     },
+     {
+      "activity": "Wave plan and unit-effort estimate",
+      "detail": "",
+      "cells": [
+       "A",
+       "C",
+       "R",
+       "C",
+       "R",
+       "R",
+       "R"
+      ]
+     },
+     {
+      "activity": "Autonomy and gate design (G1 to G3)",
+      "detail": "",
+      "cells": [
+       "C",
+       "I",
+       "A",
+       "C",
+       "R",
+       "R",
+       "R"
+      ]
+     },
+     {
+      "activity": "Context preparation (lineage, KPIs)",
+      "detail": "",
+      "cells": [
+       "I",
+       "I",
+       "A",
+       "C",
+       "R",
+       "C",
+       "R"
+      ]
+     },
+     {
+      "activity": "Tool and harness mapping",
+      "detail": "",
+      "cells": [
+       "A",
+       "I",
+       "C",
+       "I",
+       "R",
+       "C",
+       "R"
+      ]
+     },
+     {
+      "activity": "AI-native ways of working",
+      "detail": "",
+      "cells": [
+       "C",
+       "A",
+       "C",
+       "C",
+       "R",
+       "R",
+       "R"
+      ]
+     },
+     {
+      "activity": "Team training and enablement",
+      "detail": "",
+      "cells": [
+       "C",
+       "A",
+       "I",
+       "I",
+       "R",
+       "R",
+       "R"
+      ]
+     },
+     {
+      "activity": "Governance and controls",
+      "detail": "",
+      "cells": [
+       "C",
+       "A",
+       "R",
+       "I",
+       "R",
+       "R",
+       "C"
+      ]
+     },
+     {
+      "activity": "KPI baseline and legacy golden queries",
+      "detail": "",
+      "cells": [
+       "C",
+       "A",
+       "I",
+       "I",
+       "R",
+       "R",
+       "C"
+      ]
+     },
+     {
+      "activity": "Harness onboarding",
+      "detail": "",
+      "cells": [
+       "A",
+       "I",
+       "C",
+       "I",
+       "R",
+       "I",
+       "R"
+      ]
+     },
+     {
+      "activity": "Pilot execution and conversion rate",
+      "detail": "",
+      "cells": [
+       "C",
+       "A",
+       "C",
+       "C",
+       "R",
+       "R",
+       "R"
+      ]
+     },
+     {
+      "activity": "Wave scale-out and handover",
+      "detail": "",
+      "cells": [
+       "C",
+       "A",
+       "R",
+       "I",
+       "R",
+       "R",
+       "C"
+      ]
+     }
+    ]
+   },
+   {
+    "title": "Data products (DPLC)",
+    "columns": [
+     "PO",
+     "BI analyst",
+     "Data gov",
+     "Sol. architect",
+     "Data eng",
+     "QA",
+     "DevOps",
+     "PM",
+     "AI Native"
+    ],
+    "rows": [
+     {
+      "activity": "Discover and PRD (G1)",
+      "detail": "Personas, journeys, questions; source profiling; PRD drafted by PRD Agent; numeric targets confirmed",
+      "cells": [
+       "A",
+       "R",
+       "C",
+       "C",
+       "C",
+       "I",
+       "I",
+       "C",
+       "C"
+      ]
+     },
+     {
+      "activity": "Source and ingestion pattern",
+      "detail": "Volumes, keys, CDC, files, data shares; Snowpipe, integration platform or streaming per source",
+      "cells": [
+       "I",
+       "C",
+       "C",
+       "A",
+       "R",
+       "I",
+       "C",
+       "I",
+       "C"
+      ]
+     },
+     {
+      "activity": "KPI certification",
+      "detail": "One definition per KPI; owner, grain, source fact, golden query; KPI arbiter decision",
+      "cells": [
+       "A",
+       "R",
+       "C",
+       "C",
+       "C",
+       "C",
+       "I",
+       "I",
+       "I"
+      ]
+     },
+     {
+      "activity": "Solution design (G2)",
+      "detail": "Medallion, data contracts, conformed dims, masking and row access, semantic views; ADRs",
+      "cells": [
+       "C",
+       "C",
+       "C",
+       "A",
+       "R",
+       "C",
+       "C",
+       "I",
+       "C"
+      ]
+     },
+     {
+      "activity": "Data Harness build",
+      "detail": "Requirement → nine agents → canonical spec → Bronze/Silver/Gold, DQ, quarantine, lineage",
+      "cells": [
+       "I",
+       "C",
+       "I",
+       "C",
+       "A",
+       "C",
+       "C",
+       "I",
+       "R"
+      ]
+     },
+     {
+      "activity": "Semantic views and dashboards",
+      "detail": "Certified metrics published; dashboards generated from PRDs; Cortex Analyst questions",
+      "cells": [
+       "C",
+       "A",
+       "I",
+       "C",
+       "R",
+       "C",
+       "I",
+       "I",
+       "C"
+      ]
+     },
+     {
+      "activity": "Assure: DQ, RLS and masking",
+      "detail": "DQ rules, reconciliation to old feed, masking per role, row access per customer",
+      "cells": [
+       "I",
+       "C",
+       "A",
+       "C",
+       "R",
+       "R",
+       "I",
+       "I",
+       "C"
+      ]
+     },
+     {
+      "activity": "Release and promotion (G3)",
+      "detail": "PR promotion dev → stage → prod; scheduled tasks; verified in production",
+      "cells": [
+       "C",
+       "I",
+       "I",
+       "C",
+       "R",
+       "C",
+       "A",
+       "C",
+       "C"
+      ]
+     },
+     {
+      "activity": "Run, freshness and FinOps",
+      "detail": "Freshness SLA monitors, failures, reruns, credits per workload",
+      "cells": [
+       "A",
+       "I",
+       "I",
+       "C",
+       "R",
+       "I",
+       "R",
+       "C",
+       "C"
+      ]
+     },
+     {
+      "activity": "Delivery and governance",
+      "detail": "Sprints, show-and-tell, RAID with vendors, steering, retros",
+      "cells": [
+       "C",
+       "C",
+       "I",
+       "C",
+       "C",
+       "C",
+       "I",
+       "A",
+       "R"
+      ]
+     },
+     {
+      "activity": "Harness and guardrails",
+      "detail": "Skills, hooks, AI tool approval, agent standards, AI contribution measures",
+      "cells": [
+       "C",
+       "I",
+       "C",
+       "C",
+       "C",
+       "C",
+       "C",
+       "C",
+       "A/R"
+      ]
+     }
+    ]
+   },
+   {
+    "title": "Warehouse migration (DMLC)",
+    "columns": [
+     "PO",
+     "BI analyst",
+     "Architect",
+     "Data eng",
+     "QA",
+     "DevOps",
+     "Data gov",
+     "PM",
+     "AI Native",
+     "Platform lead"
+    ],
+    "rows": [
+     {
+      "activity": "AIM assessment and wave plan",
+      "detail": "",
+      "cells": [
+       "A",
+       "C",
+       "R",
+       "C",
+       "I",
+       "I",
+       "I",
+       "R",
+       "C",
+       "C"
+      ]
+     },
+     {
+      "activity": "Foundation as code (zones, RBAC)",
+      "detail": "",
+      "cells": [
+       "I",
+       "I",
+       "A",
+       "C",
+       "I",
+       "R",
+       "C",
+       "I",
+       "C",
+       "C"
+      ]
+     },
+     {
+      "activity": "DDL and procedure conversion",
+      "detail": "",
+      "cells": [
+       "I",
+       "I",
+       "C",
+       "A",
+       "C",
+       "I",
+       "I",
+       "I",
+       "R",
+       "I"
+      ]
+     },
+     {
+      "activity": "ETL to dbt and ingestion repoint",
+      "detail": "",
+      "cells": [
+       "I",
+       "C",
+       "C",
+       "A",
+       "C",
+       "C",
+       "I",
+       "I",
+       "R",
+       "I"
+      ]
+     },
+     {
+      "activity": "History load and reconciliation",
+      "detail": "",
+      "cells": [
+       "C",
+       "C",
+       "C",
+       "R",
+       "A",
+       "I",
+       "I",
+       "I",
+       "R",
+       "C"
+      ]
+     },
+     {
+      "activity": "BI conversion and RLS tests",
+      "detail": "",
+      "cells": [
+       "C",
+       "R",
+       "I",
+       "C",
+       "A",
+       "I",
+       "C",
+       "I",
+       "R",
+       "I"
+      ]
+     },
+     {
+      "activity": "Parallel run and cut-over (G3)",
+      "detail": "",
+      "cells": [
+       "A",
+       "C",
+       "C",
+       "R",
+       "R",
+       "R",
+       "I",
+       "R",
+       "C",
+       "C"
+      ]
+     },
+     {
+      "activity": "Decommission and handover",
+      "detail": "",
+      "cells": [
+       "A",
+       "I",
+       "C",
+       "C",
+       "I",
+       "C",
+       "I",
+       "R",
+       "C",
+       "R"
+      ]
+     }
+    ]
+   },
+   {
+    "title": "BI and semantic (BMLC)",
+    "columns": [
+     "PO",
+     "BI analyst",
+     "Architect",
+     "BI eng",
+     "QA",
+     "DevOps",
+     "Data gov",
+     "PM",
+     "AI Native",
+     "KPI arbiter"
+    ],
+    "rows": [
+     {
+      "activity": "Report catalog and rationalization",
+      "detail": "",
+      "cells": [
+       "A",
+       "R",
+       "I",
+       "C",
+       "I",
+       "I",
+       "I",
+       "C",
+       "R",
+       "C"
+      ]
+     },
+     {
+      "activity": "Logic extraction",
+      "detail": "",
+      "cells": [
+       "I",
+       "A",
+       "C",
+       "C",
+       "I",
+       "I",
+       "I",
+       "I",
+       "R",
+       "I"
+      ]
+     },
+     {
+      "activity": "KPI certification",
+      "detail": "",
+      "cells": [
+       "C",
+       "R",
+       "C",
+       "I",
+       "C",
+       "I",
+       "C",
+       "I",
+       "C",
+       "A"
+      ]
+     },
+     {
+      "activity": "Semantic views",
+      "detail": "",
+      "cells": [
+       "I",
+       "C",
+       "A",
+       "R",
+       "C",
+       "I",
+       "C",
+       "I",
+       "R",
+       "C"
+      ]
+     },
+     {
+      "activity": "Like-for-like conversion",
+      "detail": "",
+      "cells": [
+       "C",
+       "C",
+       "C",
+       "A",
+       "C",
+       "I",
+       "I",
+       "I",
+       "R",
+       "I"
+      ]
+     },
+     {
+      "activity": "Validation (numbers, RLS, < 5 s)",
+      "detail": "",
+      "cells": [
+       "C",
+       "C",
+       "I",
+       "C",
+       "A",
+       "C",
+       "C",
+       "I",
+       "R",
+       "I"
+      ]
+     }
+    ]
+   }
+  ],
+  "lead": "AI Native Data Lead (CoE): owns the harness, skills and guardrails across programs; approves AI tool use and tracks conversion rate and credits. About 1 lead per 3–4 track pods.",
+  "seed": "Seed allocation: 1 AI Native engineer + Snowflake specialist in months 1–3 to set up the harness, AIM, SnowConvert AI and CI/CD and prove the conversion rate in the pilot."
+ },
+ "usecases": {
+  "criteria": [
+   {
+    "code": "value",
+    "name": "Value impact",
+    "question": "How much effort, risk or time can AI remove from the wave?"
+   },
+   {
+    "code": "rep",
+    "name": "Repeatability",
+    "question": "Is the activity repeated across many objects with a pattern?"
+   },
+   {
+    "code": "feas",
+    "name": "Feasibility",
+    "question": "Can the activity be split into skill-sized tasks?"
+   },
+   {
+    "code": "risk",
+    "name": "Trust and safety",
+    "question": "Does the output keep numbers right and data secure?"
+   },
+   {
+    "code": "context",
+    "name": "Context availability",
+    "question": "Is lineage, code, KPI and usage context available?"
+   },
+   {
+    "code": "auto",
+    "name": "Automation potential",
+    "question": "Can agents convert, build or test with limited intervention?"
+   }
+  ],
+  "items": [
+   {
+    "archetype": "product",
+    "stage": "1. Discovery",
+    "activity": "Source profiling (volumes, keys, CDC, formats)",
+    "value": "High",
+    "rep": "High",
+    "comp": "Med",
+    "risk": "Low",
+    "automation": "Agentic (Execute)",
+    "prereq": "Read access to sources, sample files, Data Harness profiling agents"
+   },
+   {
+    "archetype": "product",
+    "stage": "1. Discovery",
+    "activity": "POC and point-to-point logic review",
+    "value": "High",
+    "rep": "Med",
+    "comp": "Med",
+    "risk": "Low",
+    "automation": "Agentic (Recommend)",
+    "prereq": "Power BI / Excel exports, POC tables, report usage"
+   },
+   {
+    "archetype": "product",
+    "stage": "1. Discovery",
+    "activity": "Ingestion pattern selection per source",
+    "value": "High",
+    "rep": "Low",
+    "comp": "High",
+    "risk": "Med",
+    "automation": "Manual (human)",
+    "prereq": "Architect decision; integration platform / Snowpipe / data share options"
+   },
+   {
+    "archetype": "product",
+    "stage": "2. Requirements",
+    "activity": "PRD drafting from one prompt (PRD Agent)",
+    "value": "High",
+    "rep": "High",
+    "comp": "Low",
+    "risk": "Low",
+    "automation": "Agentic (Execute)",
+    "prereq": "Persona catalogue, journey maps, PRD template, G1 approver"
+   },
+   {
+    "archetype": "product",
+    "stage": "2. Requirements",
+    "activity": "KPI definition and golden query drafting",
+    "value": "High",
+    "rep": "High",
+    "comp": "Med",
+    "risk": "Med",
+    "automation": "Agentic (Recommend)",
+    "prereq": "KPI dictionary, legacy queries, named KPI arbiter"
+   },
+   {
+    "archetype": "product",
+    "stage": "2. Requirements",
+    "activity": "Data contract and DQ rule proposal",
+    "value": "High",
+    "rep": "High",
+    "comp": "Low",
+    "risk": "Low",
+    "automation": "Agentic (Execute)",
+    "prereq": "Source schemas, null / range rules, quarantine standard"
+   },
+   {
+    "archetype": "product",
+    "stage": "3. Design",
+    "activity": "Medallion model and conformed dims draft",
+    "value": "High",
+    "rep": "High",
+    "comp": "Med",
+    "risk": "Low",
+    "automation": "Agentic (Recommend)",
+    "prereq": "Industry data model, naming and SCD standards"
+   },
+   {
+    "archetype": "product",
+    "stage": "3. Design",
+    "activity": "Snowflake DDL and dbt model generation",
+    "value": "High",
+    "rep": "High",
+    "comp": "Low",
+    "risk": "Low",
+    "automation": "Agentic (Execute)",
+    "prereq": "Approved design, dbt project, schemachange conventions"
+   },
+   {
+    "archetype": "product",
+    "stage": "3. Design",
+    "activity": "Solution design and ADR drafting (G2)",
+    "value": "Med",
+    "rep": "High",
+    "comp": "Low",
+    "risk": "Low",
+    "automation": "Agentic (Recommend)",
+    "prereq": "Design template, scope.yaml, architecture review"
+   },
+   {
+    "archetype": "product",
+    "stage": "3. Design",
+    "activity": "Masking and row access policy design",
+    "value": "High",
+    "rep": "Low",
+    "comp": "High",
+    "risk": "High",
+    "automation": "Manual (human)",
+    "prereq": "Data classification, owner approval of masking rules"
+   },
+   {
+    "archetype": "product",
+    "stage": "4. Build",
+    "activity": "Inline SQL / dbt completion (Cortex Code)",
+    "value": "High",
+    "rep": "High",
+    "comp": "Low",
+    "risk": "Low",
+    "automation": "Agentic (Execute)",
+    "prereq": "Cortex Code or Copilot, repo context, approved tool use"
+   },
+   {
+    "archetype": "product",
+    "stage": "4. Build",
+    "activity": "Bronze / Silver / Gold pipeline compile",
+    "value": "High",
+    "rep": "High",
+    "comp": "Med",
+    "risk": "Low",
+    "automation": "Agentic (Execute)",
+    "prereq": "Data Harness canonical spec, deterministic harnesses"
+   },
+   {
+    "archetype": "product",
+    "stage": "4. Build",
+    "activity": "Incremental loads (streams, tasks, dynamic tables)",
+    "value": "High",
+    "rep": "Med",
+    "comp": "High",
+    "risk": "Med",
+    "automation": "Agentic (Orchestrate)",
+    "prereq": "Change capture design, late-data and rerun rules"
+   },
+   {
+    "archetype": "product",
+    "stage": "4. Build",
+    "activity": "Semantic views and certified metrics",
+    "value": "High",
+    "rep": "High",
+    "comp": "Med",
+    "risk": "Med",
+    "automation": "Agentic (Execute)",
+    "prereq": "Certified KPI dictionary, Gold facts, semantic view standard"
+   },
+   {
+    "archetype": "product",
+    "stage": "5. Testing",
+    "activity": "dbt unit and DQ test generation (≥80%)",
+    "value": "High",
+    "rep": "High",
+    "comp": "Low",
+    "risk": "Low",
+    "automation": "Agentic (Execute)",
+    "prereq": "dbt tests, generated cases, coverage gate"
+   },
+   {
+    "archetype": "product",
+    "stage": "5. Testing",
+    "activity": "Reconciliation to legacy feed",
+    "value": "High",
+    "rep": "High",
+    "comp": "Low",
+    "risk": "Low",
+    "automation": "Agentic (Execute)",
+    "prereq": "Old feed or report outputs, /reconcile skill, ledger"
+   },
+   {
+    "archetype": "product",
+    "stage": "5. Testing",
+    "activity": "Masking and per-customer RLS tests",
+    "value": "High",
+    "rep": "High",
+    "comp": "Med",
+    "risk": "Low",
+    "automation": "Agentic (Execute)",
+    "prereq": "Role matrix, test users per customer, /test-rls"
+   },
+   {
+    "archetype": "product",
+    "stage": "6. CI/CD",
+    "activity": "Promotion pipeline (GitHub Actions)",
+    "value": "High",
+    "rep": "High",
+    "comp": "Low",
+    "risk": "Low",
+    "automation": "Agentic (Orchestrate)",
+    "prereq": "Terraform, schemachange, branch policy, key-pair auth"
+   },
+   {
+    "archetype": "product",
+    "stage": "6. CI/CD",
+    "activity": "Pipeline failure triage and RCA",
+    "value": "Med",
+    "rep": "High",
+    "comp": "Low",
+    "risk": "Low",
+    "automation": "Agentic (Recommend)",
+    "prereq": "Task history, query history, Cortex Code run support"
+   },
+   {
+    "archetype": "product",
+    "stage": "6. CI/CD",
+    "activity": "Release notes and wave evidence packs",
+    "value": "High",
+    "rep": "High",
+    "comp": "Low",
+    "risk": "Low",
+    "automation": "Agentic (Execute)",
+    "prereq": "Git commits, PRs, Jira, reconciliation ledger"
+   },
+   {
+    "archetype": "product",
+    "stage": "6. Governance",
+    "activity": "G3 verified-in-production sign-off",
+    "value": "High",
+    "rep": "Low",
+    "comp": "High",
+    "risk": "High",
+    "automation": "Manual (human)",
+    "prereq": "Product owner and release manager; UAT evidence"
+   },
+   {
+    "archetype": "migrate",
+    "stage": "1. Assess",
+    "activity": "Estate scan and lineage (AIM assessment)",
+    "value": "High",
+    "rep": "High",
+    "comp": "Low",
+    "risk": "Low",
+    "automation": "Agentic (Execute)",
+    "prereq": "Legacy DB catalog, ETL repository export, service accounts"
+   },
+   {
+    "archetype": "migrate",
+    "stage": "1. Assess",
+    "activity": "Wave plan back from licence dates",
+    "value": "High",
+    "rep": "Low",
+    "comp": "Med",
+    "risk": "Med",
+    "automation": "Agentic (Recommend)",
+    "prereq": "Licence calendar, object inventory, /plan-waves"
+   },
+   {
+    "archetype": "migrate",
+    "stage": "2. Convert",
+    "activity": "DDL conversion",
+    "value": "High",
+    "rep": "High",
+    "comp": "Low",
+    "risk": "Low",
+    "automation": "Agentic (Execute)",
+    "prereq": "SnowConvert AI, /convert-ddl, PR review"
+   },
+   {
+    "archetype": "migrate",
+    "stage": "2. Convert",
+    "activity": "Stored procedure conversion and residue",
+    "value": "High",
+    "rep": "High",
+    "comp": "Med",
+    "risk": "Med",
+    "automation": "Agentic (Execute)",
+    "prereq": "SnowConvert AI, Cortex Code, /convert-procs"
+   },
+   {
+    "archetype": "migrate",
+    "stage": "2. Convert",
+    "activity": "ETL mapping to dbt",
+    "value": "High",
+    "rep": "High",
+    "comp": "Med",
+    "risk": "Med",
+    "automation": "Agentic (Orchestrate)",
+    "prereq": "AIM ETL conversion, /convert-etl, business rule review"
+   },
+   {
+    "archetype": "migrate",
+    "stage": "3. Reconcile",
+    "activity": "History load and reconciliation ledger",
+    "value": "High",
+    "rep": "High",
+    "comp": "Low",
+    "risk": "Low",
+    "automation": "Agentic (Execute)",
+    "prereq": "AWS DMS or bulk unload, golden queries, /reconcile"
+   },
+   {
+    "archetype": "migrate",
+    "stage": "4. Cut over",
+    "activity": "Parallel run and go / no-go",
+    "value": "High",
+    "rep": "Low",
+    "comp": "High",
+    "risk": "High",
+    "automation": "Manual (human)",
+    "prereq": "Reconciliation evidence, rehearsed runbook, client steering"
+   },
+   {
+    "archetype": "bi",
+    "stage": "1. Rationalize",
+    "activity": "Report catalog and usage analysis",
+    "value": "High",
+    "rep": "High",
+    "comp": "Low",
+    "risk": "Low",
+    "automation": "Agentic (Execute)",
+    "prereq": "BI metadata APIs, usage history, Report Analyzer"
+   },
+   {
+    "archetype": "bi",
+    "stage": "2. Semantic",
+    "activity": "Logic extraction (DAX, RPD, spreadsheets)",
+    "value": "High",
+    "rep": "High",
+    "comp": "Med",
+    "risk": "Low",
+    "automation": "Agentic (Execute)",
+    "prereq": "BI exports, Logic Extractor"
+   },
+   {
+    "archetype": "bi",
+    "stage": "2. Semantic",
+    "activity": "KPI conflict resolution",
+    "value": "High",
+    "rep": "Med",
+    "comp": "High",
+    "risk": "Med",
+    "automation": "Agentic (Recommend)",
+    "prereq": "KPI dictionary, named KPI arbiter"
+   },
+   {
+    "archetype": "bi",
+    "stage": "3. Convert",
+    "activity": "Like-for-like dashboard conversion",
+    "value": "High",
+    "rep": "High",
+    "comp": "Med",
+    "risk": "Low",
+    "automation": "Agentic (Execute)",
+    "prereq": "Semantic views, Report Converter, target BI REST API"
+   },
+   {
+    "archetype": "bi",
+    "stage": "4. Validate",
+    "activity": "Parity, RLS and performance validation",
+    "value": "High",
+    "rep": "High",
+    "comp": "Low",
+    "risk": "Low",
+    "automation": "Agentic (Execute)",
+    "prereq": "/compare-reports, /test-rls, Query Insights"
+   },
+   {
+    "archetype": "ai",
+    "stage": "1. Choose",
+    "activity": "Use-case selection from persona journeys",
+    "value": "High",
+    "rep": "Low",
+    "comp": "Med",
+    "risk": "Med",
+    "automation": "Agentic (Recommend)",
+    "prereq": "Journey maps, dashboards, PRD Agent"
+   },
+   {
+    "archetype": "ai",
+    "stage": "2. Ground",
+    "activity": "Semantic model with synonyms and verified queries",
+    "value": "High",
+    "rep": "Med",
+    "comp": "Med",
+    "risk": "Med",
+    "automation": "Agentic (Recommend)",
+    "prereq": "Certified semantic views, KPI arbiter approval"
+   },
+   {
+    "archetype": "ai",
+    "stage": "3. Build",
+    "activity": "Agent configuration with tools",
+    "value": "High",
+    "rep": "Low",
+    "comp": "High",
+    "risk": "High",
+    "automation": "Manual (human)",
+    "prereq": "Cortex Agents, tool permissions approved by architect"
+   },
+   {
+    "archetype": "ai",
+    "stage": "4. Evaluate",
+    "activity": "Golden-question evaluation",
+    "value": "High",
+    "rep": "High",
+    "comp": "Low",
+    "risk": "Low",
+    "automation": "Agentic (Execute)",
+    "prereq": "Test sets, Cortex evaluations, release threshold"
+   }
+  ],
+  "impact": [
+   {
+    "persona": "BI analyst / product owner",
+    "area": "Discovery and KPIs",
+    "figure": "~25%",
+    "label": "design effort reduction"
+   },
+   {
+    "persona": "DevOps and platform",
+    "area": "CI/CD and FinOps",
+    "figure": "90%",
+    "label": "faster environment setup"
+   },
+   {
+    "persona": "Senior data engineer",
+    "area": "Conversion and build",
+    "figure": "~35%",
+    "label": "engineering effort reduction"
+   },
+   {
+    "persona": "Testing lead / QA",
+    "area": "Assurance",
+    "figure": "100%",
+    "label": "measures reconciled"
+   },
+   {
+    "persona": "Solution architect",
+    "area": "Design and platform",
+    "figure": "<5 s",
+    "label": "dashboard filter target"
+   },
+   {
+    "persona": "Program manager and data governance",
+    "area": "Governance and cut-over",
+    "figure": "100%",
+    "label": "governed human gates"
+   }
+  ]
+ },
+ "estimator": {
+  "base": {
+   "ETL": 1,
+   "DW": 1,
+   "BI": 6
+  },
+  "mult": {
+   "S": 1,
+   "M": 2,
+   "C": 4
+  },
+  "share": {
+   "Build": 0.4,
+   "SIT": 0.35,
+   "UAT": 0.25
+  },
+  "fw": {
+   "S": [
+    6,
+    3
+   ],
+   "M": [
+    15,
+    5
+   ],
+   "C": [
+    25,
+    8
+   ]
+  },
+  "disc": {
+   "S": 10,
+   "M": 20,
+   "C": 30
+  },
+  "defaults": {
+   "ETL": {
+    "S": 40,
+    "M": 30,
+    "C": 12
+   },
+   "DW": {
+    "S": 30,
+    "M": 20,
+    "C": 10
+   },
+   "BI": {
+    "S": 20,
+    "M": 20,
+    "C": 10
+   },
+   "pilot": 10,
+   "speed": 3,
+   "fw": {
+    "S": 2,
+    "M": 3,
+    "C": 2
+   },
+   "disc": {
+    "S": 3,
+    "M": 4,
+    "C": 2
+   },
+   "months": 9,
+   "fs": {
+    "a": 4,
+    "sa": 2,
+    "sk": 6,
+    "t": 3,
+    "f": 4
+   }
+  },
+  "labels": {
+   "ETL": "pipeline or mapping",
+   "DW": "fact, dim or semantic view",
+   "BI": "dashboard or report"
+  },
+  "speeds": [
+   [
+    3,
+    "3× conversion (migration)"
+   ],
+   [
+    1.5,
+    "1.5× model-first (data product)"
+   ],
+   [
+    1,
+    "None"
+   ]
+  ],
+  "note": "Excludes program management, cut-over and hypercare, which are loaded by role in the resource plan. Assume no AI gain until the pilot proves it."
+ }
+}

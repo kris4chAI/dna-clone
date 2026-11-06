@@ -2,8 +2,10 @@
 
 A conversational, persona-aware workspace for the **FlyHigh** initiative: **ABC Retail**'s Snowflake modernization, delivered by **Niche Consulting**. It covers the whole lifecycle:
 
-- **Pursuit lifecycle (sales lens):** nine gated stages from RFP signal to orals, with templates, a win room, response scoring and 9 pursuit skills.
+- **Pursuit lifecycle (pursuit lens):** nine gated stages from RFP signal to orals, with templates, a win room, response scoring and 9 pursuit skills.
 - **Implementation lifecycle (delivery lens):** ten steps from Discover to Operate & monitor, with agents, tools and 46 Snowflake delivery skills.
+- **Program office (PMO lens):** the AI Native Delivery Playbook as a working PMO: primer and archetypes, readiness scorecard, plan and execute, unit-effort estimator, AI use-case matrix, KPI scorecard, governance and RAID, team and RACI, with 4 PMO skills.
+- A **sales lens** for sales strategy and pipeline generation is reserved and shown as coming soon.
 - **Shared solution content:** persona journeys, insights dashboards and the logistics data model.
 
 Everything is in this folder: the application, the skills, the templates, the seed content, the tools and the docs.
@@ -19,7 +21,7 @@ Everything is in this folder: the application, the skills, the templates, the se
    ./start.ps1           # Windows PowerShell
    ```
 
-4. Open **http://localhost:8080** and pick a persona. Sales personas see the pursuit; delivery personas see the implementation.
+4. Open **http://localhost:8080** and pick a persona. Pursuit personas see the pursuit, delivery personas the implementation, and PMO personas the program office.
 
 On the first start, Docker builds one image (UI + API + skills + assets), starts PostgreSQL and loads all content. This takes a few minutes. Later starts take seconds and keep your edits.
 
@@ -27,7 +29,7 @@ On the first start, Docker builds one image (UI + API + skills + assets), starts
 docker compose logs -f app       # follow the logs
 docker compose down              # stop (data is kept in the pgdata volume)
 docker compose down -v           # stop and delete all data
-python3 tools/smoke_test.py      # 31 end-to-end checks (all 55 skills included)
+python3 tools/smoke_test.py      # 55 end-to-end checks (all 59 skills included)
 ```
 
 ## The only setting you may need: your LLM
@@ -54,18 +56,19 @@ flyhigh-navigator/
 ├── .env.example              ← LLM of choice, port, optional Snowflake connection
 ├── start.sh · start.ps1      ← one-click start (creates .env, builds, waits, opens the browser)
 ├── backend/                  ← FastAPI API: lens enforcement, pursuit, skills studio, chat, seed content
-│   ├── app/                  ← main.py, access.py, pursuit_api.py, skills_api.py, chat.py, llm.py, schema.sql, seed*.py
+│   ├── app/                  ← main.py, access.py, pursuit_api.py, pmo_api.py, skills_api.py, chat.py, llm.py, schema.sql, seed*.py
 │   └── requirements.txt      ← pinned Python dependencies (wheels for amd64 and arm64)
 ├── frontend/                 ← React 18 + Vite UI (fonts bundled; no external calls at runtime)
 ├── skills/                   ← everything the app can *do*
-│   ├── README.md             ← skills catalog (55 skills)
+│   ├── README.md             ← skills catalog (59 skills)
 │   ├── pursuit/              ← 9 pursuit skills (SKILL.md, source of truth)
+│   ├── pmo/                  ← 4 PMO skills (SKILL.md, source of truth)
 │   ├── delivery/snowskills/  ← generator library for the 46 Snowflake delivery skills (stdlib only)
 │   ├── delivery/catalog/     ← readable SKILL.md + example params per delivery skill
 │   └── packages/             ← .skill packages (upload to Claude, or run standalone)
 ├── assets/
 │   ├── templates/01…09/      ← pursuit stage templates (Word, Excel), downloadable in the app
-│   └── seed/                 ← extracted template sheets and win-room sample data (pursuit_kit.json)
+│   └── seed/                 ← template sheets and win-room data (pursuit_kit.json), delivery playbook (delivery_playbook.json)
 ├── docker/entrypoint.sh      ← waits for the db, loads content on first run or upgrade, starts the server
 ├── tools/                    ← smoke_test.py · package_skills.py · extract_kit.py
 ├── docs/                     ← features · architecture · configuration · operations · persona lens
@@ -79,4 +82,4 @@ flyhigh-navigator/
 - [docs/architecture.md](docs/architecture.md): components, data model and request flow
 - [docs/configuration.md](docs/configuration.md): all `.env` settings (LLM, port, Snowflake, reset)
 - [docs/operations.md](docs/operations.md): run, reset, upgrade, back up, troubleshoot, develop locally
-- [skills/README.md](skills/README.md): the 55-skill catalog
+- [skills/README.md](skills/README.md): the 59-skill catalog

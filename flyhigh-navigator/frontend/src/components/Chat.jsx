@@ -4,6 +4,13 @@ import { Md } from './ui'
 
 const KIND_ICON = { stage: '◆', persona: '◉', dashboard: '◔', kpi: '#', data: '⬡', catalog: '▦', agent: '✦', skill: '/', tool: '⚙', pursuit: '◈', pursuit_stage: '◈', kit: '▤', kit_template: '▤', winroom: '★', quality: '✓', section: '✓', lifecycle: '⟿' }
 
+const SUB = {
+  pursuit: 'Pursuit lens · ask about stages, gates, templates, scores',
+  delivery: 'Delivery lens · ask about steps, agents, skills, shared pursuit stages',
+  pmo: 'PMO lens · ask about readiness, effort, KPIs, RAID, RACI, governance',
+}
+const HINT = { pursuit: 'e.g. What does gate G5 need?', delivery: 'e.g. Which skills build RBAC?', pmo: 'e.g. How ready is Track A?' }
+
 export default function Chat({ lens, context, ask, onNavigate, onClose }) {
   const [msgs, setMsgs] = useState([])
   const [input, setInput] = useState('')
@@ -32,7 +39,7 @@ export default function Chat({ lens, context, ask, onNavigate, onClose }) {
   return (
     <section className="chat">
       <header className="chat-head">
-        <div><div className="chat-title">FlyHigh guide</div><div className="chat-sub">{lens === 'sales' ? 'Sales lens · ask about stages, gates, templates, scores' : 'Delivery lens · ask about steps, agents, skills, shared pursuit stages'}</div></div>
+        <div><div className="chat-title">FlyHigh guide</div><div className="chat-sub">{SUB[lens] || SUB.delivery}</div></div>
         <button className="icon-btn" onClick={onClose} aria-label="Close">×</button>
       </header>
       <div className="chat-body">
@@ -58,7 +65,7 @@ export default function Chat({ lens, context, ask, onNavigate, onClose }) {
         <div ref={end} />
       </div>
       <form className="chat-input" onSubmit={(e) => { e.preventDefault(); send() }}>
-        <input value={input} onChange={(e) => setInput(e.target.value)} placeholder={lens === 'sales' ? 'e.g. What does gate G5 need?' : 'e.g. Which skills build RBAC?'} />
+        <input value={input} onChange={(e) => setInput(e.target.value)} placeholder={HINT[lens] || HINT.delivery} />
         <button className="btn primary" disabled={busy}>Send</button>
       </form>
     </section>

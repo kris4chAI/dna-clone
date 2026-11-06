@@ -22,9 +22,19 @@ def lens_roles():
     return q("SELECT * FROM lens_role ORDER BY seq")
 
 
+@router.get("/lens/list")
+def lens_list():
+    """Every lens, its personas and whether it is available yet (no persona needed: this feeds the picker)."""
+    lenses = q("SELECT * FROM lens ORDER BY seq")
+    roles = q("SELECT * FROM lens_role ORDER BY seq")
+    for l in lenses:
+        l["roles"] = [r for r in roles if r["lens"] == l["code"]]
+    return lenses
+
+
 @router.get("/lens/me")
 def lens_me(p: dict = Depends(persona)):
-    return {"persona": p, "lens": p["lens"],
+    return {"persona": p, "lens": p["lens"], "lens_info": one("SELECT * FROM lens WHERE code=%s", (p["lens"],)),
             "screens": sorted(allowed_codes("screen", p["lens"])),
             "pursuit_stages": sorted(allowed_codes("pursuit_stage", p["lens"]))}
 
@@ -47,7 +57,11 @@ def lifecycle(p: dict = Depends(screen("lifecycle"))):
     impl_ok = allowed("screen", "workflow", lens)
     for s in impl:
         s["locked"] = not impl_ok
-    return {"lens": lens, "pursuit": pursuit, "implementation": impl,
+    pb = one("SELECT data FROM pb_doc WHERE key='stages'")
+    pmo_ok = allowed("screen", "roadmap", lens)
+    program = [{**s, "seq": i + 1, "locked": not pmo_ok} for i, s in enumerate(pb["data"] if pb else [])]
+    return {"lens": lens, "pursuit": pursuit, "implementation": impl, "program": program,
+            "lenses": q("SELECT * FROM lens ORDER BY seq"),
             "screens": q("SELECT * FROM access_rule WHERE resource='screen' ORDER BY label")}
 
 
@@ -80,8 +94,8 @@ def pursuit_overview(p: dict = Depends(screen("pursuit"))):
     pack = lambda k: [r["data"] for r in refs if r["kind"] == k]
     return {"lens": lens, "stages": out, "artefacts": arts, "method": method,
             "dependencies": pack("dependency"),
-            "human_inputs": pack("human_input") if lens == "sales" else [],
-            "objections": pack("objection") if lens == "sales" else [],
+            "human_inputs": pack("human_input") if lens == "pursuit" else [],
+            "objections": pack("objection") if lens == "pursuit" else [],
             "roles": q("SELECT * FROM lens_role ORDER BY seq")}
 
 
@@ -184,7 +198,7 @@ def kit_download(tid: int, persona_code: str):
     return FileResponse(f, filename=t["file"])
 
 
-# ---------------- Win room (sales only) ----------------
+# ---------------- Win room (pursuit only) ----------------
 @router.get("/winroom")
 def winroom(p: dict = Depends(screen("winroom"))):
     t = one("SELECT * FROM kit_template WHERE file LIKE %s", ("%proposal scorecard%",))
@@ -229,7 +243,7 @@ def _section_scores():
 def quality(p: dict = Depends(screen("quality"))):
     crit, secs, total, base = _section_scores()
     for s in secs:
-        s["editable"] = p["lens"] == "sales" or s["owner_lens"] == "shared"
+        s["editable"] = p["lens"] == "pursuit" or s["owner_lens"] == "shared"
     return {"criteria": crit, "sections": secs, "overall": total, "baseline": base, "threshold": 90, "lens": p["lens"]}
 
 
@@ -243,8 +257,8 @@ def _editable(sid: int, p: dict):
     s = one("SELECT * FROM response_section WHERE id=%s", (sid,))
     if not s:
         raise HTTPException(404)
-    if not (p["lens"] == "sales" or s["owner_lens"] == "shared"):
-        raise HTTPException(403, f"Section '{s['name']}' is scored by the sales team; delivery reviewers score the shared sections.")
+    if not (p["lens"] == "pursuit" or s["owner_lens"] == "shared"):
+        raise HTTPException(403, f"Section '{s['name']}' is scored by the pursuit team; delivery reviewers score the shared sections.")
 
 
 @router.put("/quality/{sid}/score")

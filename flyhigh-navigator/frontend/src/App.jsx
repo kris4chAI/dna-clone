@@ -13,10 +13,21 @@ import Journeys from './views/Journeys'
 import Insights from './views/Insights'
 import DataModels from './views/DataModels'
 import Skills from './views/Skills'
+import { Playbook, Readiness, Roadmap, Estimator, UseCases, Kpis, Governance, Team } from './views/Pmo'
 
 const NAV = [
   { group: 'Start', items: [{ id: 'lifecycle', label: 'Lifecycle overview', hint: 'Pursuit → implementation', icon: '⟿' },
-    { id: 'skills', label: 'Skills studio', hint: 'Run pursuit + Snowflake skills', icon: '⚡' }] },
+    { id: 'skills', label: 'Skills studio', hint: 'Run the skills for your lens', icon: '⚡' }] },
+  { group: 'Program office', items: [
+    { id: 'playbook', label: 'Delivery playbook', hint: 'Primer · archetypes · practices', icon: '❖' },
+    { id: 'readiness', label: 'Readiness scorecard', hint: '17 questions · 5 dimensions', icon: '◎' },
+    { id: 'roadmap', label: 'Plan and execute', hint: 'Plan · setup · execute · optimize', icon: '▸' },
+    { id: 'estimator', label: 'Unit-effort estimator', hint: 'Person-days · FTE', icon: '∑' },
+    { id: 'usecases', label: 'AI use-case matrix', hint: 'Where agents work first', icon: '⊞' },
+    { id: 'kpis', label: 'KPI scorecard', hint: 'Trusted numbers · on date', icon: '◐' },
+    { id: 'governance', label: 'Governance and RAID', hint: 'Steering · RAI · RAID', icon: '⚖' },
+    { id: 'team', label: 'Team and RACI', hint: 'Pods · roles · RACI', icon: '⚇' },
+  ] },
   { group: 'Pursuit lifecycle', items: [
     { id: 'pursuit', label: 'Pursuit stages', hint: 'G0 → G8 · signal to orals', icon: '◈' },
     { id: 'kit', label: 'Pursuit kit', hint: 'Templates · aids · skills', icon: '▤' },
@@ -75,7 +86,7 @@ export default function App() {
         </div>
         <button className="who" onClick={() => setGate(true)} title="Switch persona">
           <span className={`lens-dot ${lens}`} />
-          <span><b>{me.persona.name}</b><small>{lens === 'sales' ? 'Sales lens' : 'Delivery lens'} · switch</small></span>
+          <span><b>{me.persona.name}</b><small>{me.lens_info?.name || lens} · switch</small></span>
         </button>
         <nav>
           {NAV.map((g) => {
@@ -94,7 +105,7 @@ export default function App() {
             )
           })}
         </nav>
-        <div className="side-foot">ABC Retail · FlyHigh · AI Native Sales Engineering</div>
+        <div className="side-foot">ABC Retail · FlyHigh · Niche Consulting</div>
       </aside>
 
       <main className="main">
@@ -109,6 +120,14 @@ export default function App() {
         {v === 'journeys' && <Journeys focus={nav.ref} onAsk={askGuide} onNavigate={go} />}
         {v === 'insights' && <Insights focus={nav.ref} onNavigate={go} />}
         {v === 'data' && <DataModels focus={nav.ref} />}
+        {v === 'playbook' && <Playbook onNavigate={go} />}
+        {v === 'readiness' && <Readiness onNavigate={go} />}
+        {v === 'roadmap' && <Roadmap me={me} focus={nav.ref} onNavigate={go} />}
+        {v === 'estimator' && <Estimator onNavigate={go} />}
+        {v === 'usecases' && <UseCases onNavigate={go} />}
+        {v === 'kpis' && <Kpis onNavigate={go} />}
+        {v === 'governance' && <Governance onNavigate={go} />}
+        {v === 'team' && <Team me={me} />}
       </main>
 
       <button className="chat-toggle" onClick={() => setChatOpen((o) => !o)}>{chatOpen ? '→' : 'Ask the guide'}</button>

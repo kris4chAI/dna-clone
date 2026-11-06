@@ -1,4 +1,4 @@
-"""Pursuit lifecycle content: AI Native Sales Engineering method.
+"""Pursuit lifecycle content: the AI Native Pursuit Engineering method.
 
 Sources (folder "AI Native Sales Engineering"):
   - AI Native Sales Engineering Methodology.docx  (stages, questions, artefacts, skills, roles, measures, rubric, sections)
@@ -11,16 +11,29 @@ Sources (folder "AI Native Sales Engineering"):
 # ---------------------------------------------------------------------------
 # Persona lens: who sees what
 # ---------------------------------------------------------------------------
+# Lenses: a lens is a workspace for a group of personas. "sales" (strategy and pipeline) is reserved for later.
+LENSES = [
+    # code, name, tagline, description, available
+    ("pursuit", "Pursuit lens", "Pursuit lifecycle · win room · response quality",
+     "Pursuit personas run the nine-gate pursuit, from RFP signal to orals.", True),
+    ("delivery", "Delivery lens", "Implementation lifecycle · toolkit · Snowflake skills",
+     "Delivery personas run the implementation, from Discover to monitoring, and join the final pursuit stages.", True),
+    ("pmo", "PMO lens", "Delivery playbook · readiness · plan · KPIs · governance",
+     "Program management runs the AI Native Delivery Playbook: readiness, planning, estimation, measurement, RACI and governance.", True),
+    ("sales", "Sales lens", "Sales strategy · pipeline generation",
+     "Sales strategy and pipeline generation. Coming soon.", False),
+]
+
 LENS_ROLES = [
     # code, name, lens, owns, agent support
-    ("pursuit_lead", "Pursuit lead", "sales", "Bid decision, win themes, gates G0, G2, G7, G8", "Orchestrator runs stages; scorecard rescoring"),
-    ("client_partner", "Client partner", "sales", "Relationships, stakeholder roles, orals", "Stakeholder research and briefing notes"),
-    ("proposal_manager", "Proposal manager", "sales", "RFP matrix, clarifications, assembly, brand", "Matrix extraction, brand audit, plain-language pass"),
-    ("solution_architect", "Solution architect (pre-sales)", "sales", "Architecture, data model, gate G3", "Slide drafting, vendor research, render QA"),
-    ("experience_lead", "Experience lead", "sales", "Journeys and dashboards", "Persona dashboards, journey maps"),
-    ("deal_lead", "Deal lead and finance", "sales", "Rates, options, discounts, gate G5", "Commercials model, TCO and ROI"),
-    ("legal", "Niche Consulting Legal", "sales", "MSA positions, gate G6", "MSA readiness draft with bracketed values"),
-    ("alliance_lead", "Alliance / partner lead", "sales", "Partner architecture review, funding", "Partner slides and funding plan"),
+    ("pursuit_lead", "Pursuit lead", "pursuit", "Bid decision, win themes, gates G0, G2, G7, G8", "Orchestrator runs stages; scorecard rescoring"),
+    ("client_partner", "Client partner", "pursuit", "Relationships, stakeholder roles, orals", "Stakeholder research and briefing notes"),
+    ("proposal_manager", "Proposal manager", "pursuit", "RFP matrix, clarifications, assembly, brand", "Matrix extraction, brand audit, plain-language pass"),
+    ("solution_architect", "Solution architect (pre-sales)", "pursuit", "Architecture, data model, gate G3", "Slide drafting, vendor research, render QA"),
+    ("experience_lead", "Experience lead", "pursuit", "Journeys and dashboards", "Persona dashboards, journey maps"),
+    ("deal_lead", "Deal lead and finance", "pursuit", "Rates, options, discounts, gate G5", "Commercials model, TCO and ROI"),
+    ("legal", "Niche Consulting Legal", "pursuit", "MSA positions, gate G6", "MSA readiness draft with bracketed values"),
+    ("alliance_lead", "Alliance / partner lead", "pursuit", "Partner architecture review, funding", "Partner slides and funding plan"),
     ("delivery_lead", "Delivery lead", "delivery", "Plan, effort, team, RACI, gate G4; owns delivery after award", "Effort reconciliation, job descriptions"),
     ("product_owner", "Product owner", "delivery", "Discover, PRD, gate G1 (implementation)", "PRD Agent"),
     ("architecture_lead", "Architecture lead", "delivery", "Solution design, gate G2 (implementation)", "Solution Design Agent"),
@@ -31,22 +44,39 @@ LENS_ROLES = [
     ("qa_lead", "QA lead", "delivery", "Platform assurance and sign-off", "Test agents, reconciler"),
     ("release_manager", "Release manager", "delivery", "Promotion dev → stage → prod, gate G3 (implementation)", "Build, quality, promotion and release agents"),
     ("platform_ops", "Platform operations", "delivery", "Hypercare, run and handover", "Deploy and monitor, docs and enablement agents"),
+    ("program_manager", "AI program manager", "pmo", "Integrated plan back from licence dates, gates, RAID, steering, value tracking", "Status, burndown and RAID compiled from agent telemetry"),
+    ("ai_champion", "AI Champion (AI Native data lead)", "pmo", "Readiness, harness, skills and guardrails; AI tool approval; conversion rate and credits", "Readiness scoring, AI contribution measures"),
+    ("program_head", "Client program head (sponsor)", "pmo", "Priorities, approved AI tools, go / no-go with steering", "Steering pack and evidence packs"),
+    ("pmo_analyst", "PMO analyst", "pmo", "RAID log, KPI scorecard, gate calendar, status reporting", "Scorecard roll-ups and status drafts"),
+    ("governance_lead", "Data governance lead", "pmo", "Classification, masking approvals, Responsible AI controls", "Policy and audit evidence from Horizon"),
+    ("finops_lead", "FinOps and commercial controller", "pmo", "Effort baseline, credits per workload, run-cost reduction", "Unit-effort estimator, credit monitors"),
 ]
 
-# screen access (resource 'screen') and pursuit stage access (resource 'pursuit_stage')
+P, D, M = "pursuit", "delivery", "pmo"
+# screen access (resource 'screen'): code, label, lenses, reason
 SCREEN_ACCESS = [
-    ("skills", "Skills studio", True, True, "Each lens sees its own skills: pursuit skills for sales (shared ones for delivery), Snowflake delivery skills for delivery."),
-    ("lifecycle", "Lifecycle overview", True, True, "Both lenses see the end-to-end map; locked segments are greyed out."),
-    ("pursuit", "Pursuit lifecycle", True, True, "Sales sees all nine stages. Delivery sees only the shared final stages (5, 8, 9); the rest show as locked."),
-    ("kit", "Pursuit kit", True, True, "Templates are filtered by stage access."),
-    ("winroom", "Win room (scorecard)", True, False, "Buyer intelligence and competitor rubric stay with the sales team."),
-    ("quality", "Response quality", True, True, "Stage 8 red team is shared: delivery reviews the delivery plan and team sections."),
-    ("workflow", "Implementation workflow", False, True, "Implementation lifecycle is for delivery personas."),
-    ("catalog", "Toolkit catalog", False, True, "Engineering agents, skills and tools are for delivery personas."),
-    ("journeys", "Persona journeys", True, True, "Solution content: authored in pursuit stage 4, carried into implementation Discover and Design."),
-    ("insights", "Insights", True, True, "Solution content shared across both lifecycles."),
-    ("data", "Data models", True, True, "Solution content shared across both lifecycles."),
+    ("skills", "Skills studio", [P, D, M], "Each lens sees its own skills: pursuit skills for pursuit, Snowflake skills for delivery, PMO skills (and the planning and release skills) for the PMO."),
+    ("lifecycle", "Lifecycle overview", [P, D, M], "Every lens sees the end-to-end map; locked segments are greyed out."),
+    ("pursuit", "Pursuit lifecycle", [P, D, M], "Pursuit sees all nine stages. Delivery sees the shared final stages (5, 8, 9); the PMO sees the hand-over stages (5, 9)."),
+    ("kit", "Pursuit kit", [P, D, M], "Templates are filtered by stage access."),
+    ("winroom", "Win room (scorecard)", [P], "Buyer intelligence and competitor rubric stay with the pursuit team."),
+    ("quality", "Response quality", [P, D], "Stage 8 red team is shared: delivery reviews the delivery plan and team sections."),
+    ("workflow", "Implementation workflow", [D, M], "Delivery runs the implementation; the PMO follows it to run waves and gates."),
+    ("catalog", "Toolkit catalog", [D], "Engineering agents, skills and tools are for delivery personas."),
+    ("journeys", "Persona journeys", [P, D, M], "Solution content: authored in pursuit stage 4, carried into implementation Discover and Design."),
+    ("insights", "Insights", [P, D, M], "Solution content shared across the lifecycles."),
+    ("data", "Data models", [P, D, M], "Solution content shared across the lifecycles."),
+    ("playbook", "Delivery playbook", [M, D], "The AI-native delivery primer and archetypes: owned by the PMO, read by delivery."),
+    ("readiness", "Readiness scorecard", [M], "Qualification of each track before Sprint 0 ends: a PMO decision."),
+    ("roadmap", "Plan and execute", [M, D], "Plan, setup, execute and optimize: the PMO runs it, delivery follows the activities for its archetype."),
+    ("estimator", "Unit-effort estimator", [M], "Effort baselines and scenarios are PMO and commercial controls."),
+    ("usecases", "AI use-case matrix", [M], "Prioritizing where agents work is a PMO and AI Champion decision."),
+    ("kpis", "KPI scorecard", [M], "Measurement against baseline for steering."),
+    ("governance", "Governance and RAID", [M], "Steering, Responsible AI controls and the RAID log."),
+    ("team", "Team and RACI", [M, D], "Pod topology and RACI: owned by the PMO, shared with delivery."),
 ]
+# pursuit stages shared with the PMO (hand-over into mobilization)
+PMO_STAGES = {"delivery", "submit"}
 
 # ---------------------------------------------------------------------------
 # Nine gated pursuit stages
@@ -54,7 +84,7 @@ SCREEN_ACCESS = [
 P_STAGES = [
     {"num": 1, "code": "signal", "name": "Signal and qualify", "loop": "Build", "gate_code": "G0", "gate": "Bid decision",
      "approvers": "Pursuit lead + practice head", "purpose": "Decide whether to bid, and with what conviction.",
-     "audience": "sales", "critical": False, "lane": "Start",
+     "audience": "pursuit", "critical": False, "lane": "Start",
      "artefacts": ["Opportunity brief", "Account and stakeholder research", "Bid or no-bid memo"],
      "skills": ["rfp-response-orchestrator"], "tools": ["Web search", "In-app browser (LinkedIn roles)", "CRM and email connectors", "Project memory", "Claude Docs"],
      "questions": ["Is the program funded, with a decision date and a named executive sponsor?",
@@ -66,7 +96,7 @@ P_STAGES = [
      "samples": []},
     {"num": 2, "code": "decode", "name": "Decode the RFP", "loop": "Build", "gate_code": "G1", "gate": "Clarifications sent",
      "approvers": "Pursuit lead", "purpose": "Turn the RFP into a requirement-by-requirement plan.",
-     "audience": "sales", "critical": True, "lane": "Critical path · Requirements",
+     "audience": "pursuit", "critical": True, "lane": "Critical path · Requirements",
      "artefacts": ["Requirements and compliance matrix", "Evaluation-criteria map", "Clarification-question log", "Scoping and discovery questionnaire"],
      "skills": ["rfp-response-orchestrator", "xlsx", "docs (Claude Docs)"], "tools": ["pdf and docx readers", "Device folder bridge"],
      "questions": ["Which requirements are mandatory, which desirable, and how is each scored?",
@@ -78,7 +108,7 @@ P_STAGES = [
      "samples": ["Sample - FlyHigh scoping discovery.xlsx", "Sample - FlyHigh scoping discovery responses.xlsx"]},
     {"num": 3, "code": "win", "name": "Win strategy", "loop": "Build", "gate_code": "G2", "gate": "Win strategy approved",
      "approvers": "Pursuit lead + client partner", "purpose": "Decide why the client should pick us over firms with the same badges.",
-     "audience": "sales", "critical": False, "lane": "Parallel lane · Win strategy",
+     "audience": "pursuit", "critical": False, "lane": "Parallel lane · Win strategy",
      "artefacts": ["Stakeholder map with confirmed roles", "Win themes", "Competitor rubric", "Baseline win scorecard", "Executive-summary storyline"],
      "skills": ["rfp-win-scorecard", "niche-exec-offering", "docs (Claude Docs)"], "tools": ["In-app browser (LinkedIn roles)"],
      "questions": ["What does each buyer and evaluator care about most?",
@@ -90,7 +120,7 @@ P_STAGES = [
      "samples": ["Sample - FlyHigh proposal scorecard.xlsx"]},
     {"num": 4, "code": "solution", "name": "Solution design", "loop": "Build", "gate_code": "G3", "gate": "Solution review",
      "approvers": "Solution architect + partner solution engineer", "purpose": "Design the target state and show it as experience first, then technology.",
-     "audience": "sales", "critical": True, "lane": "Critical path · Solution scope",
+     "audience": "pursuit", "critical": True, "lane": "Critical path · Solution scope",
      "artefacts": ["Current state per track", "Reference and target architecture", "Journey maps per persona", "Persona dashboards",
                    "Industry data model and KPI library", "Accelerators", "Partner-platform integration (data pulled once)", "Scope guardrails"],
      "skills": ["niche-exec-offering", "dataviz", "niche-brand-guardian"], "tools": ["Playwright (dashboard mock-ups)", "In-app browser (vendor research)"],
@@ -118,7 +148,7 @@ P_STAGES = [
      "handover": ["discover", "foundation"]},
     {"num": 6, "code": "commercials", "name": "Commercials and value", "loop": "Build", "gate_code": "G5", "gate": "Deal review",
      "approvers": "Deal lead + finance", "purpose": "Price the options and prove the value.",
-     "audience": "sales", "critical": True, "lane": "Critical path · Commercials",
+     "audience": "pursuit", "critical": True, "lane": "Critical path · Commercials",
      "artefacts": ["Rate card", "Scope options", "Managed-services run team", "Fixed and flex capacity discount model",
                    "Three-year contract value", "Five-lever TCO", "Ten-month ROI", "Partner-funding plan"],
      "skills": ["rfp-commercials-model", "xlsx"], "tools": ["INDICATIVE stamps", "Deal-desk review flags"],
@@ -130,7 +160,7 @@ P_STAGES = [
      "samples": ["Sample - FlyHigh resource loading.xlsx (Commercials sheet)"]},
     {"num": 7, "code": "trust", "name": "Trust, security and MSA readiness", "loop": "Review", "gate_code": "G6", "gate": "Legal review",
      "approvers": "Niche Consulting Legal", "purpose": "Remove the reasons legal and security might slow the decision.",
-     "audience": "sales", "critical": False, "lane": "Parallel lane · Trust and MSA",
+     "audience": "pursuit", "critical": False, "lane": "Parallel lane · Trust and MSA",
      "artefacts": ["Brand-trust and client-satisfaction slide", "Security and compliance controls", "MSA positions with bracketed values"],
      "skills": ["niche-exec-offering", "niche-brand-guardian"], "tools": ["Corporate presentation (source)", "FOR JOINT REVIEW stamps"],
      "questions": ["Which certifications and rankings can we claim, with a source for each?",
@@ -285,28 +315,28 @@ RUBRIC = [
 SECTIONS = [
     (1, "Executive summary", "3–5", 3, "Value, differentiation and the ask, in three minutes",
      ["Headline value figure", "Three to four value levers", "Differentiation beyond badges", "The ask with a date"], 61,
-     "Headline value figure; ask with a date", "Lead with the indicative $1.84M a year saving and price; add a dated ask; reconcile estate size (22 TB vs 47 TB)", "None", 7.5, "sales"),
+     "Headline value figure; ask with a date", "Lead with the indicative $1.84M a year saving and price; add a dated ask; reconcile estate size (22 TB vs 47 TB)", "None", 7.5, "pursuit"),
     (2, "Our understanding", "6–10", 5, "We know the drivers, current state and must-haves",
      ["Drivers with quantified pain", "Current state per track", "Must-haves with dates", "Traceability to RFP requirements"], 70,
-     "Quantified pain; RFP traceability", "Add a requirement-to-slide trace table; fix TB and cut-over date conflicts", "Client input", 10, "sales"),
+     "Quantified pain; RFP traceability", "Add a requirement-to-slide trace table; fix TB and cut-over date conflicts", "Client input", 10, "pursuit"),
     (3, "Target state and architecture", "11–17", 7, "One governed platform, partner platforms, data pulled once",
      ["Reference and platform architecture", "System of record per domain", "Non-functional requirements", "Partner integration patterns labelled"], 65,
-     "System of record for all domains; non-functional requirements", "System-of-record table for all subject areas; availability, freshness, recovery panel; trim fleet management system and labor management system to one slide", "Client input", 25 / 6, "sales"),
+     "System of record for all domains; non-functional requirements", "System-of-record table for all subject areas; availability, freshness, recovery panel; trim fleet management system and labor management system to one slide", "Client input", 25 / 6, "pursuit"),
     (4, "Experience: journey maps", "18–20", 3, "Every persona's journey, from question to action",
      ["Named personas", "Stages with question, tool and KPI", "Act stage names the write-back system"], 65,
-     "Write-back system on internal and customer journeys", "Name the system each decision writes back to; baseline and target per KPI", "Client input", 25 / 6, "sales"),
+     "Write-back system on internal and customer journeys", "Name the system each decision writes back to; baseline and target per KPI", "Client input", 25 / 6, "pursuit"),
     (5, "Insight: persona dashboards", "21–24", 4, "What happened, why, what will happen, what to do",
      ["One per key persona", "Four-question narrative", "KPIs match the KPI library", "Illustrative-data label"], 74,
-     "Transportation persona dashboard", "Add a dispatcher dashboard; tag tiles with KPI-library IDs; fix the dashboard count", "None", 25 / 6, "sales"),
+     "Transportation persona dashboard", "Add a dispatcher dashboard; tag tiles with KPI-library IDs; fix the dashboard count", "None", 25 / 6, "pursuit"),
     (6, "Data: model and KPIs", "25–29", 5, "Industry data model and certified KPIs, ready on day one",
      ["Subject areas", "Star schemas", "Grain and keys", "History and data-quality rules", "Sources per fact"], 68,
-     "Data-quality rules; sources per fact", "Add sources and quality rules per fact; drop the non-Snowflake reference model", "None", 25 / 6, "sales"),
+     "Data-quality rules; sources per fact", "Add sources and quality rules per fact; drop the non-Snowflake reference model", "None", 25 / 6, "pursuit"),
     (7, "Engineering: accelerators and frameworks", "30–37", 8, "AI native delivery with human gates",
      ["Each framework with human gates", "Productivity claims as targets with a baseline", "CI/CD and environments"], 61,
      "Baselines for productivity targets", "State baselines from pilot sizing; merge eight slides into four tied to ABC Retail objects", "None", 25 / 6, "shared"),
     (8, "AI: Cortex use cases and roadmap", "38–39", 2, "AI where the data lives, sequenced by value",
      ["Use cases by value and readiness", "AI governance and guardrails", "Data stays in the platform"], 62,
-     "Use cases scored by value", "Value-by-readiness matrix (INDICATIVE); owner and metric per pilot", "Client input", 25 / 6, "sales"),
+     "Use cases scored by value", "Value-by-readiness matrix (INDICATIVE); owner and metric per pilot", "Client input", 25 / 6, "pursuit"),
     (9, "Delivery plan", "40–48", 9, "A plan that protects the cut-over date",
      ["Phases and waves on a timeline", "Gates", "Parallel run and cut-over", "Client dependencies with dates"], 72,
      "Dated client dependencies", "Need-by weeks and calendar months; fix pilot timing conflict", "None", 10, "shared"),
@@ -315,16 +345,16 @@ SECTIONS = [
      "Risk owners; delivery locations", "Owner and trigger per risk; cities and named leads; merge three overlapping slides", "Client input", 10, "shared"),
     (11, "Proof", "61–69", 9, "We have done this, in this industry, at this scale",
      ["At least three relevant case studies with quantified outcomes", "One in the client's industry", "Reference availability"], 57,
-     "Reference availability; achieved (not targeted) outcomes", "Offer references; replace off-scope cases with an Oracle-to-Snowflake BI case; rebuild legacy slides", "Client consent", 10, "sales"),
+     "Reference availability; achieved (not targeted) outcomes", "Offer references; replace off-scope cases with an Oracle-to-Snowflake BI case; rebuild legacy slides", "Client consent", 10, "pursuit"),
     (12, "Why Niche Consulting: trust, partners, MSA", "70–78", 9, "Safe to sign: security, partnerships, contract readiness",
      ["Sourced trust and security credentials", "Partner tiers", "MSA positions with values to agree flagged"], 74,
-     "None", "Replace off-scope Agentforce slide; tie credentials to ABC Retail's security review", "Legal", 10, "sales"),
+     "None", "Replace off-scope Agentforce slide; tie credentials to ABC Retail's security review", "Legal", 10, "pursuit"),
     (13, "Commercials and value", "79–83", 5, "Clear options, term discounts, TCO and ROI",
      ["Options compared", "Rate card", "Term discounts", "TCO and ROI with client-input placeholders", "INDICATIVE stamp and deal-desk review flag"], 80,
-     "None", "Separate Niche Consulting-funded value from ABC Retail cost avoided in the ROI; restate payback; show licence and consumption costs", "Client input", 10, "sales"),
+     "None", "Separate Niche Consulting-funded value from ABC Retail cost avoided in the ROI; restate payback; show licence and consumption costs", "Client input", 10, "pursuit"),
     (14, "Next steps", "84", 1, "The decision, the date and the mutual plan",
      ["The decision", "Dated mutual action plan with owners on both sides", "What we need from the client"], 50,
-     "Dated mutual action plan with owners on both sides", "Dated plan with an ABC Retail and a Niche Consulting owner per step; realistic MSA timing", "Client input", 7.5, "sales"),
+     "Dated mutual action plan with owners on both sides", "Dated plan with an ABC Retail and a Niche Consulting owner per step; realistic MSA timing", "Client input", 7.5, "pursuit"),
 ]
 
 STAGE_FOLDER = {

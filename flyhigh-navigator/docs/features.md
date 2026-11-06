@@ -17,25 +17,43 @@ Rows loaded from the reference content are tagged `origin='seed'`. Anything adde
 
 ## Pursuit lifecycle and persona lens
 
-| Screen | Sales lens | Delivery lens | What it does |
+| Screen | Pursuit lens | Delivery lens | PMO lens | What it does |
+|---|---|---|---|---|
+| Lifecycle overview | ✓ | ✓ | ✓ | The end-to-end map: pursuit (9 stages), program office (6 playbook stages) and implementation (10 steps). Locked segments are greyed out. Includes the access matrix for all lenses. |
+| Pursuit stages | all 9 | 5, 8, 9 only | 5, 9 only | Flow map by loop (Build, Review, Fix) with the critical path, parallel lanes and gates G0–G8. Each stage shows its questions checklist (saved), input tiers, artefacts (systems of record flagged), skills and tools, templates, and the implementation steps it hands over to. A method tab covers principles, targets, team 13 → 6, measures, roles, dependencies, input ceilings and guardrails (plus human inputs and objections for the pursuit lens only). |
+| Pursuit kit | all stages | shared stages | stages 5, 9 | The 11 Word and Excel templates from `Stage templates/`, turned into editable sheets: 32 sheets in grid or section-form views, with cell edits saved to Postgres and a download link for each original file. Also covers the nine skill packages and the other skills and tools. FlyHigh samples are listed but not bundled (client-confidential). |
+| Win room | ✓ | — | — | FlyHigh scorecard: summary tiles, a G7 test, the buying-group heatmap (18 people × 5 dimensions), a competitor archetype rubric and the pending actions, with editable status. |
+| Response quality | all 14 sections | scores shared sections 7, 9, 10 | — | The 10-criterion rubric scorer. Points = weight × score ÷ 4, and a missing must-have caps the section at 89. The overall weighted score starts at the 66.6 baseline. |
+| Journeys, Insights, Data models | ✓ | ✓ | ✓ | Solution content: written in pursuit stage 4 and carried into implementation. |
+| Guided workflow | — | ✓ | ✓ | The implementation lifecycle; the PMO follows it to run waves and gates. |
+| Toolkit catalog | — | ✓ | — | Engineering agents, skills and tools. |
+
+**How the lens is enforced:** every API call carries `X-Persona`. The persona maps to a lens in `lens_role`, and `access_rule.lenses` lists the lenses that can open each screen, pursuit stage and skill. Blocked calls return 403. The chat guide filters its answers the same way. Rules live in the database, so you can change them without touching code (e.g. `UPDATE access_rule SET lenses = lenses || 'pmo' WHERE code='commercials'`). The persona picker is a role lens, not authentication: in production, put SSO in front and derive the persona from IdP groups.
+
+Pursuit content comes from the AI Native Pursuit Engineering method (`AI Native Sales Engineering Methodology.docx` and `Workflow.pptx` in the source folder), `00 Start here.docx`, `Stage templates/` and `Skills/`. Seeds are in `backend/app/pursuit_data.py` and `assets/seed/pursuit_kit.json`. The blank templates are in `assets/templates/`.
+
+## Program office (PMO lens)
+
+The PMO lens turns the **Snowflake AI Native Delivery Playbook** (data modernization variant) into a working program office. Content is seeded from `assets/seed/delivery_playbook.json`; working data lives in the `pmo_*` tables.
+
+| Screen | Who | What it does | Playbook source |
 |---|---|---|---|
-| Lifecycle overview | ✓ | ✓ | The end-to-end map from pursuit (9 stages) to handover to implementation (10 steps). Locked segments are greyed out. Includes the access matrix. |
-| Pursuit stages | all 9 | 5, 8, 9 only | Flow map by loop (Build, Review, Fix) with the critical path, parallel lanes and gates G0–G8. Each stage shows its questions checklist (saved), input tiers, artefacts (systems of record flagged), skills and tools, templates, and the implementation steps it hands over to. A method tab covers principles, targets, team 13 → 6, measures, roles, dependencies, input ceilings and guardrails (plus human inputs and objections for sales only). |
-| Pursuit kit | all stages | shared stages | The 11 Word and Excel templates from `Stage templates/`, turned into editable sheets: 32 sheets in grid or section-form views, with cell edits saved to Postgres and a download link for each original file. Also covers the nine skill packages and the other skills and tools. FlyHigh samples are listed but not bundled (client-confidential). |
-| Win room | ✓ | — | FlyHigh scorecard: summary tiles, a G7 test, the buying-group heatmap (18 people × 5 dimensions), a competitor archetype rubric and the pending actions, with editable status. |
-| Response quality | all 14 sections | scores shared sections 7, 9, 10 | The 10-criterion rubric scorer. Points = weight × score ÷ 4, and a missing must-have caps the section at 89. The overall weighted score starts at the 66.6 baseline. |
-| Journeys, Insights, Data models | ✓ | ✓ | Solution content: written in pursuit stage 4 and carried into implementation. |
-| Guided workflow, Toolkit catalog | — | ✓ | The implementation lifecycle. |
+| Delivery playbook | PMO, delivery | Primer (why delivery is changing, six mindset shifts, what stays human, the mental model, roles, what good looks like), the four archetypes (DMLC migration, DPLC data products, BMLC BI and semantic, AILC Cortex AI), the harness (delivery and Data Harness flows, toolkit, anatomy, agents by lane), ten practices, the FlyHigh worked example with the ten-month plan, artefacts and reference programs | Playbook HTML, Primer |
+| Readiness scorecard | PMO | 17 questions scored 0–3 per track across five weighted dimensions (30/20/15/25/10). Bands: 75%+ ready, 50%+ ready with remediation. Lagging dimensions (< 67%) show their remediation. Tracks can be added. | Readiness Scorecard |
+| Plan and execute | PMO, delivery | Six playbook stages with exit checklists (saved), the nine-phase onboarding plan and program metadata, 13 planning steps, 7 setup steps with harness readiness, execute activities per archetype (role, activity, agent or skill linked to the studio, tools, human involvement), autonomy tiers, minimum context and ways of working, optimize measures | Project Planning & Execution Template, Transformation Activities |
+| Unit-effort estimator | PMO | ETL, warehouse and BI objects by complexity, frameworks and discovery; pilot share and wave speed-up; person-days, person-months, average FTE, activity split and framework complexity score. Scenarios are saved. | Estimation Template |
+| AI use-case matrix | PMO | 37 activities across the four archetypes rated on value, repeatability, complexity, risk and automation (editable). The weighted score assigns a lane: pilot wave, next wave, assist only or human gate. Persona-level impact targets. | Use-Case Identification & Prioritization Matrix |
+| KPI scorecard | PMO | Six measurement dimensions and 24 metrics in five categories with target, source, capture (auto, hybrid, manual) and cadence. Actuals, RAG status and notes are editable. | Measurement Framework & KPI Scorecard |
+| Governance and RAID | PMO | RAID log (add, edit, close), three-tier operating model, cadence and decision areas, Responsible AI (lifecycle controls, eight pillars, agent-lifecycle risks mapped to NIST, ISO 42001, EU AI Act, OWASP), harness guardrails and the gate log | Responsible AI Governance Framework, Planning Template |
+| Team and RACI | PMO, delivery | Pod topology, team composition per archetype, role evolution (traditional vs AI-native), four RACI matrices (planning, data products, migration, BI) | Team Formation & RACI |
 
-**How the lens is enforced:** every API call carries `X-Persona`. The persona maps to a lens in `lens_role`, and `access_rule` decides which screens and pursuit stages each lens can open. Blocked calls return 403. The chat guide filters its answers the same way. Rules live in the database, so you can change them without touching code (e.g. `UPDATE access_rule SET delivery=TRUE WHERE code='commercials'`). The persona picker is a role lens, not authentication: in production, put SSO in front and derive the persona from IdP groups.
-
-Pursuit content comes from `AI Native Sales Engineering Methodology.docx`, `AI Native Sales Engineering Workflow.pptx`, `00 Start here.docx`, `Stage templates/` and `Skills/`. Seeds are in `backend/app/pursuit_data.py` and `assets/seed/pursuit_kit.json`. The blank templates are in `assets/templates/`.
+All client, vendor and accelerator names in the playbook are rebranded for the sample: the client is ABC Retail, the initiative FlyHigh, the vendor Niche Consulting and its accelerators **Niche Accelerate**.
 
 ## Skills studio
 
-**Skills studio** (both lenses) runs every skill against the app's own data and keeps a history of runs.
+**Skills studio** (every lens) runs every skill against the app's own data and keeps a history of runs.
 
-**Pursuit skills (9).** These are the AI Native Sales Engineering skills, run as engines. Their SKILL.md files are in `skills/pursuit/`.
+**Pursuit skills (9).** These are the AI Native Pursuit Engineering skills, run as engines. Their SKILL.md files are in `skills/pursuit/`.
 
 | Skill | What the engine does in the app | Wired into |
 |---|---|---|
@@ -48,6 +66,17 @@ Pursuit content comes from `AI Native Sales Engineering Methodology.docx`, `AI N
 | proposal-to-job-descriptions | One JD per role and location tier, with the tier must-haves taken from the skill | Skills studio (stage 5, shared) |
 | niche-brand-guardian | Audit of titles and text: three-word titles, sentence case, INDICATIVE on money, competitor names, filler | Skills studio |
 | niche-exec-offering | Slide spec JSON for a response section | Skills studio |
+
+**PMO skills (4).** Engines over the playbook data; SKILL.md files in `skills/pmo/`.
+
+| Skill | What the engine does | Wired into |
+|---|---|---|
+| pmo-readiness-scorecard | Scores a track, sets the band and lists remediation for lagging dimensions; optionally raises them in the RAID log | Readiness scorecard |
+| pmo-unit-effort-estimator | Runs the unit-effort model from object counts; optionally saves a scenario | Unit-effort estimator |
+| pmo-usecase-prioritizer | Ranks activities by weighted score and lane | AI use-case matrix |
+| pmo-steering-pack | Compiles readiness, KPI RAG, top RAID items, decisions needed, playbook progress and gate decisions into a steering pack | KPI scorecard, Governance |
+
+The PMO lens also gets the planning and release delivery skills (`/plan-waves`, `/parallel-run`, `/gen-changelog`, `/release-notes`, `/gen-runbook`, `/gen-training`, `/kt-checklist`) and, for the hand-over stages, the pursuit orchestrator and job descriptions.
 
 **Snowflake delivery skills (46).** These are the generators for every slash skill in the implementation lifecycle, in `skills/delivery/snowskills/`. They emit reviewable Snowflake artefacts:
 
@@ -63,7 +92,7 @@ python scripts/run.py --params examples/params.json --out out/
 snow sql -f out/<file>.sql -c dev
 ```
 
-The packages are in `skills/packages/delivery/sf-*.skill` and `skills/packages/pursuit/*.skill`, with a CLI: `cd skills/delivery && python -m snowskills list`.
+The packages are in `skills/packages/delivery/sf-*.skill`, `skills/packages/pursuit/*.skill` and `skills/packages/pmo/*.skill`, with a CLI: `cd skills/delivery && python -m snowskills list`.
 
 **Modes:**
 
@@ -73,9 +102,10 @@ The packages are in `skills/packages/delivery/sf-*.skill` and `skills/packages/p
 
 **Lens rules:**
 
-- Pursuit skills follow their stages: the win scorecard and commercials model are sales-only; the other pursuit skills are shared.
+- Pursuit skills follow their stages: the win scorecard and commercials model are pursuit-only; the other pursuit skills are shared with delivery.
 - The orchestrator only opens stages the lens can see.
-- Delivery skills are delivery-only.
+- Delivery skills are delivery-only, except the planning and release skills shared with the PMO.
+- PMO skills are PMO-only. Only delivery personas can execute SQL on Snowflake.
 
 **SQL checks and execution:**
 
@@ -91,6 +121,8 @@ The packages are in `skills/packages/delivery/sf-*.skill` and `skills/packages/p
 - `POST|PUT|DELETE /api/curate/{table}[/{id}]`: works on `persona`, `journey_step`, `insight_dashboard`, `insight_question`, `domain`, `subject_area`, `data_entity`, `attribute`, `kpi`, `conformed_dim`, `component`
 - `GET /api/progress/{session}`, `POST /api/progress`
 - `POST /api/chat` `{message, session_id, context:{stage}}`
+- `GET /api/lens/list`: every lens with its personas (the sales lens is listed as coming soon)
+- PMO: `GET /api/pmo/playbook|readiness|roadmap|estimator|usecases|kpis|governance|team`, `PUT /api/pmo/readiness/{track}/{qid}`, `POST /api/pmo/readiness/tracks`, `PUT /api/pmo/roadmap/check`, `POST /api/pmo/estimator`, `PUT /api/pmo/usecases/{id}`, `PUT /api/pmo/kpis/{id}`, `POST|PUT|DELETE /api/pmo/raid[/{id}]`
 
 ## Notes
 

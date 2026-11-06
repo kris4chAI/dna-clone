@@ -7,19 +7,23 @@ from .skills_api import seed_skill_access
 
 
 def seed_pursuit(c):
+    for i, (code, name, tag, desc, avail) in enumerate(P.LENSES):
+        c.execute("INSERT INTO lens VALUES (%s,%s,%s,%s,%s,%s)", (code, name, tag, desc, avail, i))
     for i, (code, name, lens, owns, sup) in enumerate(P.LENS_ROLES):
         c.execute("INSERT INTO lens_role VALUES (%s,%s,%s,%s,%s,%s)", (code, name, lens, owns, sup, i))
 
-    for code, label, s, d, reason in P.SCREEN_ACCESS:
-        c.execute("INSERT INTO access_rule VALUES ('screen',%s,%s,%s,%s,%s)", (code, label, s, d, reason))
+    for code, label, lenses, reason in P.SCREEN_ACCESS:
+        c.execute("INSERT INTO access_rule VALUES ('screen',%s,%s,%s,%s)", (code, label, lenses, reason))
 
     seed_skill_access(c)
 
     for st in P.P_STAGES:
-        shared = st["audience"] == "shared"
-        reason = st.get("shared_reason") or "Pursuit stage owned by the sales team."
-        c.execute("INSERT INTO access_rule VALUES ('pursuit_stage',%s,%s,TRUE,%s,%s)",
-                  (st["code"], f"{st['num']}. {st['name']}", shared, reason))
+        lenses = ["pursuit"] + (["delivery"] if st["audience"] == "shared" else []) + (["pmo"] if st["code"] in P.PMO_STAGES else [])
+        reason = st.get("shared_reason") or "Pursuit stage owned by the pursuit team."
+        if st["code"] in P.PMO_STAGES:
+            reason += " The PMO takes it as the mobilization baseline."
+        c.execute("INSERT INTO access_rule VALUES ('pursuit_stage',%s,%s,%s,%s)",
+                  (st["code"], f"{st['num']}. {st['name']}", lenses, reason))
         extra = {k: st[k] for k in ("links", "handover", "shared_reason") if k in st}
         extra["audience"] = st["audience"]
         c.execute("""INSERT INTO pursuit_stage(code,num,name,loop,gate_code,gate,approvers,purpose,critical,lane,

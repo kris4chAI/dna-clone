@@ -1,9 +1,9 @@
 ---
 name: "rfp-response-orchestrator"
-description: "Run a Niche Consulting RFP pursuit end to end with the AI Native Sales Engineering method: nine gated stages from RFP signal to orals, with artefacts, skills, stamps and stage questions."
+description: "Run a Niche Consulting RFP pursuit end to end with the AI Native Pursuit Engineering method: nine gated stages from RFP signal to orals, with artefacts, skills, stamps and stage questions."
 ---
 
-# RFP response orchestrator (AI Native Sales Engineering)
+# RFP response orchestrator (AI Native Pursuit Engineering)
 
 Use this skill when the user starts or continues an RFP, RFI or proposal pursuit for Niche Consulting. It runs the nine-stage method, drafts each artefact with the right skill, asks the stage questions, and never passes a gate without a named human approver.
 

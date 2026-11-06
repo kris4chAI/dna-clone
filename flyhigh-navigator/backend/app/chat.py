@@ -8,6 +8,7 @@ import os
 import re
 
 from . import llm
+from .access import allowed, allowed_codes
 from .db import one, q
 
 STAGE_WORDS = {
@@ -39,23 +40,24 @@ PURSUIT_WORDS = {
     "submit": ["submit", "orals", "q&a", "retrospective", "submission", "g8"],
 }
 SUGGEST = {
-    "sales": ["How do we qualify a bid?", "What does gate G5 need?", "Show the win score", "Which sections are below 90?"],
+    "pursuit": ["How do we qualify a bid?", "What does gate G5 need?", "Show the win score", "Which sections are below 90?"],
+    "pmo": ["How ready is Track A?", "Estimate the effort", "Show the top risks", "Which KPIs are amber or red?"],
     "delivery": ["Where do I start?", "What does the delivery plan stage need?", "Show the agents in Platform migration", "Which sections can I score?"],
 }
 IMPL_KINDS = {"stage", "agent", "skill", "tool", "framework", "snowflake"}
 
 
 def _lens_ok(resource, code, lens):
-    r = one(f"SELECT {lens} AS ok FROM access_rule WHERE resource=%s AND code=%s", (resource, code))
-    return bool(r and r["ok"])
+    return allowed(resource, code, lens)
 
 
 def _pursuit_reply(code, lens):
     s = one("SELECT * FROM pursuit_stage WHERE code=%s", (code,))
     if not _lens_ok("pursuit_stage", code, lens):
-        shared = q("SELECT ps.num, ps.name FROM pursuit_stage ps JOIN access_rule a ON a.resource='pursuit_stage' AND a.code=ps.code WHERE a.delivery ORDER BY ps.num")
-        return {"reply": f"**{s['num']}. {s['name']}** (gate {s['gate_code']}) is a sales-only pursuit stage, so the delivery lens can't open it. "
-                         "The delivery lens shares the final pursuit stages: " + ", ".join(f"{x['num']}. {x['name']}" for x in shared) + ".",
+        shared = q("""SELECT ps.num, ps.name FROM pursuit_stage ps JOIN access_rule a ON a.resource='pursuit_stage' AND a.code=ps.code
+                      WHERE %s = ANY(a.lenses) ORDER BY ps.num""", (lens,))
+        return {"reply": f"**{s['num']}. {s['name']}** (gate {s['gate_code']}) stays with the pursuit lens, so your lens can't open it. "
+                         "You share these pursuit stages: " + ", ".join(f"{x['num']}. {x['name']}" for x in shared) + ".",
                 "cards": [_card("lifecycle", "Lifecycle overview", "See what your lens can open", "lifecycle", "")], "suggestions": SUGGEST[lens][:2]}
     lines = [f"**Pursuit stage {s['num']} · {s['name']}** — gate **{s['gate_code']} {s['gate']}**, approved by {s['approvers']}.",
              s["purpose"], "",
@@ -63,7 +65,7 @@ def _pursuit_reply(code, lens):
              "**Skills:** " + " ".join(f"`{k}`" for k in s["skills"]),
              "**Questions to close before the gate:**"] + [f"- {x}" for x in s["questions"]]
     if s["extra"].get("audience") == "shared":
-        lines.append(f"\n*Shared with delivery:* {s['extra'].get('shared_reason', '')}")
+        lines.append(f"\n*Shared with delivery{' and the PMO' if _lens_ok('pursuit_stage', code, 'pmo') else ''}:* {s['extra'].get('shared_reason', '')}")
     return {"reply": "\n".join(lines), "cards": [_card("pursuit", f"{s['num']} · {s['name']}", f"{s['gate_code']} · {s['gate']}", "pursuit", code)],
             "suggestions": ["What's next?", "Which templates help here?"]}
 
@@ -110,21 +112,112 @@ def _next_stage(code):
     return one("SELECT code FROM stage WHERE seq>%s ORDER BY seq LIMIT 1", (s["seq"],))
 
 
+PMO_KIND_SCREEN = {"pmo_kpi": "kpis", "pmo_raid": "governance", "pmo_usecase": "usecases"}
+ARCH_WORDS = {"migrate": ["dmlc", "warehouse migration", "legacy warehouse", "migration archetype"],
+              "product": ["dplc", "data product", "medallion"],
+              "bi": ["bmlc", "bi and semantic", "semantic modern", "bi modern"],
+              "ai": ["ailc", "cortex ai", "agents archetype", "cortex agent"]}
+
+
+def pmo_answer(m: str, context: dict):
+    """Intent rules for the PMO lens, answered from the delivery playbook and the pmo_* working tables."""
+    from . import pmo_api as P
+    if re.search(r"\b(hi|hello|help|start|begin|get started|where do i)\b", m) and len(m) < 60:
+        st = P.doc("stages")
+        return {"reply": "You're in the **PMO lens**: the program office for FlyHigh, run on the AI Native Delivery Playbook. "
+                         "Agents convert, build and test; named people own G1 (PRD), G2 (design), G3 (verified in production) and every reconciliation variance.\n" +
+                         "\n".join(f"- {i + 1}. **{s['name']}**" for i, s in enumerate(st)) +
+                         "\n\nStart with the **Delivery playbook** primer, score each track in the **Readiness scorecard**, then plan waves back from the licence dates. "
+                         "Track value in the **KPI scorecard** and run steering from **Governance and RAID**.",
+                "cards": [_card("playbook", "Delivery playbook", "Primer and archetypes", "playbook", ""),
+                          _card("readiness", "Readiness scorecard", "Qualify each track", "readiness", "")],
+                "suggestions": SUGGEST["pmo"]}
+    if re.search(r"readiness|ready|qualif", m):
+        rows = [P.readiness_score(t) for t in P.tracks()]
+        lines = []
+        for r in rows:
+            lag = [d for d in r["dims"] if d["lagging"]]
+            lines.append(f"- **{r['track']}**: {r['overall']}% · {r['band']}" + (f" · lagging: {', '.join(d['dim'] for d in lag)}" if lag else ""))
+        first_lag = next((d for r in rows for d in r["dims"] if d["lagging"]), None)
+        tail = f"\n\nFirst remediation for **{first_lag['dim']}**:\n" + "\n".join(f"- {x}" for x in first_lag["remedy"][:3]) if first_lag else ""
+        return {"reply": "Readiness on 17 questions across five weighted dimensions (75%+ ready, 50%+ ready with remediation):\n" + "\n".join(lines) + tail,
+                "cards": [_card("readiness", "Readiness scorecard", "Score and remediate", "readiness", "")],
+                "suggestions": ["Run the steering pack", "Show the top risks"]}
+    if re.search(r"estimat|effort|person-day|person day|\bfte\b|unit effort|sizing", m):
+        r = P.estimate({})
+        return {"reply": f"Unit-effort model with the FlyHigh defaults: **{r['total_pd']:,} person-days**, {r['person_months']} person-months, "
+                         f"**{r['avg_fte']} average FTE** over {int(r['inputs']['months'])} months. Without the wave speed-up it would be {r['without_speedup_pd']:,} PD.\n"
+                         + "\n".join(f"- {c}: {v['objects']:.0f} objects → {v['with_speedup']:,} PD" for c, v in r["components"].items())
+                         + f"\n- Frameworks {r['frameworks_pd']:,} PD · discovery {r['discovery_pd']:,} PD\n\n{r['note']}",
+                "cards": [_card("estimator", "Unit-effort estimator", "Try your own counts", "estimator", "")], "suggestions": ["Which use cases go in the pilot?"]}
+    if re.search(r"\brisk|\braid\b|issue|dependenc|assumption|blocker", m):
+        rows = q("SELECT * FROM pmo_raid WHERE status <> 'Closed' ORDER BY CASE severity WHEN 'High' THEN 0 WHEN 'Medium' THEN 1 ELSE 2 END, id LIMIT 8")
+        return {"reply": "Open RAID items, highest severity first:\n" + "\n".join(f"- **{r['kind']} · {r['severity']}** — {r['title']} ({r['owner'] or 'unassigned'}, {r['due'] or 'no date'})" for r in rows),
+                "cards": [_card("governance", "Governance and RAID", "Add or update items", "governance", "")], "suggestions": ["Run the steering pack"]}
+    if re.search(r"steering|status report|status pack", m):
+        return {"reply": "The **steering pack** skill compiles readiness per track, the KPI scorecard by RAG, top RAID items, decisions needed and playbook progress. "
+                         "Monthly steering covers milestones, benefits and licence retirement; RAID is weekly, gate reviews bi-weekly.",
+                "cards": [_card("skill", "Steering pack", "Run it in the skills studio", "skills", "pmo-steering-pack")], "suggestions": ["Which KPIs are amber or red?"]}
+    if re.search(r"\bkpi|scorecard|metric|amber|\bred\b|green|measure", m) and not re.search(r"otif|dwell|fact|warehouse kpi|executive", m):
+        rows = q("SELECT * FROM pmo_kpi ORDER BY CASE status WHEN 'red' THEN 0 WHEN 'amber' THEN 1 WHEN 'green' THEN 2 ELSE 3 END, seq")
+        flagged = [r for r in rows if r["status"] in ("red", "amber")]
+        return {"reply": "Measure AI-native delivery by trusted numbers and legacy retired on date, not by the volume of converted code.\n\n"
+                         + (f"{len(flagged)} metrics need attention:\n" + "\n".join(f"- **{r['name']}** {r['actual']} vs target {r['target']} ({r['status'].upper()}) {r['note'] or ''}" for r in flagged)
+                            if flagged else "All tracked metrics are green."),
+                "cards": [_card("kpis", "KPI scorecard", f"{len(rows)} metrics", "kpis", "")], "suggestions": ["Run the steering pack"]}
+    if re.search(r"raci|accountab|who approves|team|pod|topology|roles?\b", m):
+        t = P.doc("team")
+        return {"reply": "One AI Native core pod (~6 FTE) builds the frameworks once; AI-assisted track pods (~3.5 FTE each) reuse them every wave. "
+                         "Named humans are accountable at three gates.\n" + "\n".join(f"- **{x['principle']}**: {x['detail']}" for x in t["topology"]) +
+                         "\n\nTeam sizes: " + ", ".join(f"{a['name']} {a['size']}" for a in t["archetypes"]) + ".",
+                "cards": [_card("team", "Team and RACI", "Topology, roles, RACI", "team", "")], "suggestions": ["Who approves G3?"]}
+    if re.search(r"responsible ai|\brai\b|governance|guardrail|pillar|nist|eu ai act|compliance", m):
+        r = P.doc("rai")
+        return {"reply": r["principle"] + "\n\n" + "\n".join(f"- **{x['pillar']}**: {x['control']}" for x in r["pillars"]) + f"\n\nStandards: {r['standards']}.",
+                "cards": [_card("governance", "Governance and RAID", "Responsible AI controls", "governance", "")], "suggestions": ["Show the top risks"]}
+    if re.search(r"use case|use-case|prioriti|where .*agent|automation potential|pilot candidate", m):
+        rows = sorted((P.uc_score(u) for u in q("SELECT * FROM pmo_usecase")), key=lambda u: -u["score"])
+        return {"reply": "Top AI use cases by weighted score (value 30, repeatability 20, feasibility 20, trust 15, automation 15):\n" +
+                         "\n".join(f"- **{u['score']}** {u['activity']} ({u['archetype']} · {u['lane']})" for u in rows[:8]),
+                "cards": [_card("usecases", "AI use-case matrix", "Rate and rank", "usecases", "")], "suggestions": ["Estimate the effort"]}
+    for key, words in ARCH_WORDS.items():
+        if any(w in m for w in words):
+            a = next(x for x in P.doc("archetypes") if x["key"] == key)
+            return {"reply": f"**{a['title']}** ({a['lc']}) — {a['summary']}\n\n**Method:** {a['method']}\n\n**Artefacts:** " + ", ".join(a["artefacts"]) +
+                             f"\n\n**FlyHigh:** {a['example']}",
+                    "cards": [_card("roadmap", a["title"], "Execute activities", "roadmap", key)], "suggestions": ["How ready is Track A?"]}
+    if re.search(r"\bplan\b|planning|setup|set up|onboard|sprint 0|wave plan|optimi", m):
+        ob = P.doc("onboarding")
+        return {"reply": "From kickoff to transition in nine phases:\n" + "\n".join(f"- **{o['phase']}** ({o['timeline']}): {o['activities']} → {o['output']}" for o in ob) +
+                         "\n\nThe Plan and execute screen holds the 13 planning steps, 7 setup steps and the activities per archetype.",
+                "cards": [_card("roadmap", "Plan and execute", "Steps and checklists", "roadmap", "")], "suggestions": ["Estimate the effort"]}
+    if re.search(r"primer|shift|why .*chang|ai-native|ai native|mindset", m):
+        pr = {x["code"]: x for x in P.doc("primer")}
+        return {"reply": pr["shifts"]["body"][:1500], "cards": [_card("playbook", "Delivery playbook", "Primer", "playbook", "")], "suggestions": []}
+    return None
+
+
 def answer(message: str, context: dict | None = None, lens: str = "delivery"):
     context = context or {}
     m = message.lower().strip()
     cards, suggestions = [], []
     impl_ok = _lens_ok("screen", "workflow", lens)
 
-    # 0. Sales lens orientation: the pursuit lifecycle
-    if lens == "sales" and re.search(r"\b(hi|hello|help|start|begin|get started|where do i)\b", m) and len(m) < 60:
+    # 0. Pursuit lens orientation: the pursuit lifecycle
+    if lens == "pursuit" and re.search(r"\b(hi|hello|help|start|begin|get started|where do i)\b", m) and len(m) < 60:
         st = q("SELECT num, name, gate_code, gate FROM pursuit_stage ORDER BY num")
-        return {"reply": "You're in the **sales lens**. A pursuit runs in nine gated stages, from RFP signal to orals:\n" +
+        return {"reply": "You're in the **pursuit lens**. A pursuit runs in nine gated stages, from RFP signal to orals:\n" +
                          "\n".join(f"- {x['num']}. {x['name']} — **{x['gate_code']}** {x['gate']}" for x in st) +
                          "\n\nAgents draft, people decide: no gate passes without a named approver. Start with **Signal and qualify**, "
                          "use the pursuit kit for each stage's template, and track the win score and section rubric as you go.",
                 "cards": [_card("pursuit", "1 · Signal and qualify", "Start here", "pursuit", "signal")],
-                "suggestions": SUGGEST["sales"]}
+                "suggestions": SUGGEST["pursuit"]}
+
+    # PMO lens: the delivery playbook
+    if lens == "pmo":
+        r = pmo_answer(m, context)
+        if r:
+            return r
 
     # Pursuit "next" when on a pursuit stage
     if re.search(r"\b(next|what now|then what|after this)\b", m) and context.get("pstage"):
@@ -139,28 +232,28 @@ def answer(message: str, context: dict | None = None, lens: str = "delivery"):
     # Win room, rubric and kit intents
     if re.search(r"win score|scorecard|buying group|stakeholder score|evaluator", m):
         if not _lens_ok("screen", "winroom", lens):
-            return {"reply": "The win room (buyer and evaluator scorecard, competitor rubric) stays with the **sales lens**.", "cards": [], "suggestions": SUGGEST[lens][:2]}
+            return {"reply": "The win room (buyer and evaluator scorecard, competitor rubric) stays with the **pursuit lens**.", "cards": [], "suggestions": SUGGEST[lens][:2]}
         summ = q("""SELECT r.data FROM kit_row r JOIN kit_sheet s ON s.id=r.sheet_id WHERE s.name='Summary' ORDER BY r.seq LIMIT 8""")
         return {"reply": "Current FlyHigh scorecard:\n" + "\n".join(f"- {x['data']['Measure']}: **{x['data']['Score (1–5)']}** ({x['data']['RAG']})" for x in summ) +
                          "\n\nGate G7 needs a buying-group score of 4.0 or higher with no stakeholder in red.",
                 "cards": [_card("winroom", "Win room", "Scorecard and actions", "winroom", "")], "suggestions": ["Which sections are below 90?"]}
-    if re.search(r"rubric|section|below 90|must-have|must have|score .*section", m):
+    if re.search(r"rubric|section|below 90|must-have|must have|score .*section", m) and _lens_ok("screen", "quality", lens):
         rows = q("SELECT num, name, baseline, missing, owner_lens FROM response_section ORDER BY baseline")
-        mine = [r for r in rows if lens == "sales" or r["owner_lens"] == "shared"]
+        mine = [r for r in rows if lens == "pursuit" or r["owner_lens"] == "shared"]
         reply = ("Sections score on 10 weighted criteria (points = weight × score ÷ 4); 90 passes only with every must-have met, and a missing must-have caps the section at 89.\n"
                  "Lowest baselines:\n" + "\n".join(f"- {r['num']}. **{r['name']}** {r['baseline']} — missing: {r['missing']}" for r in rows[:6]))
         if lens == "delivery":
             reply += "\n\nIn the delivery lens you score the shared sections: " + ", ".join(r["name"] for r in mine) + "."
         return {"reply": reply, "cards": [_card("quality", "Response quality", "Section rubric", "quality", "")], "suggestions": []}
     if re.search(r"template|kit|workbook|aid", m):
-        ok = [r["code"] for r in q(f"SELECT code FROM access_rule WHERE resource='pursuit_stage' AND {lens}")]
+        ok = list(allowed_codes("pursuit_stage", lens))
         rows = q("""SELECT t.file, t.sample, ps.num, ps.name FROM kit_template t JOIN pursuit_stage ps ON ps.num=t.stage_num
                     WHERE ps.code = ANY(%s) ORDER BY ps.num, t.sample""", (ok,))
         return {"reply": "Templates and aids you can open:\n" + "\n".join(f"- {r['num']}. {r['name']}: {r['file']}{' *(FlyHigh sample)*' if r['sample'] else ''}" for r in rows),
                 "cards": [_card("kit", "Pursuit kit", f"{len(rows)} files", "kit", "")], "suggestions": []}
 
-    # Pursuit stage by name (sales first; delivery only reaches here if implementation words don't match)
-    if lens == "sales" or re.search(r"pursuit|proposal|rfp|bid", m):
+    # Pursuit stage by name (pursuit lens first; other lenses only reach here if their own words don't match)
+    if lens == "pursuit" or re.search(r"pursuit|proposal|rfp|bid", m):
         for code, words in PURSUIT_WORDS.items():
             if any(w in m for w in words):
                 return _pursuit_reply(code, lens)
@@ -271,8 +364,8 @@ def answer(message: str, context: dict | None = None, lens: str = "delivery"):
         if any(w in m + " " for w in words):
             if not impl_ok:
                 return {"reply": "The implementation lifecycle (Discover to Operate & monitor) is in the **delivery lens**. "
-                                 "In the sales lens, engineering shows up as proposal section 7 and the delivery plan in pursuit stage 5.",
-                        "cards": [_card("lifecycle", "Lifecycle overview", "", "lifecycle", "")], "suggestions": SUGGEST["sales"][:2]}
+                                 "In the pursuit lens, engineering shows up as proposal section 7 and the delivery plan in pursuit stage 5.",
+                        "cards": [_card("lifecycle", "Lifecycle overview", "", "lifecycle", "")], "suggestions": SUGGEST[lens][:2]}
             s = _stage(code)
             if "agent" in m and "tool" not in m and "skill" not in m:
                 agents = [c for c in s["components"] if c["kind"] == "agent"]
@@ -289,7 +382,8 @@ def answer(message: str, context: dict | None = None, lens: str = "delivery"):
     # 9. Retrieval fallback
     terms = _tokens(m)
     rows = q("SELECT * FROM search_index")
-    ok_stages = {r["code"] for r in q(f"SELECT code FROM access_rule WHERE resource='pursuit_stage' AND {lens}")}
+    ok_stages = allowed_codes("pursuit_stage", lens)
+    ok_screens = allowed_codes("screen", lens)
     ok_nums = {r["num"] for r in q("SELECT num, code FROM pursuit_stage") if r["code"] in ok_stages}
     tmpl_num = {str(r["id"]): r["stage_num"] for r in q("SELECT id, stage_num FROM kit_template")}
     def visible(r):
@@ -300,7 +394,17 @@ def answer(message: str, context: dict | None = None, lens: str = "delivery"):
         if r["kind"] == "kit_template":
             return tmpl_num.get(r["ref"]) in ok_nums
         if r["kind"] in ("pursuit_artefact", "pursuit_skill"):
-            return lens == "sales" or any(str(n) in (r["body"] or "") for n in ok_nums)
+            return lens == "pursuit" or any(str(n) in (r["body"] or "") for n in ok_nums)
+        if r["kind"] in PMO_KIND_SCREEN:
+            return PMO_KIND_SCREEN[r["kind"]] in ok_screens
+        if r["kind"] in ("persona", "journey_step"):
+            return "journeys" in ok_screens
+        if r["kind"] in ("dashboard", "insight"):
+            return "insights" in ok_screens
+        if r["kind"] in ("subject_area", "entity", "kpi"):
+            return "data" in ok_screens
+        if r["kind"] == "section":
+            return "quality" in ok_screens
         return True
     rows = [r for r in rows if visible(r)]
     scored = []
@@ -312,12 +416,14 @@ def answer(message: str, context: dict | None = None, lens: str = "delivery"):
     scored.sort(key=lambda x: -x[0])
     top = [r for _, r in scored[:6]]
     if not top:
-        return {"reply": "I couldn't find that in what your lens can open. Try a stage, gate, template, section or KPI." if lens == "sales" else "I couldn't find that in the FlyHigh catalog yet. Try asking about a stage, an agent, a skill like `/reconcile`, a KPI or a persona — or add it through the curation screens.",
+        return {"reply": "I couldn't find that in what your lens can open. Try a stage, gate, template, section or KPI." if lens == "pursuit" else
+                "I couldn't find that in the playbook. Try readiness, the estimate, a KPI, the RAID log, RACI or an archetype such as migration." if lens == "pmo" else "I couldn't find that in the FlyHigh catalog yet. Try asking about a stage, an agent, a skill like `/reconcile`, a KPI or a persona — or add it through the curation screens.",
                 "cards": [], "suggestions": SUGGEST_DEFAULT}
     view = {"stage": "workflow", "agent": "catalog", "skill": "catalog", "tool": "catalog", "framework": "catalog", "snowflake": "catalog",
             "persona": "journeys", "journey_step": "journeys", "dashboard": "insights", "insight": "insights",
             "subject_area": "data", "entity": "data", "kpi": "data", "pursuit_stage": "pursuit", "pursuit_artefact": "pursuit",
-            "pursuit_skill": "kit", "kit_template": "kit", "section": "quality"}
+            "pursuit_skill": "kit", "kit_template": "kit", "section": "quality",
+            "pmo_kpi": "kpis", "pmo_raid": "governance", "pmo_usecase": "usecases"}
     reply = "Here's what matches in the catalog:\n" + "\n".join(f"- **{r['title']}** ({r['kind'].replace('_', ' ')}) — {(r['body'] or '')[:110]}" for r in top)
     cards = [_card(r["kind"], r["title"], r["kind"].replace("_", " "), view.get(r["kind"], "catalog"), r["ref"]) for r in top[:4]]
     return {"reply": reply, "cards": cards, "suggestions": SUGGEST[lens][:2], "context_rows": top}
@@ -329,7 +435,7 @@ def llm_polish(message, result):
         return result
     try:
         result["reply"] = llm.complete(
-            "You are the FlyHigh Navigator guide for a Niche Consulting pursuit and Snowflake modernization program. "
+            "You are the FlyHigh Navigator guide for a Niche Consulting pursuit, Snowflake modernization program and its program office. "
             "Answer only from the CONTEXT, which is already filtered to the user's persona lens; never add content beyond it. "
             "Be concise; use short markdown bullets.",
             f"CONTEXT:\n{result['reply']}\n\nQUESTION: {message}", max_tokens=600)

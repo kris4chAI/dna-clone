@@ -5,10 +5,11 @@ Everything FlyHigh Navigator knows how to *do* lives in this folder. The app loa
 
 | Folder | What it holds |
 |---|---|
-| `pursuit/<name>/SKILL.md` | The 9 AI Native Sales Engineering pursuit skills (source of truth) |
+| `pursuit/<name>/SKILL.md` | The 9 AI Native Pursuit Engineering pursuit skills (source of truth) |
+| `pmo/<name>/SKILL.md` | The 4 PMO skills from the AI Native Delivery Playbook (source of truth) |
 | `delivery/snowskills/` | The Snowflake generator library behind the 46 delivery skills (pure Python, stdlib only) |
 | `delivery/catalog/sf-*/` | Readable SKILL.md and example parameters per delivery skill |
-| `packages/pursuit/*.skill`, `packages/delivery/*.skill` | Packaged skills (zip format) |
+| `packages/pursuit/*.skill`, `packages/pmo/*.skill`, `packages/delivery/*.skill` | Packaged skills (zip format) |
 
 Rebuild packages and this catalog after editing a skill: `python tools/package_skills.py`.
 
@@ -32,6 +33,15 @@ python -m snowskills run gen-grants --params catalog/sf-gen-grants/examples/para
 | `rfp-section-loop` | Improve RFP response sections with a generate, score and revise loop until each reaches 90% of the rubric with all must-haves, or escalate the inputs needed. | [SKILL.md](pursuit/rfp-section-loop/SKILL.md) · [package](packages/pursuit/rfp-section-loop.skill) |
 | `rfp-section-rubric` | Independently score one RFP response section against a 10-criterion weighted rubric and its must-haves, citing evidence, and return the highest-leverage fixes. | [SKILL.md](pursuit/rfp-section-rubric/SKILL.md) · [package](packages/pursuit/rfp-section-rubric.skill) |
 | `rfp-win-scorecard` | Score a proposal against every buyer, evaluator and competitor archetype in a RAG-coloured Excel scorecard and list only the pending actions that lift the score. | [SKILL.md](pursuit/rfp-win-scorecard/SKILL.md) · [package](packages/pursuit/rfp-win-scorecard.skill) |
+
+## PMO skills (4)
+
+| Skill | Purpose | Files |
+|---|---|---|
+| `pmo-readiness-scorecard` | Score a Snowflake modernization track on the 17-question AI-native readiness model across five weighted dimensions, set the qualification band and turn lagging dimensions into owned remediation actions. | [SKILL.md](pmo/pmo-readiness-scorecard/SKILL.md) · [package](packages/pmo/pmo-readiness-scorecard.skill) |
+| `pmo-steering-pack` | Compile the FlyHigh steering pack: readiness per track, KPI scorecard by RAG, top risks and issues, decisions needed, playbook progress and recent gate decisions. | [SKILL.md](pmo/pmo-steering-pack/SKILL.md) · [package](packages/pmo/pmo-steering-pack.skill) |
+| `pmo-unit-effort-estimator` | Estimate an AI-native Snowflake program with the unit-effort model: objects by complexity, AI frameworks and discovery, pilot share and wave speed-up, returning person-days, person-months and average FTE. | [SKILL.md](pmo/pmo-unit-effort-estimator/SKILL.md) · [package](packages/pmo/pmo-unit-effort-estimator.skill) |
+| `pmo-usecase-prioritizer` | Rank data modernization activities for AI and agent enablement on value, repeatability, feasibility, trust and automation, and assign each a lane: pilot wave, next wave, assist only or human gate. | [SKILL.md](pmo/pmo-usecase-prioritizer/SKILL.md) · [package](packages/pmo/pmo-usecase-prioritizer.skill) |
 
 ## Snowflake delivery skills (46)
 

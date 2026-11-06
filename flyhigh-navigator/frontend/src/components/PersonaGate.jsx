@@ -2,26 +2,25 @@ import { useEffect, useState } from 'react'
 import { api, getPersona } from '../api'
 
 export default function PersonaGate({ onChoose }) {
-  const [roles, setRoles] = useState([])
-  useEffect(() => { api.get('/api/lens/roles').then(setRoles) }, [])
+  const [lenses, setLenses] = useState([])
+  useEffect(() => { api.get('/api/lens/list').then(setLenses) }, [])
   const current = getPersona()
-  const group = (lens) => roles.filter((r) => r.lens === lens)
 
   return (
     <div className="gate-screen">
-      <div className="gate-card">
+      <div className="gate-card wide">
         <div className="eyebrow">FlyHigh Navigator</div>
-        <h1>Who are you on this pursuit?</h1>
-        <p className="lede">Your persona sets your lens. Sales personas run the pursuit lifecycle, from RFP signal to orals. Delivery personas run the implementation lifecycle, from Discover to monitoring. Both lenses share the final pursuit stages, where the plan, red team and orals hand over to delivery.</p>
+        <h1>Who are you on FlyHigh?</h1>
+        <p className="lede">Your persona sets your lens. Pursuit personas run the pursuit, from RFP signal to orals. Delivery personas run the implementation, from Discover to monitoring. The PMO runs the program with the AI Native Delivery Playbook: readiness, planning, estimation, KPIs, RACI and governance. The final pursuit stages are shared, where the plan and orals hand over to delivery and the PMO.</p>
         <div className="gate-cols">
-          {[['sales', 'Sales lens', 'Pursuit lifecycle · win room · response quality'], ['delivery', 'Delivery lens', 'Implementation lifecycle · toolkit · shared pursuit stages 5, 8, 9']].map(([lens, title, sub]) => (
-            <div key={lens} className={`gate-col ${lens}`}>
-              <div className="gate-col-head"><span className={`lens-dot ${lens}`} /><b>{title}</b><small>{sub}</small></div>
-              {group(lens).map((r) => (
+          {lenses.map((l) => (
+            <div key={l.code} className={`gate-col ${l.code} ${l.available ? '' : 'soon'}`}>
+              <div className="gate-col-head"><span className={`lens-dot ${l.code}`} /><b>{l.name}</b><small>{l.tagline}</small></div>
+              {l.available ? l.roles.map((r) => (
                 <button key={r.code} className={`role ${r.code === current ? 'on' : ''}`} onClick={() => onChoose(r.code)}>
                   <b>{r.name}</b><small>{r.owns}</small>
                 </button>
-              ))}
+              )) : <div className="soon-note"><b>Coming soon</b><small>{l.description}</small></div>}
             </div>
           ))}
         </div>

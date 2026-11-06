@@ -3,8 +3,9 @@
     python tools/package_skills.py
 
 Sources:  skills/pursuit/<name>/SKILL.md          (9 pursuit skills)
+          skills/pmo/<name>/SKILL.md              (4 PMO skills)
           skills/delivery/snowskills/              (46 Snowflake delivery skill generators)
-Outputs:  skills/packages/pursuit/<name>.skill
+Outputs:  skills/packages/pursuit/<name>.skill, skills/packages/pmo/<name>.skill
           skills/packages/delivery/sf-<name>.skill  (SKILL.md + scripts/run.py + scripts/snowskills + examples/params.json)
           skills/delivery/catalog/sf-<name>/SKILL.md and examples/params.json   (readable copies)
           skills/README.md                          (catalog)
@@ -32,17 +33,20 @@ def main():
     shutil.rmtree(pk, ignore_errors=True)
     (pk / "pursuit").mkdir(parents=True)
     (pk / "delivery").mkdir(parents=True)
+    (pk / "pmo").mkdir(parents=True)
     cat = SK / "delivery" / "catalog"
     shutil.rmtree(cat, ignore_errors=True)
 
-    pursuit_rows = []
-    for d in sorted(p for p in (SK / "pursuit").iterdir() if p.is_dir()):
-        with zipfile.ZipFile(pk / "pursuit" / f"{d.name}.skill", "w", zipfile.ZIP_DEFLATED) as z:
-            for f in d.rglob("*"):
-                if f.is_file():
-                    z.write(f, f"{d.name}/{f.relative_to(d)}")
-        desc = re.search(r'description:\s*"(.*?)"', (d / "SKILL.md").read_text())
-        pursuit_rows.append(f"| `{d.name}` | {desc.group(1) if desc else ''} | [SKILL.md](pursuit/{d.name}/SKILL.md) · [package](packages/pursuit/{d.name}.skill) |")
+    rows = {"pursuit": [], "pmo": []}
+    for kind in rows:
+        for d in sorted(p for p in (SK / kind).iterdir() if p.is_dir()):
+            with zipfile.ZipFile(pk / kind / f"{d.name}.skill", "w", zipfile.ZIP_DEFLATED) as z:
+                for f in d.rglob("*"):
+                    if f.is_file():
+                        z.write(f, f"{d.name}/{f.relative_to(d)}")
+            desc = re.search(r'description:\s*"(.*?)"', (d / "SKILL.md").read_text())
+            rows[kind].append(f"| `{d.name}` | {desc.group(1) if desc else ''} | [SKILL.md]({kind}/{d.name}/SKILL.md) · [package](packages/{kind}/{d.name}.skill) |")
+    pursuit_rows, pmo_rows = rows["pursuit"], rows["pmo"]
 
     delivery_rows = []
     for sk in sorted(REGISTRY.values(), key=lambda s: (STAGE_ORDER.index(s.stage), s.name)):
@@ -62,10 +66,11 @@ Everything FlyHigh Navigator knows how to *do* lives in this folder. The app loa
 
 | Folder | What it holds |
 |---|---|
-| `pursuit/<name>/SKILL.md` | The {len(pursuit_rows)} AI Native Sales Engineering pursuit skills (source of truth) |
+| `pursuit/<name>/SKILL.md` | The {len(pursuit_rows)} AI Native Pursuit Engineering pursuit skills (source of truth) |
+| `pmo/<name>/SKILL.md` | The {len(pmo_rows)} PMO skills from the AI Native Delivery Playbook (source of truth) |
 | `delivery/snowskills/` | The Snowflake generator library behind the {len(delivery_rows)} delivery skills (pure Python, stdlib only) |
 | `delivery/catalog/sf-*/` | Readable SKILL.md and example parameters per delivery skill |
-| `packages/pursuit/*.skill`, `packages/delivery/*.skill` | Packaged skills (zip format) |
+| `packages/pursuit/*.skill`, `packages/pmo/*.skill`, `packages/delivery/*.skill` | Packaged skills (zip format) |
 
 Rebuild packages and this catalog after editing a skill: `python tools/package_skills.py`.
 
@@ -82,13 +87,19 @@ python -m snowskills run gen-grants --params catalog/sf-gen-grants/examples/para
 |---|---|---|
 {chr(10).join(pursuit_rows)}
 
+## PMO skills ({len(pmo_rows)})
+
+| Skill | Purpose | Files |
+|---|---|---|
+{chr(10).join(pmo_rows)}
+
 ## Snowflake delivery skills ({len(delivery_rows)})
 
 | Stage | Skill | What · agent | Snowflake features | Files |
 |---|---|---|---|---|
 {chr(10).join(delivery_rows)}
 """)
-    print(f"{len(pursuit_rows)} pursuit + {len(delivery_rows)} delivery packages; catalog at skills/README.md")
+    print(f"{len(pursuit_rows)} pursuit + {len(pmo_rows)} PMO + {len(delivery_rows)} delivery packages; catalog at skills/README.md")
 
 
 if __name__ == "__main__":

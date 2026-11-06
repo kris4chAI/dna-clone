@@ -38,7 +38,7 @@ export default function Quality({ me, onNavigate }) {
                 <span className="sec-num">{x.num}</span>
                 <span className="sec-main">
                   <b>{x.name}</b>
-                  <small>slides {x.slides} · {x.owner_lens === 'shared' ? 'sales + delivery' : 'sales'}{!x.editable ? ' · view only' : ''}</small>
+                  <small>slides {x.slides} · {x.owner_lens === 'shared' ? 'pursuit + delivery' : 'pursuit'}{!x.editable ? ' · view only' : ''}</small>
                   <span className="sec-bar"><i style={{ width: `${x.current}%` }} className={x.passes ? 'pass' : x.current >= 80 ? 'near' : 'low'} /><em style={{ left: '90%' }} /></span>
                 </span>
                 <span className={`sec-score ${x.passes ? 'pass' : ''}`}>{x.current}<small>{x.scored ? 'scored' : 'baseline'}</small></span>
@@ -57,7 +57,7 @@ export default function Quality({ me, onNavigate }) {
               </div>
               <div className={`big-score ${s.passes ? 'pass' : ''}`}><b>{s.current}</b><small>{s.scored ? 'your score' : `baseline ${s.baseline}`}</small></div>
             </div>
-            {!s.editable && <div className="note">This section is scored by the sales team. You can view it; the shared sections are yours to score.</div>}
+            {!s.editable && <div className="note">This section is scored by the pursuit team. You can view it; the shared sections are yours to score.</div>}
 
             <h5>Must-haves</h5>
             <div className="musts">

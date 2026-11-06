@@ -17,12 +17,12 @@ python3 tools/smoke_test.py                  # default http://localhost:8080
 python3 tools/smoke_test.py http://host:port
 ```
 
-The script runs 31 checks, which together exercise all 55 skills:
+The script runs 55 checks, which together exercise all 59 skills:
 
 - health and the UI;
-- the persona lens (401 without a persona, 403 across lenses);
-- every screen's API and the chat guide in both lenses;
-- every pursuit skill engine and all 46 Snowflake delivery skills.
+- the persona lens (401 without a persona, 403 across the pursuit, delivery and PMO lenses);
+- every screen's API, the PMO screens and RAID writes, and the chat guide in all three lenses;
+- every pursuit and PMO skill engine and all 46 Snowflake delivery skills.
 
 ## Reset, upgrade, back up
 
@@ -39,12 +39,13 @@ The script runs 31 checks, which together exercise all 55 skills:
 | What | Where | Then |
 |---|---|---|
 | Implementation stages, agents, tools, personas, insights, data model, KPIs | `backend/app/seed_data.py` | `RESET_DB=true`, then `docker compose up -d --build` |
-| Pursuit stages, roles, lens rules, rubric, sections | `backend/app/pursuit_data.py` | same as above |
+| Pursuit stages, lenses, roles, lens rules, rubric, sections | `backend/app/pursuit_data.py` | same as above |
+| Delivery playbook content (PMO lens) | `assets/seed/delivery_playbook.json`; seed working data in `backend/app/pmo_api.py` | same as above |
 | Stage templates | Replace the files in `assets/templates/`, then run `python tools/extract_kit.py <folder> assets/seed/pursuit_kit.json` | same as above |
-| A pursuit skill | `skills/pursuit/<name>/SKILL.md` | `python tools/package_skills.py`, then rebuild |
+| A pursuit or PMO skill | `skills/pursuit/<name>/SKILL.md` or `skills/pmo/<name>/SKILL.md` | `python tools/package_skills.py`, then rebuild |
 | A Snowflake delivery skill | `skills/delivery/snowskills/*.py` (each skill is one decorated function) | `python tools/package_skills.py`, then rebuild |
 
-Most screens also allow curation in place: personas, journeys, insights, the data model, KPIs and the kit sheets. Those edits are stored in the database and survive restarts.
+Most screens also allow curation in place: personas, journeys, insights, the data model, KPIs, the kit sheets, readiness answers, checklists, KPI actuals, use-case ratings, the RAID log and estimate scenarios. Those edits are stored in the database and survive restarts.
 
 ## Develop without Docker
 

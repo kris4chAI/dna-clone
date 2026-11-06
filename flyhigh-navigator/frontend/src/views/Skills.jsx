@@ -16,27 +16,31 @@ export default function Skills({ me, focus, onNavigate }) {
     const f = cat.skills.filter((s) => !term || `${s.name} ${s.title} ${s.description}`.toLowerCase().includes(term.toLowerCase()))
     const g = new Map()
     const key = (s) => s.kind === 'pursuit'
-      ? [`P${String(s.stages[0].num).padStart(2, '0')}`, me.lens === 'delivery' ? 'Shared pursuit skills' : `Pursuit · stage ${s.stages.map((x) => x.num).join(', ')}`]
-      : [`D${String(s.stage_seq).padStart(2, '0')}`, `${s.stage_seq}. ${s.stage_name}`]
-    f.forEach((s) => { const [k, label] = key(s); const kk = me.lens === 'delivery' && s.kind === 'pursuit' ? 'Z' : k; if (!g.has(kk)) g.set(kk, { label, items: [] }); g.get(kk).items.push(s) })
+      ? [`P${String(s.stages[0].num).padStart(2, '0')}`, me.lens === 'pursuit' ? `Pursuit · stage ${s.stages.map((x) => x.num).join(', ')}` : 'Shared pursuit skills']
+      : s.kind === 'pmo' ? ['A', 'PMO skills']
+        : [`D${String(s.stage_seq).padStart(2, '0')}`, `${s.stage_seq}. ${s.stage_name}`]
+    f.forEach((s) => { const [k, label] = key(s); const kk = me.lens !== 'pursuit' && s.kind === 'pursuit' ? 'Z' : k; if (!g.has(kk)) g.set(kk, { label, items: [] }); g.get(kk).items.push(s) })
     return [...g.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([, v]) => v)
   }, [cat, term, me.lens])
 
   if (!cat) return <div className="page">Loading…</div>
   const nPursuit = cat.skills.filter((s) => s.kind === 'pursuit').length
-  const nDelivery = cat.skills.length - nPursuit
+  const nPmo = cat.skills.filter((s) => s.kind === 'pmo').length
+  const nDelivery = cat.skills.length - nPursuit - nPmo
 
   return (
     <div className="page">
       <header className="page-head">
         <div>
           <div className="eyebrow">Skills studio · {me.lens} lens</div>
-          <h1>{me.lens === 'sales' ? 'Run the pursuit skills on live pursuit data' : 'Generate Snowflake-ready artefacts, skill by skill'}</h1>
-          <p className="lede">{me.lens === 'sales'
+          <h1>{me.lens === 'pursuit' ? 'Run the pursuit skills on live pursuit data' : me.lens === 'pmo' ? 'Run the program office on live playbook data' : 'Generate Snowflake-ready artefacts, skill by skill'}</h1>
+          <p className="lede">{me.lens === 'pursuit'
             ? 'Each pursuit skill runs as an engine over the kit, scorecard and rubric in this app, writes its results back, and hands you a ready-to-paste prompt for your LLM.'
+            : me.lens === 'pmo' ? 'PMO skills score readiness, size effort, rank AI use cases and compile the steering pack from the playbook data in this app. You also get the wave-planning and release skills, and the pursuit orchestrator and job descriptions for the hand-over stages.'
             : 'Each implementation skill generates reviewable Snowflake SQL, schemachange, dbt, Terraform and runbooks. Download it as a .skill package, or execute reviewed SQL in a DEV account from here.'}</p>
         </div>
         <div className="status-pills">
+          {nPmo > 0 && <span className="spill"><b>{nPmo}</b> PMO</span>}
           <span className="spill"><b>{nPursuit}</b> pursuit</span>
           {nDelivery > 0 && <span className="spill"><b>{nDelivery}</b> Snowflake delivery</span>}
           <span className={`spill ${cat.llm ? 'on' : ''}`} title="Set LLM_PROVIDER and LLM_API_KEY in .env">{cat.llm ? `LLM · ${cat.llm_status.provider} · ${cat.llm_status.model}` : 'LLM not configured · prompt mode'}</span>
@@ -94,7 +98,7 @@ function SkillPanel({ name, me, cat, onNavigate }) {
     <>
       <div className="persona-head">
         <div>
-          <Chip tone={delivery ? 'snow' : 'agent'}>{delivery ? `Snowflake delivery skill · ${sk.package}` : 'Pursuit skill'}</Chip>
+          <Chip tone={delivery ? 'snow' : 'agent'}>{delivery ? `Snowflake delivery skill · ${sk.package}` : sk.kind === 'pmo' ? 'PMO skill' : 'Pursuit skill'}</Chip>
           <h2 className={delivery ? 'mono' : ''}>{delivery ? `/${sk.name}` : sk.title}</h2>
           <p>{delivery ? sk.description : sk.engine}</p>
           {delivery && <div className="muted small">{sk.agent} · stage <a className="link" onClick={() => onNavigate('workflow', sk.stage)}>{sk.stage}</a> · gate: {sk.gate}</div>}
@@ -157,6 +161,13 @@ function FieldInput({ f, v, set }) {
   )
 }
 
+const PMO_SCREEN = {
+  'pmo-readiness-scorecard': ['readiness', 'Open the readiness scorecard'],
+  'pmo-unit-effort-estimator': ['estimator', 'Open the estimator'],
+  'pmo-usecase-prioritizer': ['usecases', 'Open the use-case matrix'],
+  'pmo-steering-pack': ['governance', 'Open governance and RAID'],
+}
+
 function Result({ res, file, setFile, me, cat, delivery, name, onNavigate }) {
   const [exec, setExec] = useState(null)
   const [confirm, setConfirm] = useState(false)
@@ -176,6 +187,7 @@ function Result({ res, file, setFile, me, cat, delivery, name, onNavigate }) {
       {res.gate && <GatePanel gate={res.gate} />}
       {name === 'rfp-win-scorecard' && <button className="btn ghost" onClick={() => onNavigate('winroom')}>Open the win room →</button>}
       {name === 'rfp-section-loop' && <button className="btn ghost" onClick={() => onNavigate('quality')}>Open response quality →</button>}
+      {PMO_SCREEN[name] && <button className="btn ghost" onClick={() => onNavigate(PMO_SCREEN[name][0])}>{PMO_SCREEN[name][1]} →</button>}
       <div className="tabs files">{Object.keys(res.files).map((f) => <button key={f} className={f === file ? 'on' : ''} onClick={() => { setFile(f); setExec(null) }}>{f}</button>)}</div>
       <div className="file-bar">
         {v && <span className="vbadge">{v.statements} statements · {v.parsed} parsed by the SQL validator · {v.snowflake_only} Snowflake-specific (checked on execution){v.messages.length ? ` · ${v.messages[0]}` : ''}</span>}

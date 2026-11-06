@@ -1,10 +1,10 @@
 """Seed content for FlyHigh Navigator.
 
 Source: Niche Consulting Proposal to ABC Retail - FlyHigh v.6
-  - Slides 18-20  persona journeys
-  - Slides 21-24  insight dashboards
-  - Slides 25-29  logistics data model, schemas, KPI library
-  - Slides 30-37  engineering accelerators: agents, skills, tools, frameworks
+  - persona journeys
+  - insight dashboards
+  - logistics data model, schemas, KPI library
+  - engineering accelerators: agents, skills, tools, frameworks
 Everything here is a starting point. All rows are editable from the UI ("curation").
 """
 

@@ -43,9 +43,9 @@ export default function Pursuit({ me, code, onSelect, onAsk, onNavigate }) {
     <div className="page">
       <header className="page-head">
         <div>
-          <div className="eyebrow">Pursuit lifecycle · AI Native Sales Engineering</div>
+          <div className="eyebrow">Pursuit lifecycle · AI Native Pursuit Engineering</div>
           <h1>Nine gated stages, from RFP signal to orals</h1>
-          <p className="lede">Agents draft, people decide: every stage closes with a gate signed by a named approver. {me.lens === 'delivery' && <b>Delivery lens: you can open the shared final stages; the others stay with sales.</b>}</p>
+          <p className="lede">Agents draft, people decide: every stage closes with a gate signed by a named approver. {me.lens !== 'pursuit' && <b>{me.lens_info?.name}: you can open the shared stages; the others stay with the pursuit team.</b>}</p>
         </div>
         <div className="progress-card">
           <div className="pc-top"><span>Gate questions closed</span><b>{total ? Math.round((totalDone / total) * 100) : 0}%</b></div>
@@ -73,7 +73,7 @@ export default function Pursuit({ me, code, onSelect, onAsk, onNavigate }) {
                         <div className="node-top">
                           <span className="node-num">{!s.locked && complete(s) ? '✓' : s.num}</span>
                           {s.audience === 'shared' && <span className="shared-tag">Shared</span>}
-                          {s.locked && <span className="lock-tag">Sales only</span>}
+                          {s.locked && <span className="lock-tag">Pursuit only</span>}
                         </div>
                         <div className="node-name">{s.name}</div>
                         <div className="node-lead">{s.lane}</div>
@@ -257,7 +257,7 @@ function Method({ ov, lens }) {
           <table className="tbl"><thead><tr><th>Lens</th><th>Build</th><th>Review</th><th>Fix</th></tr></thead>
             <tbody>{m.guardrails.map((t) => <tr key={t[0]}>{t.map((x, i) => <td key={i}>{i === 0 ? <b>{x}</b> : x}</td>)}</tr>)}</tbody></table></section>
       </div>
-      {lens === 'sales' && (
+      {lens === 'pursuit' && (
         <div className="two">
           <section className="panel"><h4>Intelligence only people bring</h4>
             <table className="tbl"><thead><tr><th>Human input</th><th>Owner</th><th>Stages</th><th>Shapes</th></tr></thead>
@@ -267,7 +267,7 @@ function Method({ ov, lens }) {
               <tbody>{ov.objections.map((d) => <tr key={d[0]}>{d.map((x, i) => <td key={i}>{i === 0 ? <b>{x}</b> : x}</td>)}</tr>)}</tbody></table></section>
         </div>
       )}
-      <section className="panel"><h4>Artefact catalogue {lens === 'delivery' && <span className="muted small" style={{ textTransform: 'none' }}>filtered to shared stages</span>}</h4>
+      <section className="panel"><h4>Artefact catalogue {lens !== 'pursuit' && <span className="muted small" style={{ textTransform: 'none' }}>filtered to shared stages</span>}</h4>
         <table className="tbl"><thead><tr><th>Artefact</th><th>Stage</th><th>Owner</th><th>Format</th><th>Drafted by</th></tr></thead>
           <tbody>{ov.artefacts.map((a) => <tr key={a.id}><td><b>{a.name}</b>{a.system_of_record && <span className="sor">System of record</span>}</td><td>{a.stages}</td><td>{a.owner}</td><td>{a.format}</td><td className="muted">{a.drafted_by}</td></tr>)}</tbody></table></section>
     </>

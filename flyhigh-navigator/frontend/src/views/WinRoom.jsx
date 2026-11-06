@@ -44,7 +44,7 @@ export default function WinRoom({ onNavigate }) {
     <div className="page">
       <header className="page-head">
         <div>
-          <div className="eyebrow">Win room · stages 3 and 8 · sales lens only</div>
+          <div className="eyebrow">Win room · stages 3 and 8 · pursuit lens only</div>
           <h1>Score the response the way the buyer will</h1>
           <p className="lede">FlyHigh buying group: {people.length} people scored on five dimensions, a competitor rubric of rival archetypes, and only the pending actions that lift the score. Internal only, never client-facing.</p>
         </div>

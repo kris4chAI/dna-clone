@@ -1,7 +1,8 @@
 -- FlyHigh Navigator schema (PostgreSQL 14+)
 -- `origin` = 'seed' for rows loaded from the proposal, 'curated' for rows added or edited in the UI.
 
-DROP TABLE IF EXISTS skill_execution, skill_run, gate_decision, section_round, lens_role, access_rule, pursuit_stage, pursuit_artefact, pursuit_skill, pursuit_ref,
+DROP TABLE IF EXISTS pmo_readiness, pmo_check, pmo_kpi, pmo_usecase, pmo_raid, pmo_estimate, pb_doc,
+  skill_execution, skill_run, gate_decision, section_round, lens_role, lens, access_rule, pursuit_stage, pursuit_artefact, pursuit_skill, pursuit_ref,
   kit_template, kit_sheet, kit_row, response_section, rubric_criterion, section_score, section_musthave,
   chat_message, guide_progress, stage_component, component, stage, phase,
   journey_step, persona, insight_question, insight_dashboard,
@@ -49,7 +50,7 @@ CREATE TABLE guide_progress (
   PRIMARY KEY (session_id, stage_code, step_index)
 );
 
--- Persona journeys (slides 18-20)
+-- Persona journeys
 CREATE TABLE persona (
   id SERIAL PRIMARY KEY, code TEXT UNIQUE, segment TEXT, name TEXT NOT NULL, roles TEXT, wants TEXT,
   journey TEXT, goals TEXT, pains TEXT, kpis TEXT, note TEXT, slide INT, origin TEXT DEFAULT 'seed'
@@ -60,7 +61,7 @@ CREATE TABLE journey_step (
   origin TEXT DEFAULT 'seed'
 );
 
--- Insights (slides 21-24)
+-- Insights
 CREATE TABLE insight_dashboard (
   id SERIAL PRIMARY KEY, code TEXT UNIQUE, name TEXT NOT NULL, audience TEXT, roles TEXT, surface TEXT,
   headline TEXT, guardrail TEXT, persona_code TEXT, slide INT, origin TEXT DEFAULT 'seed'
@@ -70,7 +71,7 @@ CREATE TABLE insight_question (
   seq INT, kind TEXT, question TEXT, answer TEXT, origin TEXT DEFAULT 'seed'
 );
 
--- Industry data model (slides 25-29)
+-- Industry data model
 CREATE TABLE domain (id SERIAL PRIMARY KEY, name TEXT UNIQUE NOT NULL, source TEXT, origin TEXT DEFAULT 'seed');
 CREATE TABLE subject_area (
   id SERIAL PRIMARY KEY, domain_id INT REFERENCES domain(id) ON DELETE CASCADE,
@@ -99,19 +100,23 @@ CREATE TABLE chat_message (
 -- ---------------------------------------------------------------------------
 -- Persona lens
 -- ---------------------------------------------------------------------------
+-- A lens is a workspace for a group of personas. 'available' = FALSE shows it as coming soon.
+CREATE TABLE lens (
+  code TEXT PRIMARY KEY, name TEXT NOT NULL, tagline TEXT, description TEXT, available BOOLEAN NOT NULL DEFAULT TRUE, seq INT
+);
 CREATE TABLE lens_role (
-  code TEXT PRIMARY KEY, name TEXT NOT NULL, lens TEXT NOT NULL CHECK (lens IN ('sales','delivery')),
+  code TEXT PRIMARY KEY, name TEXT NOT NULL, lens TEXT NOT NULL REFERENCES lens(code),
   owns TEXT, agent_support TEXT, seq INT
 );
--- resource: 'screen' | 'pursuit_stage' ; code: screen id or pursuit stage code
+-- resource: 'screen' | 'pursuit_stage' | 'skill'; lenses: every lens allowed to open it
 CREATE TABLE access_rule (
   resource TEXT NOT NULL, code TEXT NOT NULL, label TEXT,
-  sales BOOLEAN NOT NULL, delivery BOOLEAN NOT NULL, reason TEXT,
+  lenses TEXT[] NOT NULL, reason TEXT,
   PRIMARY KEY (resource, code)
 );
 
 -- ---------------------------------------------------------------------------
--- Pursuit lifecycle (AI Native Sales Engineering)
+-- Pursuit lifecycle (AI Native Pursuit Engineering)
 -- ---------------------------------------------------------------------------
 CREATE TABLE pursuit_stage (
   id SERIAL PRIMARY KEY, code TEXT UNIQUE NOT NULL, num INT NOT NULL, name TEXT NOT NULL,
@@ -172,6 +177,37 @@ CREATE TABLE section_round (
 );
 
 -- One searchable index across everything, used by the conversational assistant
+
+-- ---------------------------------------------------------------------------
+-- PMO lens: Snowflake AI Native Delivery Playbook
+-- ---------------------------------------------------------------------------
+CREATE TABLE pb_doc (key TEXT PRIMARY KEY, data JSONB NOT NULL);   -- playbook content, one row per section
+CREATE TABLE pmo_readiness (
+  track TEXT NOT NULL, qid INT NOT NULL, score INT CHECK (score BETWEEN 0 AND 3), note TEXT,
+  updated_by TEXT, updated_at TIMESTAMPTZ DEFAULT now(), PRIMARY KEY (track, qid)
+);
+CREATE TABLE pmo_check (
+  stage TEXT NOT NULL, archetype TEXT NOT NULL, idx INT NOT NULL, done BOOLEAN NOT NULL DEFAULT FALSE,
+  updated_by TEXT, updated_at TIMESTAMPTZ DEFAULT now(), PRIMARY KEY (stage, archetype, idx)
+);
+CREATE TABLE pmo_kpi (
+  id SERIAL PRIMARY KEY, seq INT, category TEXT, name TEXT, what TEXT, source TEXT, target TEXT, cadence TEXT, capture TEXT,
+  actual TEXT, status TEXT CHECK (status IN ('green','amber','red','na')) DEFAULT 'na', note TEXT,
+  updated_by TEXT, updated_at TIMESTAMPTZ
+);
+CREATE TABLE pmo_usecase (
+  id SERIAL PRIMARY KEY, seq INT, archetype TEXT, stage TEXT, activity TEXT,
+  value TEXT, rep TEXT, comp TEXT, risk TEXT, automation TEXT, prereq TEXT, origin TEXT DEFAULT 'seed'
+);
+CREATE TABLE pmo_raid (
+  id SERIAL PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('Risk','Assumption','Issue','Dependency','Decision')),
+  title TEXT NOT NULL, detail TEXT, owner TEXT, due TEXT, severity TEXT DEFAULT 'Medium', status TEXT DEFAULT 'Open',
+  origin TEXT DEFAULT 'seed', created_by TEXT, created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE TABLE pmo_estimate (
+  id SERIAL PRIMARY KEY, name TEXT, params JSONB, result JSONB, created_by TEXT, created_at TIMESTAMPTZ DEFAULT now()
+);
+
 CREATE VIEW search_index AS
   SELECT 'stage' AS kind, s.code AS ref, s.name AS title,
          concat_ws(' ', s.summary, s.lead_role, s.gate, s.key_steps::text, s.outputs::text) AS body
@@ -188,4 +224,7 @@ CREATE VIEW search_index AS
   UNION ALL SELECT 'pursuit_artefact', a.id::text, a.name, concat_ws(' ', a.owner, a.format, a.drafted_by, a.stages) FROM pursuit_artefact a
   UNION ALL SELECT 'pursuit_skill', s.id::text, s.name, concat_ws(' ', s.type, s.contributes, s.stages) FROM pursuit_skill s
   UNION ALL SELECT 'kit_template', t.id::text, t.file, concat_ws(' ', t.folder, t.format) FROM kit_template t
-  UNION ALL SELECT 'section', r.id::text, r.name, concat_ws(' ', r.proves, r.missing, r.fixes) FROM response_section r;
+  UNION ALL SELECT 'section', r.id::text, r.name, concat_ws(' ', r.proves, r.missing, r.fixes) FROM response_section r
+  UNION ALL SELECT 'pmo_kpi', k.id::text, k.name, concat_ws(' ', k.category, k.what, k.source, k.target) FROM pmo_kpi k
+  UNION ALL SELECT 'pmo_raid', r.id::text, r.title, concat_ws(' ', r.kind, r.detail, r.owner, r.status) FROM pmo_raid r
+  UNION ALL SELECT 'pmo_usecase', u.id::text, u.activity, concat_ws(' ', u.archetype, u.stage, u.automation, u.prereq) FROM pmo_usecase u;

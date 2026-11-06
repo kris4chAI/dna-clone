@@ -56,7 +56,7 @@ export default function Kit({ me, focus, onNavigate }) {
               const ts = kit.templates.filter((x) => x.stage_num === s.num)
               return (
                 <div key={s.code}>
-                  <div className={`list-group ${s.locked ? 'dim' : ''}`}>{s.num}. {s.name} · {s.gate_code}{s.locked && ' · sales only'}</div>
+                  <div className={`list-group ${s.locked ? 'dim' : ''}`}>{s.num}. {s.name} · {s.gate_code}{s.locked && ' · pursuit only'}</div>
                   {ts.map((x) => (
                     <button key={x.id} className={`list-item ${x.id === tid ? 'on' : ''}`} onClick={() => pick(x)}>
                       <b><span className={`fmt fmt-${x.format}`}>{x.format}</span> {x.file.replace(/\.(xlsx|docx|pptx)$/, '')}</b>
