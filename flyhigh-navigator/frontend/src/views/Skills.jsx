@@ -174,6 +174,7 @@ const PMO_SCREEN = {
   'aw-test-script-generator': ['aw_design', 'Open assurance design'],
   'aw-test-report-summarizer': ['aw_analytics', 'Open assurance analytics'],
   'aw-impact-analyzer': ['aw_maintenance', 'Open impact analysis'],
+  'aw-lakehouse-test-strategy': ['aw_testmap', 'Open the lakehouse test map'],
 }
 
 function Result({ res, file, setFile, me, cat, delivery, name, onNavigate }) {

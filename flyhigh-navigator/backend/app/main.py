@@ -26,7 +26,7 @@ async def lifespan(_):
     pool.close()
 
 
-app = FastAPI(title="FlyHigh Navigator API", version="5.0", lifespan=lifespan)
+app = FastAPI(title="FlyHigh Navigator API", version="5.1", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 

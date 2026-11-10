@@ -13,7 +13,7 @@ import Journeys from './views/Journeys'
 import Insights from './views/Insights'
 import DataModels from './views/DataModels'
 import Skills from './views/Skills'
-import { AwOverview, AwDesign, AwExecution, AwAnalytics, AwMaintenance } from './views/Assurance'
+import { AwOverview, AwTestMap, AwDesign, AwExecution, AwAnalytics, AwMaintenance } from './views/Assurance'
 import { Playbook, Readiness, Roadmap, Estimator, UseCases, Kpis, Governance, Team } from './views/Pmo'
 
 const NAV = [
@@ -46,6 +46,7 @@ const NAV = [
   ] },
   { group: 'Assurance workbench', items: [
     { id: 'aw_overview', label: 'Overview', hint: 'Design · execution · analytics · maintenance', icon: '◇' },
+    { id: 'aw_testmap', label: 'Lakehouse test map', hint: 'Tests by layer · coverage · gaps', icon: '▦' },
     { id: 'aw_design', label: 'Design', hint: 'Test cases · data · scripts', icon: '✎' },
     { id: 'aw_execution', label: 'Execution', hint: 'Engines · plans · runs · reports', icon: '▶' },
     { id: 'aw_analytics', label: 'Analytics', hint: 'Coverage · defects · hotspots', icon: '◔' },
@@ -129,6 +130,7 @@ export default function App() {
         {v === 'insights' && <Insights focus={nav.ref} onNavigate={go} />}
         {v === 'data' && <DataModels focus={nav.ref} />}
         {v === 'aw_overview' && <AwOverview onNavigate={go} />}
+        {v === 'aw_testmap' && <AwTestMap me={me} onNavigate={go} />}
         {v === 'aw_design' && <AwDesign />}
         {v === 'aw_execution' && <AwExecution />}
         {v === 'aw_analytics' && <AwAnalytics me={me} />}

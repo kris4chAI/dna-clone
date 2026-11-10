@@ -1,7 +1,7 @@
 -- FlyHigh Navigator schema (PostgreSQL 14+)
 -- `origin` = 'seed' for rows loaded from the proposal, 'curated' for rows added or edited in the UI.
 
-DROP TABLE IF EXISTS aw_mapping, aw_module, aw_defect, aw_result, aw_cycle, aw_cicd, aw_plan, aw_release, aw_device, aw_engine,
+DROP TABLE IF EXISTS aw_test_type, aw_mapping, aw_module, aw_defect, aw_result, aw_cycle, aw_cicd, aw_plan, aw_release, aw_device, aw_engine,
   aw_script, aw_component, aw_dataset, aw_case, aw_suite, aw_story,
   pmo_readiness, pmo_check, pmo_kpi, pmo_usecase, pmo_raid, pmo_estimate, pb_doc,
   skill_execution, skill_run, gate_decision, section_round, lens_role, lens, access_rule, pursuit_stage, pursuit_artefact, pursuit_skill, pursuit_ref,
@@ -219,7 +219,11 @@ CREATE TABLE aw_story (id SERIAL PRIMARY KEY, key TEXT UNIQUE, title TEXT, featu
 CREATE TABLE aw_suite (id SERIAL PRIMARY KEY, name TEXT, source_kind TEXT, source_ref TEXT, llm TEXT, version INT,
   created_by TEXT, created_at TIMESTAMPTZ DEFAULT now());
 CREATE TABLE aw_case (id SERIAL PRIMARY KEY, suite_id INT REFERENCES aw_suite(id) ON DELETE CASCADE, key TEXT, title TEXT,
-  story_key TEXT, feature TEXT, type TEXT, priority TEXT, steps JSONB, expected TEXT, automation TEXT, origin TEXT DEFAULT 'generated');
+  story_key TEXT, feature TEXT, type TEXT, priority TEXT, steps JSONB, expected TEXT, automation TEXT, origin TEXT DEFAULT 'generated',
+  test_type TEXT);
+-- lakehouse test catalogue: test types by platform layer (1-6) and cross-cutting discipline (7-9)
+CREATE TABLE aw_test_type (code TEXT PRIMARY KEY, seq INT, layer INT, layer_name TEXT, name TEXT, what TEXT, checks JSONB, tools JSONB,
+  skills JSONB, owner TEXT, gate TEXT, automation TEXT);
 CREATE TABLE aw_dataset (id SERIAL PRIMARY KEY, name TEXT, schema_source TEXT, entity TEXT, scenarios TEXT[], rows JSONB, sql TEXT,
   created_by TEXT, created_at TIMESTAMPTZ DEFAULT now());
 CREATE TABLE aw_component (id SERIAL PRIMARY KEY, kind TEXT, name TEXT, description TEXT);
@@ -265,4 +269,5 @@ CREATE VIEW search_index AS
   UNION ALL SELECT 'pmo_raid', r.id::text, r.title, concat_ws(' ', r.kind, r.detail, r.owner, r.status) FROM pmo_raid r
   UNION ALL SELECT 'pmo_usecase', u.id::text, u.activity, concat_ws(' ', u.archetype, u.stage, u.automation, u.prereq) FROM pmo_usecase u
   UNION ALL SELECT 'aw_case', c.id::text, c.title, concat_ws(' ', c.key, c.story_key, c.feature, c.type, c.expected) FROM aw_case c
+  UNION ALL SELECT 'aw_test_type', t.code, t.name, concat_ws(' ', t.layer_name, t.what, t.checks::text, t.tools::text, t.skills::text) FROM aw_test_type t
   UNION ALL SELECT 'aw_defect', d.id::text, d.title, concat_ws(' ', d.key, d.severity, d.status, d.feature, d.component) FROM aw_defect d;

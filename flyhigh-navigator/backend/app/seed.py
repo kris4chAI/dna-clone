@@ -115,7 +115,7 @@ def seed(c):
     seed_assurance(c)
 
 
-SCHEMA_VERSION = "5.0"
+SCHEMA_VERSION = "5.1"
 
 
 def main():

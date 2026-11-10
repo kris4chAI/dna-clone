@@ -21,6 +21,7 @@ from pydantic import BaseModel
 from . import llm
 from .access import screen
 from .db import conn
+from .lakehouse_tests import BANDS, CROSS, LAYERS, catalog, classify_test_type
 
 router = APIRouter(prefix="/api/assurance")
 
@@ -148,6 +149,11 @@ DEVICES = [("Chrome desktop", "Browser", "Windows 11", "UAT"), ("Safari iPad", "
 
 def seed_assurance(c):
     x = X(c)
+    for t in catalog():
+        c.execute("""INSERT INTO aw_test_type(code,seq,layer,layer_name,name,what,checks,tools,skills,owner,gate,automation)
+                     VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                  (t["code"], t["seq"], t["layer"], t["layer_name"], t["name"], t["what"], json.dumps(t["checks"]), json.dumps(t["tools"]),
+                   json.dumps(t["skills"]), t["owner"], t["gate"], t["automation"]))
     for kind, name, desc in FRAMEWORK:
         c.execute("INSERT INTO aw_component(kind,name,description) VALUES (%s,%s,%s)", (kind, name, desc))
     n = 100
@@ -205,6 +211,12 @@ def seed_assurance(c):
     run_plan(x, p2, "Snowflake DEV cluster", "Chrome desktop", True, True, who="seed", trigger="Manual")
     run_plan(x, p2, "Nightly cluster (CI)", "Headless Chromium", True, True, who="seed", trigger="CI/CD")
     run_plan(x, p3, "Snowflake DEV cluster", "Edge desktop", False, True, who="seed", trigger="Manual")
+    found = [t["code"] for t in catalog() if t["layer"] in (1, 2, 3) or t["code"] in ("X9.1", "X9.2", "X8.1")]
+    ls = generate_cases(x, "catalog", codes=found, name="Lakehouse foundation · v1", who="seed")
+    lids = [r["id"] for r in x.q("SELECT id FROM aw_case WHERE suite_id=%s", (ls["id"],))]
+    p4 = x.one("INSERT INTO aw_plan(name,release_id,case_ids,suite) VALUES (%s,%s,%s,'Regression') RETURNING id", ("Lakehouse foundation", rel["R1 · Pilot wave"], lids))["id"]
+    run_plan(x, p4, "Snowflake DEV cluster", "Headless Chromium", True, True, who="seed", trigger="CI/CD")
+    remap(x)
     c.execute("UPDATE aw_module SET changed=TRUE WHERE path IN ('procs/sp_load_wms_incremental.sql','policies/rap_customer.sql')")
 
 
@@ -246,13 +258,20 @@ def _case_rows(items):
         for crit in it["criteria"]:
             typ = "ui" if it.get("kind") == "ui" else ("api" if it.get("kind") == "api" else classify(crit))
             out.append({**it, "type": typ, "crit": crit, "title_c": f"{it['title']}: {crit}"})
-        if it.get("kind") not in ("ui", "api"):
+        if it.get("kind") not in ("ui", "api", "catalog"):
             out.append({**it, "type": "negative", "crit": "access refused", "title_c": f"{it['title']}: refuses users without access"})
     return out
 
 
-def generate_cases(x, source, story_ids=None, doc_type=None, doc_text=None, name=None, who="app", feature=None):
-    if source == "stories":
+def generate_cases(x, source, story_ids=None, doc_type=None, doc_text=None, name=None, who="app", feature=None, codes=None):
+    if source == "catalog":
+        tts = x.q("SELECT * FROM aw_test_type WHERE code = ANY(%s) ORDER BY seq", (list(codes or []),))
+        if not tts:
+            raise HTTPException(400, "Pick at least one test type from the lakehouse test map.")
+        items = [{"story_key": t["code"], "title": t["name"], "feature": t["layer_name"], "persona": t["owner"],
+                  "priority": "High" if t["layer"] in (3, 4, 6, 7) else "Medium", "criteria": t["checks"], "kind": "catalog", "test_type": t["code"]} for t in tts]
+        ref = f"Lakehouse test map · {len(tts)} test types"
+    elif source == "stories":
         if story_ids:
             st = x.q("SELECT * FROM aw_story WHERE id = ANY(%s) ORDER BY id", (list(story_ids),))
         else:
@@ -276,16 +295,17 @@ def generate_cases(x, source, story_ids=None, doc_type=None, doc_text=None, name
         raise HTTPException(400, "No user stories matched.")
     ver = (x.one("SELECT COALESCE(MAX(version),0)+1 AS v FROM aw_suite")["v"])
     suite = x.one("""INSERT INTO aw_suite(name,source_kind,source_ref,llm,version,created_by) VALUES (%s,%s,%s,%s,%s,%s) RETURNING *""",
-                  (name or f"Test suite v{ver}", source if source == "stories" else (doc_type or "FSD/BRD"), ref,
+                  (name or f"Test suite v{ver}", source if source in ("stories", "catalog") else (doc_type or "FSD/BRD"), ref,
                    (llm.status().get("model") if llm.available() else "Deterministic engine"), ver, who))
     rows = _case_rows(items)
     for i, r in enumerate(rows, 1):
         steps = [s.format(persona=r["persona"], feature=r["feature"], title=r["title"], crit=r["crit"]) for s in STEPS[r["type"]]]
         pri = "High" if r["type"] in ("security", "data") or r["priority"] == "High" else r["priority"]
-        x.one("""INSERT INTO aw_case(suite_id,key,title,story_key,feature,type,priority,steps,expected,automation)
-                 VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+        x.one("""INSERT INTO aw_case(suite_id,key,title,story_key,feature,type,priority,steps,expected,automation,test_type)
+                 VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
               (suite["id"], f"TC-{suite['version']:02d}-{i:03d}", r["title_c"][:200], r["story_key"], r["feature"], r["type"], pri,
-               json.dumps(steps), EXPECT[r["type"]], "Automated" if r["type"] in ("data", "security", "performance", "api") else "Automatable"))
+               json.dumps(steps), EXPECT[r["type"]], "Automated" if r["type"] in ("data", "security", "performance", "api") else "Automatable",
+               r.get("test_type") or classify_test_type(r["title_c"], r["type"])))
     return suite
 
 
@@ -299,11 +319,12 @@ def import_cases(x, text, who):
     for i, r in enumerate(rd, 1):
         g = {k.lower().strip(): (v or "").strip() for k, v in r.items()}
         typ = g.get("type") or classify(g.get("title", ""))
-        x.one("""INSERT INTO aw_case(suite_id,key,title,story_key,feature,type,priority,steps,expected,automation,origin)
-                 VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,'Manual','curated') RETURNING id""",
+        typ = typ if typ in STEPS else "functional"
+        x.one("""INSERT INTO aw_case(suite_id,key,title,story_key,feature,type,priority,steps,expected,automation,origin,test_type)
+                 VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,'Manual','curated',%s) RETURNING id""",
               (s["id"], f"TC-{ver:02d}-{i:03d}", g.get("title") or f"Imported case {i}", g.get("story"), g.get("feature") or "Imported",
-               typ if typ in STEPS else "functional", g.get("priority") or "Medium", json.dumps([t.strip() for t in (g.get("steps") or "").split(";") if t.strip()]),
-               g.get("expected")))
+               typ, g.get("priority") or "Medium", json.dumps([t.strip() for t in (g.get("steps") or "").split(";") if t.strip()]),
+               g.get("expected"), g.get("test_type") or classify_test_type(g.get("title", ""), typ)))
     return s
 
 
@@ -576,6 +597,7 @@ def summary(x, release_id=None):
 # ---------------------------------------------------------------------------
 PILLARS = [
     {"code": "design", "name": "Design", "tools": [
+        ["Lakehouse test map", "Every test the open-lakehouse platform needs, by layer and discipline, with live coverage and one-click generation for the gaps."],
         ["Test Case Generator", "Generates test cases from user stories (Jira, Rally, Azure DevOps, PDF, XLSX, DOCX, S3) or product documents (FSD, BRD, UI/UX designs, API docs)."],
         ["Test Data Generator", "Generates synthetic test data from a schema file (SQL, CSV, XLSX) or a live database, aligned to valid, boundary, invalid and masked scenarios."],
         ["Test Script Generator", "Generates keyword-driven, BDD or data-driven scripts from test cases, over reusable components, applications, standard suites and services."]]},
@@ -834,6 +856,49 @@ def impact_plan(body: ImpactPlanIn, p: dict = Depends(screen("aw_maintenance")))
                   (f"Impact regression · {date.today()}", body.release_id, [r["id"] for r in rows]))
 
 
+
+# ---------------------------------------------------------------------------
+# Lakehouse test map: coverage of every test type the platform needs
+# ---------------------------------------------------------------------------
+def testmap(x, release_id=None):
+    rf = "AND cy.release_id=%s" if release_id else ""
+    latest = {r["case_id"]: r["status"] for r in x.q(f"""SELECT DISTINCT ON (r.case_id) r.case_id, r.status FROM aw_result r
+                 JOIN aw_cycle cy ON cy.id=r.cycle_id WHERE TRUE {rf} ORDER BY r.case_id, r.cycle_id DESC""", (release_id,) if release_id else ())}
+    cases = x.q("SELECT id, key, title, type, priority, test_type FROM aw_case")
+    types = x.q("SELECT * FROM aw_test_type ORDER BY seq")
+    by = {t["code"]: [] for t in types}
+    for c in cases:
+        by.setdefault(c["test_type"], []).append(c)
+    out = []
+    for t in types:
+        cs = by.get(t["code"], [])
+        res = [latest[c["id"]] for c in cs if c["id"] in latest]
+        n = {s: res.count(s) for s in ("passed", "failed", "skipped")}
+        status = "Gap" if not cs else "Planned" if not res else "At risk" if n["failed"] else "Covered"
+        out.append({**t, "cases": len(cs), "executed": len(res), **n, "status": status,
+                    "pass_rate": round(100 * n["passed"] / len(res)) if res else None,
+                    "sample": [{"key": c["key"], "title": c["title"], "status": latest.get(c["id"], "not run")} for c in cs[:8]]})
+    counts = {s: sum(1 for t in out if t["status"] == s) for s in ("Covered", "At risk", "Planned", "Gap")}
+    return {"bands": BANDS, "layers": LAYERS, "cross": CROSS, "types": out, "counts": counts}
+
+
+@router.get("/testmap")
+def get_testmap(release_id: int | None = None, p: dict = Depends(screen("aw_testmap"))):
+    return {**testmap(DB, release_id), "releases": DB.q("SELECT id, name FROM aw_release ORDER BY start_date"), "release_id": release_id}
+
+
+class MapGenIn(BaseModel):
+    codes: list[str]
+    name: str | None = None
+
+
+@router.post("/testmap/generate")
+def testmap_generate(body: MapGenIn, p: dict = Depends(screen("aw_design"))):
+    s = generate_cases(DB, "catalog", codes=body.codes, name=body.name, who=p["code"])
+    remap(DB)
+    return s
+
+
 # ---------------------------------------------------------------------------
 # Assurance skills (engines for the skills studio)
 # ---------------------------------------------------------------------------
@@ -856,6 +921,10 @@ AW_SKILLS = {
     "aw-test-report-summarizer": {"title": "Test report summarizer", "screens": ["aw_analytics"],
         "engine": "Summarizes coverage, results, feature readiness, hotspots, defects by severity and the impact × likelihood grid for a release.",
         "fields": [{"key": "release", "label": "Release (blank = all)", "kind": "text", "default": ""}]},
+    "aw-lakehouse-test-strategy": {"title": "Lakehouse test strategy", "screens": ["aw_testmap"],
+        "engine": "Writes the test strategy for the lakehouse platform, layer by layer: every test type with what it proves, its checks, Snowflake features, skills, owner and gate, plus current coverage and the gaps to close; optionally generates cases for the gaps.",
+        "fields": [{"key": "layer", "label": "Layer (blank = all)", "kind": "choice", "default": "", "options": [""] + [f"{k} · {v}" for k, v in LAYERS.items()]},
+                   {"key": "fill_gaps", "label": "Generate test cases for test types with no cases", "kind": "choice", "default": "no", "options": ["no", "yes"]}]},
     "aw-impact-analyzer": {"title": "Impact analyzer", "screens": ["aw_maintenance"],
         "engine": "From a list of changed files, finds the impacted test cases through the test-to-code mappings and ranks the regression suite by risk.",
         "fields": [{"key": "paths", "label": "Changed files (git diff --name-only)", "kind": "lines", "default": "procs/sp_load_wms_incremental.sql\npolicies/rap_customer.sql"}]},
@@ -936,5 +1005,35 @@ def sk_impact(params, p, session):
             "notes": [f"Unmapped paths: {', '.join(unknown)}"] if unknown else []}
 
 
-AW_ENGINES = {"aw-test-case-generator": sk_cases, "aw-test-data-generator": sk_data, "aw-test-script-generator": sk_script,
+def sk_strategy(params, p, session):
+    lay = int(params["layer"].split(" ")[0]) if params.get("layer") else None
+    gen = None
+    if params.get("fill_gaps") == "yes":
+        gaps = [t["code"] for t in testmap(DB)["types"] if t["status"] == "Gap" and (not lay or t["layer"] == lay)]
+        if gaps:
+            gen = generate_cases(DB, "catalog", codes=gaps, name="Lakehouse gaps", who=p["code"])
+            remap(DB)
+    tm = testmap(DB)
+    types = [t for t in tm["types"] if not lay or t["layer"] == lay]
+    md = ["# FlyHigh lakehouse test strategy" + (f" · {LAYERS[lay]}" if lay else ""), "",
+          "Tests are organized by platform layer (data foundation, context and AI, experience) and by cross-cutting discipline "
+          "(governance and security, observability and FinOps, test automation and DevOps). Agents generate and run the tests; "
+          "named people own G1, G2 and G3.", "",
+          "| Status | Test types |", "|---|---|"] + [f"| {k} | {v} |" for k, v in tm["counts"].items()]
+    for num in sorted({t["layer"] for t in types}):
+        md += ["", f"## {num}. {LAYERS[num]}", ""]
+        for t in [t for t in types if t["layer"] == num]:
+            cov = f"{t['cases']} cases, {t['executed']} executed" + (f", {t['pass_rate']}% passing" if t["pass_rate"] is not None else "")
+            md += [f"### {t['code']} {t['name']} — {t['status']}", "", t["what"], "", "Checks:"] + [f"- {c}" for c in t["checks"]] + [
+                "", f"Snowflake and tools: {', '.join(t['tools'])} · Skills: {', '.join(f'`{k}`' for k in t['skills'])} · "
+                    f"Owner: {t['owner']} · Gate: {t['gate']} · Mode: {t['automation']} · Coverage: {cov}", ""]
+    gaps = [t for t in types if t["status"] in ("Gap", "At risk")]
+    md += ["## Close next", ""] + [f"- **{t['code']} {t['name']}** ({t['status']}): owner {t['owner']}" for t in gaps]
+    if gen:
+        md += ["", f"Generated suite **{gen['name']}** for the gaps; add it to a test plan in Execution."]
+    return {"summary": f"{len(types)} test types · " + " · ".join(f"{k} {v}" for k, v in tm["counts"].items()) + (f" · generated {gen['name']}" if gen else ""),
+            "files": {"lakehouse_test_strategy.md": "\n".join(md)}, "notes": []}
+
+
+AW_ENGINES = {"aw-lakehouse-test-strategy": sk_strategy, "aw-test-case-generator": sk_cases, "aw-test-data-generator": sk_data, "aw-test-script-generator": sk_script,
               "aw-test-report-summarizer": sk_summary, "aw-impact-analyzer": sk_impact}

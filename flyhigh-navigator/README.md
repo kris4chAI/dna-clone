@@ -4,7 +4,7 @@ A conversational, persona-aware workspace for the **FlyHigh** initiative: **ABC 
 
 - **Pursuit lifecycle (pursuit lens):** nine gated stages from RFP signal to orals, with templates, a win room, response scoring and 9 pursuit skills.
 - **Implementation lifecycle (delivery lens):** ten steps from Discover to Operate & monitor, with agents, tools and 46 Snowflake delivery skills.
-- **Assurance workbench (assurance lens):** design (test cases from user stories or documents, synthetic test data, keyword-driven scripts), execution (engines, devices, releases, test plans, runs with self-healing and failure analysis), analytics (coverage, results, hotspots, defects, impact × likelihood) and maintenance (test-to-code mapping and impact analysis), with 5 assurance skills.
+- **Assurance workbench (assurance lens):** design (test cases from user stories or documents, synthetic test data, keyword-driven scripts), execution (engines, devices, releases, test plans, runs with self-healing and failure analysis), analytics (coverage, results, hotspots, defects, impact × likelihood) and maintenance (test-to-code mapping and impact analysis), plus a lakehouse test map of 39 test types across the platform's six layers and three cross-cutting disciplines, with 6 assurance skills.
 - **Program office (PMO lens):** the AI Native Delivery Playbook as a working PMO: primer and archetypes, readiness scorecard, plan and execute, unit-effort estimator, AI use-case matrix, KPI scorecard, governance and RAID, team and RACI, with 4 PMO skills.
 - A **sales lens** for sales strategy and pipeline generation is reserved and shown as coming soon.
 - **Shared solution content:** persona journeys, insights dashboards and the logistics data model.
@@ -30,7 +30,7 @@ On the first start, Docker builds one image (UI + API + skills + assets), starts
 docker compose logs -f app       # follow the logs
 docker compose down              # stop (data is kept in the pgdata volume)
 docker compose down -v           # stop and delete all data
-python3 tools/smoke_test.py      # 73 end-to-end checks (all 64 skills included)
+python3 tools/smoke_test.py      # 76 end-to-end checks (all 65 skills included)
 ```
 
 ## The only setting you may need: your LLM
@@ -61,10 +61,10 @@ flyhigh-navigator/
 │   └── requirements.txt      ← pinned Python dependencies (wheels for amd64 and arm64)
 ├── frontend/                 ← React 18 + Vite UI (fonts bundled; no external calls at runtime)
 ├── skills/                   ← everything the app can *do*
-│   ├── README.md             ← skills catalog (64 skills)
+│   ├── README.md             ← skills catalog (65 skills)
 │   ├── pursuit/              ← 9 pursuit skills (SKILL.md, source of truth)
 │   ├── pmo/                  ← 4 PMO skills (SKILL.md, source of truth)
-│   ├── assurance/            ← 5 assurance workbench skills (SKILL.md, source of truth)
+│   ├── assurance/            ← 6 assurance workbench skills (SKILL.md, source of truth)
 │   ├── delivery/snowskills/  ← generator library for the 46 Snowflake delivery skills (stdlib only)
 │   ├── delivery/catalog/     ← readable SKILL.md + example params per delivery skill
 │   └── packages/             ← .skill packages (upload to Claude, or run standalone)
@@ -84,4 +84,4 @@ flyhigh-navigator/
 - [docs/architecture.md](docs/architecture.md): components, data model and request flow
 - [docs/configuration.md](docs/configuration.md): all `.env` settings (LLM, port, Snowflake, reset)
 - [docs/operations.md](docs/operations.md): run, reset, upgrade, back up, troubleshoot, develop locally
-- [skills/README.md](skills/README.md): the 64-skill catalog
+- [skills/README.md](skills/README.md): the 65-skill catalog

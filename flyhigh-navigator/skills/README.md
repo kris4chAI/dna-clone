@@ -7,7 +7,7 @@ Everything FlyHigh Navigator knows how to *do* lives in this folder. The app loa
 |---|---|
 | `pursuit/<name>/SKILL.md` | The 9 AI Native Pursuit Engineering pursuit skills (source of truth) |
 | `pmo/<name>/SKILL.md` | The 4 PMO skills from the AI Native Delivery Playbook (source of truth) |
-| `assurance/<name>/SKILL.md` | The 5 assurance workbench skills (source of truth) |
+| `assurance/<name>/SKILL.md` | The 6 assurance workbench skills (source of truth) |
 | `delivery/snowskills/` | The Snowflake generator library behind the 46 delivery skills (pure Python, stdlib only) |
 | `delivery/catalog/sf-*/` | Readable SKILL.md and example parameters per delivery skill |
 | `packages/pursuit/*.skill`, `packages/pmo/*.skill`, `packages/assurance/*.skill`, `packages/delivery/*.skill` | Packaged skills (zip format) |
@@ -44,11 +44,12 @@ python -m snowskills run gen-grants --params catalog/sf-gen-grants/examples/para
 | `pmo-unit-effort-estimator` | Estimate an AI-native Snowflake program with the unit-effort model: objects by complexity, AI frameworks and discovery, pilot share and wave speed-up, returning person-days, person-months and average FTE. | [SKILL.md](pmo/pmo-unit-effort-estimator/SKILL.md) · [package](packages/pmo/pmo-unit-effort-estimator.skill) |
 | `pmo-usecase-prioritizer` | Rank data modernization activities for AI and agent enablement on value, repeatability, feasibility, trust and automation, and assign each a lane: pilot wave, next wave, assist only or human gate. | [SKILL.md](pmo/pmo-usecase-prioritizer/SKILL.md) · [package](packages/pmo/pmo-usecase-prioritizer.skill) |
 
-## Assurance skills (5)
+## Assurance skills (6)
 
 | Skill | Purpose | Files |
 |---|---|---|
 | `aw-impact-analyzer` | From a list of changed files, find the impacted test cases through test-to-code mappings and rank the regression suite by risk (mapping score × priority × failure history). | [SKILL.md](assurance/aw-impact-analyzer/SKILL.md) · [package](packages/assurance/aw-impact-analyzer.skill) |
+| `aw-lakehouse-test-strategy` | Write the test strategy for a Snowflake open-lakehouse platform layer by layer: every test type with what it proves, its checks, Snowflake features, skills, owner and gate, current coverage and the gaps to close. | [SKILL.md](assurance/aw-lakehouse-test-strategy/SKILL.md) · [package](packages/assurance/aw-lakehouse-test-strategy.skill) |
 | `aw-test-case-generator` | Generate a versioned suite of functional, negative, data, security, performance, UI and API test cases from user stories or from requirements, screen lists and API endpoints, for a Snowflake modernization program. | [SKILL.md](assurance/aw-test-case-generator/SKILL.md) · [package](packages/assurance/aw-test-case-generator.skill) |
 | `aw-test-data-generator` | Generate synthetic Snowflake test data for valid, boundary, invalid and masked scenarios from a schema file (CREATE TABLE DDL, CSV header) or a data-model entity, with INSERT SQL and data-quality checks. | [SKILL.md](assurance/aw-test-data-generator/SKILL.md) · [package](packages/assurance/aw-test-data-generator.skill) |
 | `aw-test-report-summarizer` | Summarize test results for a release: user-story coverage, results, feature readiness, hotspots (critical, flaky, stable), defects by severity, most-failed tests with root cause, and the impact × likelihood grid. | [SKILL.md](assurance/aw-test-report-summarizer/SKILL.md) · [package](packages/assurance/aw-test-report-summarizer.skill) |

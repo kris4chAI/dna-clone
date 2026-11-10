@@ -17,7 +17,7 @@ python3 tools/smoke_test.py                  # default http://localhost:8080
 python3 tools/smoke_test.py http://host:port
 ```
 
-The script runs 73 checks, which together exercise all 64 skills:
+The script runs 76 checks, which together exercise all 65 skills:
 
 - health and the UI;
 - the persona lens (401 without a persona, 403 across the pursuit, delivery, assurance and PMO lenses);

@@ -81,6 +81,7 @@ SCREEN_ACCESS = [
     ("kpis", "KPI scorecard", [M], "Measurement against baseline for steering."),
     ("governance", "Governance and RAID", [M], "Steering, Responsible AI controls and the RAID log."),
     ("aw_overview", "Assurance overview", [A, D, M], "The assurance workbench at a glance: shared with delivery and the PMO."),
+    ("aw_testmap", "Lakehouse test map", [A, D, M], "The tests every platform layer needs, with coverage: assurance owns it, delivery and the PMO read it."),
     ("aw_design", "Assurance design", [A], "Test case, test data and script generation."),
     ("aw_execution", "Assurance execution", [A], "Engines, devices, releases, plans, executions and reports."),
     ("aw_analytics", "Assurance analytics", [A, D, M], "Test report summary and defect impact: read by delivery and the PMO for gates and steering."),

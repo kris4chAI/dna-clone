@@ -60,6 +60,10 @@ Q = "qa_lead"
 for path in ["/api/assurance/overview", "/api/assurance/design", "/api/assurance/execution", "/api/assurance/analytics", "/api/assurance/maintenance"]:
     check(f"GET {path} as {Q}", call(path, Q)[0] == 200)
 check("assurance lens available after delivery", [l["code"] for l in ls if l["available"]] == ["pursuit", "delivery", "assurance", "pmo"])
+s, tm = call("/api/assurance/testmap", Q)
+check("lakehouse test map covers 39 test types in 9 layers", s == 200 and len(tm["types"]) == 39 and len({t["layer"] for t in tm["types"]}) == 9, str(tm and tm["counts"]))
+s, r = call("/api/assurance/testmap/generate", Q, {"codes": ["L4.2"]})
+check("test map generates cases for a test type", s == 200 and r and r.get("id"))
 check("delivery reads assurance analytics, not design", call("/api/assurance/analytics", D)[0] == 200 and call("/api/assurance/design", D)[0] == 403)
 check("pursuit blocked from assurance", call("/api/assurance/overview", S)[0] == 403)
 s, r = call("/api/assurance/design/cases/generate", Q, {"source": "document", "doc_type": "API DOCS", "doc_text": "GET /shipments/{id}"})
@@ -91,7 +95,7 @@ for n in pmo:
     check(f"PMO skill {n}", s == 200 and r and r.get("files"), r.get("summary", "") if r else "")
 s, cat = call("/api/skills", "qa_lead")
 aw = [x["name"] for x in cat["skills"] if x["kind"] == "assurance"] if cat else []
-check("assurance skills catalogue", len(aw) == 5, f"{len(aw)} assurance skills, {len(cat['skills']) if cat else 0} in the assurance lens")
+check("assurance skills catalogue", len(aw) == 6, f"{len(aw)} assurance skills, {len(cat['skills']) if cat else 0} in the assurance lens")
 for n in aw:
     s, r = call(f"/api/skills/{n}/run", "qa_lead", {"params": {}, "mode": "engine", "session_id": "smoke"})
     check(f"assurance skill {n}", s == 200 and r and r.get("files"), r.get("summary", "") if r else "")

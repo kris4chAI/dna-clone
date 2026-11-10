@@ -113,7 +113,7 @@ def _next_stage(code):
     return one("SELECT code FROM stage WHERE seq>%s ORDER BY seq LIMIT 1", (s["seq"],))
 
 
-PMO_KIND_SCREEN = {"pmo_kpi": "kpis", "pmo_raid": "governance", "pmo_usecase": "usecases", "aw_case": "aw_design", "aw_defect": "aw_analytics"}
+PMO_KIND_SCREEN = {"pmo_kpi": "kpis", "pmo_raid": "governance", "pmo_usecase": "usecases", "aw_case": "aw_design", "aw_defect": "aw_analytics", "aw_test_type": "aw_testmap"}
 
 
 def assurance_answer(m: str, context: dict):
@@ -131,6 +131,15 @@ def assurance_answer(m: str, context: dict):
                          f"{sum(1 for d in s['defects'] if d['status'] != 'Closed')} open defects.",
                 "cards": [card("aw_overview", "Assurance overview", "Start here"), card("aw_design", "Design", "Generate test cases")],
                 "suggestions": SUGGEST["assurance"]}
+    if re.search(r"lakehouse|test map|test strategy|which tests|tests? (for|across|needed|required)|layer|gap", m):
+        from .lakehouse_tests import LAYERS
+        tm = A.testmap(A.DB)
+        hit = [n for n, name in LAYERS.items() if any(w in m for w in name.lower().replace(" and ", " ").split() if len(w) > 4)]
+        types = [t for t in tm["types"] if not hit or t["layer"] in hit]
+        head = (f"Tests for **{', '.join(LAYERS[n] for n in hit)}**:" if hit else
+                "The lakehouse test map covers six platform layers and three cross-cutting disciplines: " + ", ".join(f"{t} {v}" for t, v in tm["counts"].items()) + ".")
+        return {"reply": head + "\n" + "\n".join(f"- **{t['code']} {t['name']}** ({t['status']}, {t['cases']} cases): {t['what']}" for t in types[:14]),
+                "cards": [card("aw_testmap", "Lakehouse test map", "Coverage by layer")], "suggestions": ["Which tests failed?"]}
     if re.search(r"fail|flaky|hotspot|root cause", m):
         s = A.summary(A.DB)
         return {"reply": "Most-failed test cases:\n" + "\n".join(f"- **{d['key']}** {d['title'][:70]} — {d['failure_rate']}% ({d['root_cause'] or 'n/a'}): {d['resolution'] or ''}" for d in s["most_failed"][:8])
@@ -486,7 +495,7 @@ def answer(message: str, context: dict | None = None, lens: str = "delivery"):
             "persona": "journeys", "journey_step": "journeys", "dashboard": "insights", "insight": "insights",
             "subject_area": "data", "entity": "data", "kpi": "data", "pursuit_stage": "pursuit", "pursuit_artefact": "pursuit",
             "pursuit_skill": "kit", "kit_template": "kit", "section": "quality",
-            "pmo_kpi": "kpis", "pmo_raid": "governance", "pmo_usecase": "usecases", "aw_case": "aw_design", "aw_defect": "aw_analytics"}
+            "pmo_kpi": "kpis", "pmo_raid": "governance", "pmo_usecase": "usecases", "aw_case": "aw_design", "aw_defect": "aw_analytics", "aw_test_type": "aw_testmap"}
     reply = "Here's what matches in the catalog:\n" + "\n".join(f"- **{r['title']}** ({r['kind'].replace('_', ' ')}) — {(r['body'] or '')[:110]}" for r in top)
     cards = [_card(r["kind"], r["title"], r["kind"].replace("_", " "), view.get(r["kind"], "catalog"), r["ref"]) for r in top[:4]]
     return {"reply": reply, "cards": cards, "suggestions": SUGGEST[lens][:2], "context_rows": top}

@@ -60,7 +60,7 @@ def lifecycle(p: dict = Depends(screen("lifecycle"))):
     pb = one("SELECT data FROM pb_doc WHERE key='stages'")
     pmo_ok = allowed("screen", "roadmap", lens)
     program = [{**s, "seq": i + 1, "locked": not pmo_ok} for i, s in enumerate(pb["data"] if pb else [])]
-    aw = [("aw_overview", "Overview", "Workbench at a glance"), ("aw_design", "Design", "Cases · data · scripts"),
+    aw = [("aw_overview", "Overview", "Workbench at a glance"), ("aw_testmap", "Lakehouse test map", "Tests by layer · gaps"), ("aw_design", "Design", "Cases · data · scripts"),
           ("aw_execution", "Execution", "Engines · plans · runs"), ("aw_analytics", "Analytics", "Coverage · defects"),
           ("aw_maintenance", "Maintenance", "Code mapping · impact")]
     assurance = [{"code": c, "seq": i + 1, "name": n, "hint": h, "locked": not allowed("screen", c, lens)} for i, (c, n, h) in enumerate(aw)]

@@ -614,3 +614,89 @@ export function AwMaintenance({ me, onNavigate }) {
     </div>
   )
 }
+
+/* ---------------------------------------------------------------- Lakehouse test map */
+const MAP_TONE = { Covered: 'g', 'At risk': 'r', Planned: 's', Gap: 'n' }
+export function AwTestMap({ me, onNavigate }) {
+  const [rel, setRel] = useState('')
+  const [d, , reload] = useLoad(`/api/assurance/testmap${rel ? `?release_id=${rel}` : ''}`, [rel])
+  const [sel, setSel] = useState(null)
+  const [pick, setPick] = useState([])
+  const [msg, setMsg] = useState('')
+  const edit = me?.lens === 'assurance'
+  if (!d) return <div className="page">Loading…</div>
+  const of = (n) => d.types.filter((t) => t.layer === n)
+  const t = d.types.find((x) => x.code === sel)
+  const toggle = (code) => setPick((p) => (p.includes(code) ? p.filter((c) => c !== code) : [...p, code]))
+  const generate = async (codes) => {
+    setMsg('')
+    try { const s = await api.post('/api/assurance/testmap/generate', { codes }); setMsg(`Generated “${s.name}” for ${codes.length} test type(s). Add it to a test plan in Execution.`); setPick([]); reload() } catch (e) { setMsg(e.message) }
+  }
+  const Cell = ({ x }) => (
+    <button className={`tm-cell ${MAP_TONE[x.status]} ${sel === x.code ? 'on' : ''}`} onClick={() => setSel(x.code)} title={x.what}>
+      {edit && <input type="checkbox" checked={pick.includes(x.code)} onClick={(e) => e.stopPropagation()} onChange={() => toggle(x.code)} />}
+      <span className="tm-name">{x.name}</span>
+      <span className="tm-meta"><i />{x.status}{x.cases ? ` · ${x.cases} cases` : ''}{x.pass_rate != null ? ` · ${x.pass_rate}%` : ''}</span>
+    </button>
+  )
+  return (
+    <div className="page">
+      <Head crumb="Lakehouse test map" title="Every test the lakehouse platform needs, layer by layer"
+        lede="The reference architecture for the open lakehouse: six platform layers from source systems to applications, and three disciplines that cut across them. Each test type shows what it proves, its checks, the Snowflake features and skills behind it, the owner and gate, and how well FlyHigh's test cases cover it today.">
+        {Object.entries(d.counts).map(([k, v]) => <span key={k} className={`spill tm-${MAP_TONE[k]}`}><b>{v}</b> {k.toLowerCase()}</span>)}
+        <select value={rel} onChange={(e) => setRel(e.target.value)}><option value="">All releases</option>{d.releases.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select>
+      </Head>
+      {edit && (
+        <div className="toolbar" style={{ marginBottom: 10 }}>
+          <button className="btn ghost small" onClick={() => setPick(d.types.filter((x) => x.status === 'Gap').map((x) => x.code))}>Select gaps</button>
+          <button className="btn ghost small" onClick={() => setPick([])} disabled={!pick.length}>Clear</button>
+          <button className="btn primary" disabled={!pick.length} onClick={() => generate(pick)}>Generate test cases for {pick.length || 'selected'} test type{pick.length === 1 ? '' : 's'}</button>
+          <span style={{ flex: 1 }} /><button className="btn ghost" onClick={() => onNavigate('skills', 'aw-lakehouse-test-strategy')}>Write the test strategy</button>
+        </div>
+      )}
+      {msg && <div className="note">{msg}</div>}
+      <div className="tm">
+        <div className="tm-bands">{d.bands.map((b) => <div key={b.code} className={`tm-band ${b.code}`} style={{ gridColumn: `span ${b.layers.length}` }}>{b.name}</div>)}</div>
+        <div className="tm-layers">
+          {[1, 2, 3, 4, 5, 6].map((n) => (
+            <div key={n} className={`tm-col b${n <= 3 ? 1 : n <= 5 ? 2 : 3}`}>
+              <div className="tm-head"><span className="tm-num">{n}</span><b>{d.layers[n]}</b></div>
+              {of(n).map((x) => <Cell key={x.code} x={x} />)}
+            </div>
+          ))}
+        </div>
+        {d.cross.map((n) => (
+          <div key={n} className="tm-row">
+            <div className="tm-rowhead"><span>{n}</span>{d.layers[n]}</div>
+            {of(n).map((x) => <Cell key={x.code} x={x} />)}
+          </div>
+        ))}
+        <div className="tm-legend">{Object.entries(MAP_TONE).map(([k, v]) => <span key={k}><i className={`tm-dot ${v}`} />{k}</span>)}
+          <span className="muted small">Covered: cases exist and the latest runs pass · At risk: a latest run failed · Planned: cases not yet run · Gap: no cases</span></div>
+      </div>
+      {t && (
+        <section className="panel tm-detail">
+          <div className="persona-head">
+            <div><Chip tone="purple">{t.code} · {t.layer_name}</Chip><h2>{t.name}</h2><p>{t.what}</p></div>
+            <div style={{ textAlign: 'right' }}><Pill s={t.status === 'Covered' ? 'passed' : t.status === 'At risk' ? 'failed' : 'Executing'}>{t.status}</Pill>
+              {edit && <div style={{ marginTop: 8 }}><button className="btn primary small" onClick={() => generate([t.code])}>Generate test cases</button></div>}</div>
+          </div>
+          <div className="aw-two">
+            <div>
+              <h5>Checks</h5><ul>{t.checks.map((c) => <li key={c}>{c}</li>)}</ul>
+              <h5>Snowflake features and tools</h5><div className="chips">{t.tools.map((x) => <Chip key={x} tone="snow">{x}</Chip>)}</div>
+              <h5>Skills</h5><div className="chips">{t.skills.map((x) => <Chip key={x} tone="agent" onClick={() => onNavigate('skills', x.replace(/^\//, ''))}>{x}</Chip>)}</div>
+              <p className="small" style={{ marginTop: 10 }}><b>Owner:</b> {t.owner} · <b>Gate:</b> {t.gate} · <b>Mode:</b> {t.automation}</p>
+            </div>
+            <div>
+              <h5>Coverage</h5>
+              <div className="aw-tiles">{[['Cases', t.cases], ['Executed', t.executed], ['Passed', t.passed], ['Failed', t.failed]].map(([l, v]) => <div key={l} className={`aw-tile ${l.toLowerCase()}`}><b>{v}</b><span>{l}</span></div>)}</div>
+              {t.sample.length ? <table className="tbl"><tbody>{t.sample.map((c) => <tr key={c.key}><td className="mono small">{c.key}</td><td className="small">{c.title}</td><td><Pill s={c.status}>{c.status}</Pill></td></tr>)}</tbody></table>
+                : <Empty>No test cases yet for this test type.</Empty>}
+            </div>
+          </div>
+        </section>
+      )}
+    </div>
+  )
+}

@@ -9,7 +9,7 @@
             │    ├── pursuit_api.py   lifecycle, pursuit stages, kit (sheets + template downloads), win room, response quality
             │    ├── assurance_api.py assurance lens: test design, execution simulator, analytics, code mapping, 5 engines
             │    ├── pmo_api.py       PMO lens: playbook, readiness, plan, estimator, use cases, KPIs, governance, RAID, 4 PMO engines
-            │    ├── skills_api.py    skills studio: 9 pursuit + 4 PMO + 5 assurance engines, 46 Snowflake generators, SQL checks, gate log, execution
+            │    ├── skills_api.py    skills studio: 9 pursuit + 4 PMO + 6 assurance engines, 46 Snowflake generators, SQL checks, gate log, execution
             │    ├── chat.py          lens-aware intent rules (pursuit, delivery, PMO) + retrieval over the search_index view (LLM optional)
             │    └── llm.py           Anthropic, OpenAI, Azure OpenAI, Gemini or any OpenAI-compatible server
             ├── skills/               SKILL.md files, snowskills library, .skill packages
@@ -29,7 +29,7 @@
 | Solution content | `persona`, `journey_step`, `insight_dashboard`, `insight_question`, `domain`, `subject_area`, `data_entity`, `attribute`, `kpi`, `conformed_dim`, `data_layer` |
 | Pursuit lifecycle | `pursuit_stage`, `pursuit_artefact`, `pursuit_skill`, `pursuit_ref`, `kit_template`, `kit_sheet`, `kit_row`, `rubric_criterion`, `response_section`, `section_score`, `section_musthave` |
 | Persona lens | `lens`, `lens_role`, `access_rule` (resource = screen, pursuit_stage or skill; `lenses` array) |
-| Assurance workbench | `aw_story`, `aw_suite`, `aw_case`, `aw_dataset`, `aw_component`, `aw_script`, `aw_engine`, `aw_device`, `aw_release`, `aw_plan`, `aw_cicd`, `aw_cycle`, `aw_result`, `aw_defect`, `aw_module`, `aw_mapping` |
+| Assurance workbench | `aw_story`, `aw_suite`, `aw_case`, `aw_dataset`, `aw_component`, `aw_script`, `aw_engine`, `aw_device`, `aw_release`, `aw_plan`, `aw_cicd`, `aw_cycle`, `aw_result`, `aw_defect`, `aw_module`, `aw_mapping`, `aw_test_type` (lakehouse test catalogue) |
 | Program office | `pb_doc` (playbook content), `pmo_readiness`, `pmo_check`, `pmo_kpi`, `pmo_usecase`, `pmo_raid`, `pmo_estimate` |
 | Activity | `guide_progress`, `chat_message`, `skill_run`, `skill_execution`, `gate_decision`, `section_round`, `app_meta` |
 
