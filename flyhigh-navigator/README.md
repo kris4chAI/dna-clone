@@ -4,7 +4,7 @@ A conversational, persona-aware workspace for the **FlyHigh** initiative: **ABC 
 
 - **Pursuit lifecycle (pursuit lens):** nine gated stages from RFP signal to orals, with templates, a win room, response scoring and 9 pursuit skills.
 - **Implementation lifecycle (delivery lens):** ten steps from Discover to Operate & monitor, with agents, tools and 46 Snowflake delivery skills.
-- **Assurance workbench (assurance lens):** design (test cases from user stories or documents, synthetic test data, keyword-driven scripts), execution (engines, devices, releases, test plans, runs with self-healing and failure analysis), analytics (coverage, results, hotspots, defects, impact × likelihood) and maintenance (test-to-code mapping and impact analysis), plus a lakehouse test map of 39 test types across the platform's six layers and three cross-cutting disciplines, with 6 assurance skills.
+- **Assurance workbench (assurance lens):** design (test cases from user stories or documents, synthetic test data, keyword-driven scripts), execution (engines, devices, releases, test plans, runs with self-healing and failure analysis), analytics (coverage, results, hotspots, defects, impact × likelihood) and maintenance (test-to-code mapping and impact analysis), plus a lakehouse test map of 39 test types across the platform's six layers and three cross-cutting disciplines, with 6 assurance skills. TAF is the data-test framework: column, template and SQL assertions and an external suite run on the Simulator, Snowflake or Databricks engine, and every failure (data check or test case) goes to a triage queue where a fix is recorded or a linked defect is raised. See [docs/taf](docs/taf/README.md). **Settings** switches assets on or off and holds their LLM, ALM, storage, DB and parser connections, with encrypted credentials and a test for each connection.
 - **Program office (PMO lens):** the AI Native Delivery Playbook as a working PMO: primer and archetypes, readiness scorecard, plan and execute, unit-effort estimator, AI use-case matrix, KPI scorecard, governance and RAID, team and RACI, with 4 PMO skills.
 - A **sales lens** for sales strategy and pipeline generation is reserved and shown as coming soon.
 - **Shared solution content:** persona journeys, insights dashboards and the logistics data model.
@@ -30,7 +30,7 @@ On the first start, Docker builds one image (UI + API + skills + assets), starts
 docker compose logs -f app       # follow the logs
 docker compose down              # stop (data is kept in the pgdata volume)
 docker compose down -v           # stop and delete all data
-python3 tools/smoke_test.py      # 76 end-to-end checks (all 65 skills included)
+python3 tools/smoke_test.py      # 101 end-to-end checks (all 65 skills, TAF data checks, triage and settings)
 ```
 
 ## The only setting you may need: your LLM
@@ -57,7 +57,7 @@ flyhigh-navigator/
 ├── .env.example              ← LLM of choice, port, optional Snowflake connection
 ├── start.sh · start.ps1      ← one-click start (creates .env, builds, waits, opens the browser)
 ├── backend/                  ← FastAPI API: lens enforcement, pursuit, skills studio, chat, seed content
-│   ├── app/                  ← main.py, access.py, pursuit_api.py, assurance_api.py, pmo_api.py, skills_api.py, chat.py, llm.py, schema.sql, seed*.py
+│   ├── app/                  ← main.py, access.py, pursuit_api.py, assurance_api.py, settings_api.py, taf/ (TAF data checks), pmo_api.py, skills_api.py, chat.py, llm.py, schema.sql, seed*.py
 │   └── requirements.txt      ← pinned Python dependencies (wheels for amd64 and arm64)
 ├── frontend/                 ← React 18 + Vite UI (fonts bundled; no external calls at runtime)
 ├── skills/                   ← everything the app can *do*
@@ -73,7 +73,7 @@ flyhigh-navigator/
 │   └── seed/                 ← template sheets and win-room data (pursuit_kit.json), delivery playbook (delivery_playbook.json)
 ├── docker/entrypoint.sh      ← waits for the db, loads content on first run or upgrade, starts the server
 ├── tools/                    ← smoke_test.py · package_skills.py · extract_kit.py
-├── docs/                     ← features · architecture · configuration · operations · persona lens
+├── docs/                     ← features · architecture · configuration · operations · persona lens · taf/
 └── secrets/                  ← optional Snowflake private key (mounted read-only, never in the image)
 ```
 
@@ -82,6 +82,7 @@ flyhigh-navigator/
 - [docs/features.md](docs/features.md): every screen, the skills studio and the API
 - [docs/persona-lens.md](docs/persona-lens.md): who sees what, and how it is enforced
 - [docs/architecture.md](docs/architecture.md): components, data model and request flow
-- [docs/configuration.md](docs/configuration.md): all `.env` settings (LLM, port, Snowflake, reset)
+- [docs/configuration.md](docs/configuration.md): all `.env` settings (LLM, port, Snowflake, Databricks for TAF, settings key, reset)
 - [docs/operations.md](docs/operations.md): run, reset, upgrade, back up, troubleshoot, develop locally
+- [docs/taf/README.md](docs/taf/README.md): TAF data checks, engines, triage, the Databricks view contract and loader note
 - [skills/README.md](skills/README.md): the 65-skill catalog

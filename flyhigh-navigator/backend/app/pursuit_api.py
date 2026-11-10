@@ -62,7 +62,7 @@ def lifecycle(p: dict = Depends(screen("lifecycle"))):
     program = [{**s, "seq": i + 1, "locked": not pmo_ok} for i, s in enumerate(pb["data"] if pb else [])]
     aw = [("aw_overview", "Overview", "Workbench at a glance"), ("aw_testmap", "Lakehouse test map", "Tests by layer · gaps"), ("aw_design", "Design", "Cases · data · scripts"),
           ("aw_execution", "Execution", "Engines · plans · runs"), ("aw_analytics", "Analytics", "Coverage · defects"),
-          ("aw_maintenance", "Maintenance", "Code mapping · impact")]
+          ("aw_maintenance", "Maintenance", "Code mapping · impact"), ("aw_settings", "Settings", "Assets · connections")]
     assurance = [{"code": c, "seq": i + 1, "name": n, "hint": h, "locked": not allowed("screen", c, lens)} for i, (c, n, h) in enumerate(aw)]
     return {"lens": lens, "pursuit": pursuit, "implementation": impl, "program": program, "assurance": assurance,
             "lenses": q("SELECT * FROM lens ORDER BY seq"),

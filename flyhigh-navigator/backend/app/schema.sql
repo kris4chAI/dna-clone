@@ -1,7 +1,7 @@
 -- FlyHigh Navigator schema (PostgreSQL 14+)
 -- `origin` = 'seed' for rows loaded from the proposal, 'curated' for rows added or edited in the UI.
 
-DROP TABLE IF EXISTS aw_test_type, aw_mapping, aw_module, aw_defect, aw_result, aw_cycle, aw_cicd, aw_plan, aw_release, aw_device, aw_engine,
+DROP TABLE IF EXISTS taf_scenario_run, taf_upload, taf_result, taf_run, taf_case, aw_triage, aw_test_type, aw_mapping, aw_module, aw_defect, aw_result, aw_cycle, aw_cicd, aw_plan, aw_release, aw_device, aw_engine,
   aw_script, aw_component, aw_dataset, aw_case, aw_suite, aw_story,
   pmo_readiness, pmo_check, pmo_kpi, pmo_usecase, pmo_raid, pmo_estimate, pb_doc,
   skill_execution, skill_run, gate_decision, section_round, lens_role, lens, access_rule, pursuit_stage, pursuit_artefact, pursuit_skill, pursuit_ref,
@@ -229,7 +229,7 @@ CREATE TABLE aw_dataset (id SERIAL PRIMARY KEY, name TEXT, schema_source TEXT, e
 CREATE TABLE aw_component (id SERIAL PRIMARY KEY, kind TEXT, name TEXT, description TEXT);
 CREATE TABLE aw_script (id SERIAL PRIMARY KEY, case_id INT REFERENCES aw_case(id) ON DELETE CASCADE, framework TEXT, app TEXT, file TEXT,
   keywords JSONB, code TEXT, created_by TEXT, created_at TIMESTAMPTZ DEFAULT now());
-CREATE TABLE aw_engine (id SERIAL PRIMARY KEY, name TEXT UNIQUE, type TEXT, status TEXT, expires DATE);
+CREATE TABLE aw_engine (id SERIAL PRIMARY KEY, name TEXT UNIQUE, type TEXT, status TEXT, expires DATE, platform TEXT DEFAULT 'Simulator');
 CREATE TABLE aw_device (id SERIAL PRIMARY KEY, name TEXT, type TEXT, platform TEXT, environment TEXT);
 CREATE TABLE aw_release (id SERIAL PRIMARY KEY, name TEXT, description TEXT, start_date DATE, release_date DATE);
 CREATE TABLE aw_plan (id SERIAL PRIMARY KEY, name TEXT, release_id INT REFERENCES aw_release(id), case_ids INT[] DEFAULT '{}', suite TEXT,
@@ -242,11 +242,56 @@ CREATE TABLE aw_cycle (id SERIAL PRIMARY KEY, name TEXT, plan_id INT REFERENCES 
 CREATE TABLE aw_result (id SERIAL PRIMARY KEY, cycle_id INT REFERENCES aw_cycle(id) ON DELETE CASCADE, case_id INT REFERENCES aw_case(id),
   status TEXT, duration_ms INT, root_cause TEXT, detail TEXT, resolution TEXT, self_healed BOOLEAN);
 CREATE TABLE aw_defect (id SERIAL PRIMARY KEY, key TEXT, title TEXT, severity TEXT, status TEXT, case_id INT REFERENCES aw_case(id),
-  feature TEXT, component TEXT, cycle_id INT REFERENCES aw_cycle(id), cause TEXT, created_at TIMESTAMPTZ DEFAULT now());
+  feature TEXT, component TEXT, cycle_id INT REFERENCES aw_cycle(id), cause TEXT, created_at TIMESTAMPTZ DEFAULT now(), failure_id TEXT);
 CREATE TABLE aw_module (id SERIAL PRIMARY KEY, path TEXT UNIQUE, module TEXT, kind TEXT, keywords TEXT, lines INT, covered INT,
   changed BOOLEAN DEFAULT FALSE);
 CREATE TABLE aw_mapping (case_id INT REFERENCES aw_case(id) ON DELETE CASCADE, module_id INT REFERENCES aw_module(id) ON DELETE CASCADE,
   score NUMERIC, PRIMARY KEY (case_id, module_id));
+
+
+-- ---------------------------------------------------------------------------
+-- TAF data checks (merged from the TAF operator app) and failure triage
+-- ---------------------------------------------------------------------------
+CREATE TABLE taf_case (
+  test_id TEXT NOT NULL, suite TEXT NOT NULL CHECK (suite IN ('TAF','EXTERNAL')), check_id TEXT,
+  test_type TEXT NOT NULL CHECK (test_type IN ('COLUMN','TEMPLATE','SQL','MANUAL')), severity TEXT,
+  requirement_group TEXT, requirement_id TEXT, requirement_title TEXT, sheet_name TEXT, functional_category TEXT, load_type TEXT,
+  target_table TEXT, target_column TEXT, date_column TEXT, tenant_column TEXT,
+  assertion_name TEXT, assertion_params JSONB, template_name TEXT, template_params JSONB, sql_expression TEXT,
+  expected_result TEXT, explanation TEXT, owner TEXT, source_ref TEXT, lakehouse_type TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE, deactivated_by TEXT, deactivated_at TIMESTAMPTZ, updated_at TIMESTAMPTZ DEFAULT now(),
+  origin TEXT DEFAULT 'seed', PRIMARY KEY (test_id, suite)
+);
+CREATE TABLE taf_run (
+  run_id TEXT PRIMARY KEY, engine TEXT NOT NULL, test_scope TEXT, started_at TIMESTAMPTZ DEFAULT now(), finished_at TIMESTAMPTZ,
+  status TEXT NOT NULL DEFAULT 'Running', run_scope TEXT, triggered_by TEXT, upstream_pipeline_run TEXT, input_source TEXT,
+  filter_mode TEXT, date_source TEXT, params JSONB, total_tests INT DEFAULT 0, pass_count INT DEFAULT 0, fail_count INT DEFAULT 0,
+  warn_count INT DEFAULT 0, error_count INT DEFAULT 0, manual_count INT DEFAULT 0, not_run_count INT DEFAULT 0,
+  notes TEXT, log TEXT, created_by TEXT
+);
+CREATE TABLE taf_result (
+  run_id TEXT REFERENCES taf_run(run_id) ON DELETE CASCADE, test_id TEXT, suite TEXT, check_id TEXT, test_type TEXT, severity TEXT,
+  status TEXT CHECK (status IN ('Pass','Fail','Warn','Error','Skipped','Manual','Info','Not_Run','Blocked')),
+  violation_count INT, expected_result TEXT, actual_result TEXT, executed_sql TEXT, sample_rows JSONB, duration_ms INT,
+  executed_at TIMESTAMPTZ DEFAULT now(), filter_applied TEXT, filter_skipped_reason TEXT, error_message TEXT,
+  PRIMARY KEY (run_id, test_id, suite)
+);
+CREATE TABLE taf_upload (id SERIAL PRIMARY KEY, filename TEXT, path TEXT, bytes INT, imported INT, engine TEXT, created_by TEXT,
+  created_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE taf_scenario_run (id SERIAL PRIMARY KEY, run_id TEXT, scenario_id TEXT, scenario TEXT, status TEXT, violation_count INT,
+  duration_ms INT, evidence JSONB, sql_used TEXT, error_message TEXT, engine TEXT, executed_at TIMESTAMPTZ DEFAULT now());
+-- one triage row per failure (failure_id = test_id::run_id for data checks, case key::C<cycle> for test cases)
+CREATE TABLE aw_triage (failure_id TEXT PRIMARY KEY, source TEXT, recommended_fix TEXT, resolved BOOLEAN NOT NULL DEFAULT FALSE,
+  resolved_by TEXT, resolved_at TIMESTAMPTZ, defect_id INT REFERENCES aw_defect(id) ON DELETE SET NULL, updated_at TIMESTAMPTZ DEFAULT now());
+
+-- Assurance settings: kept across reseeds (not in the DROP list) so connections and credentials survive upgrades
+CREATE TABLE IF NOT EXISTS aw_asset (code TEXT PRIMARY KEY, name TEXT NOT NULL, color TEXT, needs TEXT[] NOT NULL DEFAULT '{}', description TEXT,
+  screen TEXT, tab TEXT, enabled BOOLEAN NOT NULL DEFAULT TRUE, seq INT);
+CREATE TABLE IF NOT EXISTS aw_conn (id SERIAL PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('llm','alm','storage','db','parser')), provider TEXT NOT NULL,
+  name TEXT NOT NULL, config JSONB NOT NULL DEFAULT '{}', secret_enc TEXT, file_name TEXT, file_size BIGINT,
+  test_status TEXT, test_message TEXT, tested_at TIMESTAMPTZ, created_by TEXT, created_at TIMESTAMPTZ DEFAULT now(), updated_at TIMESTAMPTZ DEFAULT now());
+CREATE UNIQUE INDEX IF NOT EXISTS aw_conn_name ON aw_conn (kind, lower(name));
+CREATE TABLE IF NOT EXISTS aw_conn_assign (kind TEXT NOT NULL, asset TEXT NOT NULL, conn_ref TEXT NOT NULL, PRIMARY KEY (kind, asset));
 
 CREATE VIEW search_index AS
   SELECT 'stage' AS kind, s.code AS ref, s.name AS title,
@@ -270,4 +315,5 @@ CREATE VIEW search_index AS
   UNION ALL SELECT 'pmo_usecase', u.id::text, u.activity, concat_ws(' ', u.archetype, u.stage, u.automation, u.prereq) FROM pmo_usecase u
   UNION ALL SELECT 'aw_case', c.id::text, c.title, concat_ws(' ', c.key, c.story_key, c.feature, c.type, c.expected) FROM aw_case c
   UNION ALL SELECT 'aw_test_type', t.code, t.name, concat_ws(' ', t.layer_name, t.what, t.checks::text, t.tools::text, t.skills::text) FROM aw_test_type t
-  UNION ALL SELECT 'aw_defect', d.id::text, d.title, concat_ws(' ', d.key, d.severity, d.status, d.feature, d.component) FROM aw_defect d;
+  UNION ALL SELECT 'aw_defect', d.id::text, d.title, concat_ws(' ', d.key, d.severity, d.status, d.feature, d.component) FROM aw_defect d
+  UNION ALL SELECT 'taf_case', c.test_id, coalesce(c.requirement_title, c.test_id), concat_ws(' ', c.suite, c.test_type, c.target_table, c.target_column, c.assertion_name, c.template_name, c.explanation) FROM taf_case c;

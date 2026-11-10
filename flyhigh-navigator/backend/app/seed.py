@@ -115,7 +115,7 @@ def seed(c):
     seed_assurance(c)
 
 
-SCHEMA_VERSION = "5.1"
+SCHEMA_VERSION = "5.3"
 
 
 def main():
@@ -144,7 +144,7 @@ def main():
             (SELECT count(*) FROM kit_template) templates, (SELECT count(*) FROM kit_sheet) sheets, (SELECT count(*) FROM kit_row) kit_rows,
             (SELECT count(*) FROM response_section) sections, (SELECT count(*) FROM lens_role) roles,
             (SELECT count(*) FROM pmo_kpi) pmo_kpis, (SELECT count(*) FROM pmo_usecase) pmo_usecases, (SELECT count(*) FROM pmo_raid) raid,
-            (SELECT count(*) FROM aw_story) aw_stories, (SELECT count(*) FROM aw_case) aw_cases, (SELECT count(*) FROM aw_cycle) aw_cycles, (SELECT count(*) FROM aw_defect) aw_defects""").fetchone()
+            (SELECT count(*) FROM aw_story) aw_stories, (SELECT count(*) FROM aw_case) aw_cases, (SELECT count(*) FROM aw_cycle) aw_cycles, (SELECT count(*) FROM aw_defect) aw_defects, (SELECT count(*) FROM taf_case) taf_cases, (SELECT count(*) FROM taf_result) taf_results, (SELECT count(*) FROM aw_triage) triage""").fetchone()
         print("Seeded:", counts)
 
 

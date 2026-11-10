@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api } from '../api'
 import { Chip, Editor, Empty, Md } from '../components/ui'
+import { TafCards, TafSuite, TafRun, TafResults, TafLogs, TafScenarios, Triage } from './Taf'
 
 /* Assurance lens: the assurance workbench (overview, design, execution, analytics, maintenance). */
 
@@ -47,9 +48,10 @@ export function AwOverview({ onNavigate }) {
           [c.cycles, 'execution cycles', `${c.self_healed} self-healed`], [c.passed, 'passed', `${c.failed} failed · ${c.skipped} skipped`], [c.open_defects, 'open defects', `${c.changed} of ${c.modules} modules changed`]]
           .map(([v, l, s]) => <div key={l} className="aw-kpi"><b>{v}</b><span>{l}</span><small>{s}</small></div>)}
       </div>
+      <TafCards onNavigate={onNavigate} />
       <section className="aw-hero">
         <div className="aw-hero-head">{d.pillars.map((x) => <button key={x.code} className={pillar === x.code ? 'on' : ''} onClick={() => setPillar(x.code)}>{x.name}</button>)}</div>
-        <div className="aw-tools">{p.tools.map(([t, desc]) => <div key={t} className="aw-tool"><b>{t}</b><span>{desc}</span></div>)}</div>
+        <div className="aw-tools">{p.tools.map(([t, desc, off]) => <div key={t} className={`aw-tool ${off ? 'off' : ''}`}><b>{t}{off && <small className="aw-off"> · switched off in Settings</small>}</b><span>{desc}</span></div>)}</div>
       </section>
       <div className="aw-pillars">
         {d.pillars.map((x) => (
@@ -64,10 +66,11 @@ export function AwOverview({ onNavigate }) {
 }
 
 /* ---------------------------------------------------------------- Design */
-export function AwDesign() {
+export function AwDesign({ focus }) {
   const [suite, setSuite] = useState(null)
   const [d, setD, reload] = useLoad(`/api/assurance/design${suite ? `?suite_id=${suite}` : ''}`, [suite])
-  const [tab, setTab] = useState('cases')
+  const [tab, setTab] = useState(focus || 'cases')
+  useEffect(() => { if (focus) setTab(focus) }, [focus])
   const [modal, setModal] = useState(null)
   const [view, setView] = useState(null)
   const [busy, setBusy] = useState(false)
@@ -79,8 +82,9 @@ export function AwDesign() {
     <div className="page">
       <Head crumb="Design" title="Generate test cases, test data and scripts"
         lede="Test cases come from user stories (FlyHigh's persona journeys and the Jira backlog) or from FSD, BRD, UI/UX and API documents. Test data comes from the data model or a schema file. Scripts are keyword-driven over reusable components." />
-      <Tabs tab={tab} setTab={setTab} tabs={[['cases', 'Test case generator'], ['data', 'Test data generator'], ['scripts', 'Test script generator'], ['stories', `User stories (${d.stories.length})`]]} />
+      <Tabs tab={tab} setTab={setTab} tabs={[['cases', 'Test case generator'], ['data', 'Test data generator'], ['scripts', 'Test script generator'], ['stories', `User stories (${d.stories.length})`], ['taf', 'Data checks (TAF)']]} />
       {err && <div className="note warn">{err}</div>}
+      {tab === 'taf' && <TafSuite />}
 
       {tab === 'cases' && (
         <div className="aw-split">
@@ -285,9 +289,11 @@ const FORMS = {
   cicd: [{ key: 'name', label: 'Execution name', required: true }, { key: 'pipeline', label: 'Pipeline', placeholder: 'GitHub Actions · repo / workflow' }, { key: 'config', label: 'CI/CD config info', type: 'textarea' }, { key: 'schedule', label: 'Schedule', placeholder: 'Daily 02:00 UTC' }],
 }
 
-export function AwExecution() {
+export function AwExecution({ focus }) {
   const [d, , reload] = useLoad('/api/assurance/execution')
-  const [tab, setTab] = useState('report')
+  const [tab, setTab] = useState(focus || 'report')
+  const [tafRun, setTafRun] = useState(null)
+  useEffect(() => { if (focus) setTab(focus) }, [focus])
   const [sub, setSub] = useState('planning')
   const [form, setForm] = useState(null)
   const [cyc, setCyc] = useState(null)
@@ -317,11 +323,14 @@ export function AwExecution() {
         lede="Set up execution engines and devices, plan the cases for each release, run them manually, from CI/CD or on a schedule, with self-healing for UI locator changes and failure analysis on every failure.">
         <span className="spill">Built-in simulator · connect an engine to run for real</span>
       </Head>
-      <Tabs tab={tab} setTab={setTab} tabs={[['report', 'Test execution report'], ['manage', 'Execution management'], ['engines', 'Execution engines'], ['devices', 'Devices'], ['releases', 'Releases']]} />
+      <Tabs tab={tab} setTab={setTab} tabs={[['report', 'Test execution report'], ['manage', 'Execution management'], ['engines', 'Execution engines'], ['devices', 'Devices'], ['releases', 'Releases'], ['taf', 'Data checks run'], ['tafres', 'Data check results'], ['taflogs', 'Run logs']]} />
+      {tab === 'taf' && <TafRun onOpenLog={(id) => { setTafRun(id); setTab('taflogs') }} onOpenResults={(id) => { setTafRun(id); setTab('tafres') }} />}
+      {tab === 'tafres' && <TafResults runId={tafRun} />}
+      {tab === 'taflogs' && <TafLogs runId={tafRun} />}
 
       {tab === 'engines' && <Simple kind="engines" add="Add new engine" cols={['Engine name and type', 'Status', 'Expire date', 'Setup engine']} rows={d.engines}
-        keys={[(r) => <><b>{r.name}</b> <small className="muted">· {r.type}</small></>, (r) => <Pill s={r.expires && new Date(r.expires) < new Date() ? 'Open' : 'Completed'}>{r.expires && new Date(r.expires) < new Date() ? 'Expired' : r.status}</Pill>, 'expires',
-          (r) => <span className="small muted">{r.type === 'Cluster' ? 'Key-pair auth to Snowflake DEV; Playwright grid' : 'Runs on the tester’s machine'}</span>]} />}
+        keys={[(r) => <><b>{r.name}</b> <small className="muted">· {r.type} · {r.platform}</small></>, (r) => <Pill s={r.expires && new Date(r.expires) < new Date() ? 'Open' : 'Completed'}>{r.expires && new Date(r.expires) < new Date() ? 'Expired' : r.status}</Pill>, 'expires',
+          (r) => <span className="small muted">{r.platform === 'Databricks' ? 'TAF data checks only: job submission and UC views (Data checks run tab)' : r.type === 'Cluster' ? 'Key-pair auth to Snowflake DEV; Playwright grid' : 'Runs on the tester’s machine'}</span>]} />}
       {tab === 'devices' && <Simple kind="devices" add="Add new device" cols={['Device name', 'Device type', 'Platform', 'Environment']} rows={d.devices} keys={['name', 'type', 'platform', 'environment']} />}
       {tab === 'releases' && <Simple kind="releases" add="Add new release" cols={['Release name', 'Description', 'Start date', 'Release date']} rows={d.releases} keys={[(r) => <b>{r.name}</b>, 'description', 'start_date', 'release_date']} />}
 
@@ -340,7 +349,7 @@ export function AwExecution() {
             <h4>Selected test plan and settings</h4>
             <div className="form-grid aw-run">
               <label className="field"><span>Test plan</span><select value={run.plan} onChange={(e) => setRun({ ...run, plan: Number(e.target.value) })}>{d.plans.map((p) => <option key={p.id} value={p.id}>{p.name} · {p.n} cases</option>)}</select></label>
-              <label className="field"><span>Global execution engine</span><select value={run.engine} onChange={(e) => setRun({ ...run, engine: e.target.value })}>{d.engines.map((x) => <option key={x.id}>{x.name}</option>)}</select></label>
+              <label className="field"><span>Global execution engine</span><select value={run.engine} onChange={(e) => setRun({ ...run, engine: e.target.value })}>{d.engines.filter((x) => x.platform !== 'Databricks').map((x) => <option key={x.id}>{x.name}</option>)}</select></label>
               <label className="field"><span>Global device / browser</span><select value={run.device} onChange={(e) => setRun({ ...run, device: e.target.value })}>{d.devices.map((x) => <option key={x.id}>{x.name}</option>)}</select></label>
             </div>
             <div className="aw-sc"><label><input type="checkbox" checked={run.failure_analysis} onChange={(e) => setRun({ ...run, failure_analysis: e.target.checked })} /> Test failure analysis</label>
@@ -431,10 +440,11 @@ function PlanEditor({ d, plan, onClose, onSaved }) {
 }
 
 /* ---------------------------------------------------------------- Analytics */
-export function AwAnalytics({ me }) {
+export function AwAnalytics({ me, focus }) {
   const [rel, setRel] = useState('')
   const [d, setD] = useLoad(`/api/assurance/analytics${rel ? `?release_id=${rel}` : ''}`, [rel])
-  const [tab, setTab] = useState('feature')
+  const [tab, setTab] = useState(focus || 'feature')
+  useEffect(() => { if (focus) setTab(focus) }, [focus])
   const [hot, setHot] = useState('critical')
   if (!d) return <div className="page">Loading…</div>
   const cov = d.stories ? Math.round((100 * d.covered) / d.stories) : 0
@@ -449,7 +459,9 @@ export function AwAnalytics({ me }) {
         lede="Coverage of user stories, results, feature readiness and hotspots; defects by severity; the tests to run first by impact and likelihood; and the tests that fail most, with root cause and resolution.">
         <select value={rel} onChange={(e) => setRel(e.target.value)}><option value="">All releases</option>{d.releases.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select>
       </Head>
-      <Tabs tab={tab} setTab={setTab} tabs={[['feature', 'Feature-level test status'], ['defects', 'Defect impact analysis'], ['list', 'Defect impact analysis list'], ['impact', 'Impact-based test suggestion'], ['perf', 'Test case performance']]} />
+      <Tabs tab={tab} setTab={setTab} tabs={[['feature', 'Feature-level test status'], ['defects', 'Defect impact analysis'], ['list', 'Defect impact analysis list'], ['impact', 'Impact-based test suggestion'], ['perf', 'Test case performance'], ['triage', 'Failure triage'], ['scen', 'Health scenarios']]} />
+      {tab === 'triage' && <Triage edit={canEdit} />}
+      {tab === 'scen' && <TafScenarios edit={canEdit} />}
 
       {tab === 'feature' && (<>
         <div className="aw-two">

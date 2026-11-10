@@ -22,7 +22,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: flyhigh-navigator:5.1
+    image: flyhigh-navigator:5.3
     restart: unless-stopped
     depends_on:
       db:
@@ -50,10 +50,31 @@ services:
       SNOWFLAKE_PRIVATE_KEY_FILE_PWD: ${SNOWFLAKE_PRIVATE_KEY_FILE_PWD:-}
       SNOWFLAKE_PASSWORD: ${SNOWFLAKE_PASSWORD:-}
       SNOWFLAKE_ALLOW_EXECUTE: ${SNOWFLAKE_ALLOW_EXECUTE:-false}
+      # --- Databricks engine for TAF data checks (optional; Snowflake and the simulator run the rest) ---
+      DATABRICKS_HOST: ${DATABRICKS_HOST:-}
+      DATABRICKS_TOKEN: ${DATABRICKS_TOKEN:-}
+      DATABRICKS_CLIENT_ID: ${DATABRICKS_CLIENT_ID:-}
+      DATABRICKS_CLIENT_SECRET: ${DATABRICKS_CLIENT_SECRET:-}
+      APP_TAF_ENVIRONMENT: ${APP_TAF_ENVIRONMENT:-}
+      APP_TAF_CATALOG: ${APP_TAF_CATALOG:-}
+      APP_TAF_CATALOG_PREFIX: ${APP_TAF_CATALOG_PREFIX:-}
+      APP_TAF_SCHEMA: ${APP_TAF_SCHEMA:-}
+      APP_TAF_HTTP_PATH: ${APP_TAF_HTTP_PATH:-}
+      APP_TAF_NOTEBOOK_DIR: ${APP_TAF_NOTEBOOK_DIR:-}
+      APP_TAF_LOG_DIR: ${APP_TAF_LOG_DIR:-}
+      APP_TAF_RUN_AS_SP: ${APP_TAF_RUN_AS_SP:-}
+      APP_TAF_MASS_FAIL_PCT: ${APP_TAF_MASS_FAIL_PCT:-25}
+      APP_TAF_STRANDED_HOURS: ${APP_TAF_STRANDED_HOURS:-12}
+      APP_UC_CREDENTIAL_NAME: ${APP_UC_CREDENTIAL_NAME:-}
+      TAF_SCENARIOS_FILE: ${TAF_SCENARIOS_FILE:-}
+      # --- Assurance settings: key that encrypts connection credentials (optional; generated in the data volume if blank) ---
+      SETTINGS_SECRET_KEY: ${SETTINGS_SECRET_KEY:-}
     volumes:
       - ./secrets:/srv/secrets:ro          # Snowflake private keys (never baked into the image)
+      - appdata:/srv/data                  # settings key and files uploaded to storage connections
     extra_hosts:
       - "host.docker.internal:host-gateway"   # lets the app reach a local LLM such as Ollama
 
 volumes:
   pgdata:
+  appdata:

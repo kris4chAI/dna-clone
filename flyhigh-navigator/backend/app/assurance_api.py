@@ -142,7 +142,8 @@ MODULES = [  # path, module, kind, keywords, lines, covered
 RELEASES = [("R1 · Pilot wave", "Track A and B pilots: 5 + 7 dashboards, HR pages", -60, -10),
             ("R2 · Wave 1", "15 warehouse dashboards, 11 customer dashboards", -5, 40),
             ("R3 · Wave 2", "15 dashboards, transport reports, HR pack", 35, 85)]
-ENGINES = [("Local runner", "Local", 365, "Ready"), ("Snowflake DEV cluster", "Cluster", 180, "Ready"), ("Nightly cluster (CI)", "Cluster", 90, "Ready")]
+ENGINES = [("Local runner", "Local", 365, "Ready", "Simulator"), ("Snowflake DEV cluster", "Cluster", 180, "Ready", "Snowflake"),
+           ("Nightly cluster (CI)", "Cluster", 90, "Ready", "Snowflake"), ("Databricks TAF jobs", "Cluster", 180, "Ready", "Databricks")]
 DEVICES = [("Chrome desktop", "Browser", "Windows 11", "UAT"), ("Safari iPad", "Tablet", "iPadOS 18", "UAT"),
            ("Edge desktop", "Browser", "Windows 11", "SIT"), ("Headless Chromium", "Browser", "Linux", "CI")]
 
@@ -181,8 +182,8 @@ def seed_assurance(c):
     for name, desc, s, e in RELEASES:
         c.execute("INSERT INTO aw_release(name,description,start_date,release_date) VALUES (%s,%s,%s,%s)",
                   (name, desc, today + timedelta(days=s), today + timedelta(days=e)))
-    for name, typ, days, st in ENGINES:
-        c.execute("INSERT INTO aw_engine(name,type,status,expires) VALUES (%s,%s,%s,%s)", (name, typ, st, today + timedelta(days=days)))
+    for name, typ, days, st, plat in ENGINES:
+        c.execute("INSERT INTO aw_engine(name,type,status,expires,platform) VALUES (%s,%s,%s,%s,%s)", (name, typ, st, today + timedelta(days=days), plat))
     for d in DEVICES:
         c.execute("INSERT INTO aw_device(name,type,platform,environment) VALUES (%s,%s,%s,%s)", d)
 
@@ -218,6 +219,21 @@ def seed_assurance(c):
     run_plan(x, p4, "Snowflake DEV cluster", "Headless Chromium", True, True, who="seed", trigger="CI/CD")
     remap(x)
     c.execute("UPDATE aw_module SET changed=TRUE WHERE path IN ('procs/sp_load_wms_incremental.sql','policies/rap_customer.sql')")
+    # TAF data checks (merged from the TAF operator app), then triage: fixes recorded, some failures raised as defects
+    from .taf.api import raise_defect, seed_taf, triage_rows
+    from .settings_api import seed_settings
+    seed_settings(x)
+    seed_taf(x)
+    rows = triage_rows(False, "all", x)
+    for i, r in enumerate(rows):
+        u = h01(r["failure_id"], "triage")
+        if u < 0.35:
+            fix = r.get("suggested_fix") or "Trace the measure through the conversion; fix the mapping or sign off the variance"
+            done = u < 0.12
+            c.execute("""INSERT INTO aw_triage(failure_id,source,recommended_fix,resolved,resolved_by,resolved_at)
+                         VALUES (%s,%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING""", (r["failure_id"], r["source"], fix, done, "seed" if done else None, datetime.now() if done else None))
+        elif u < 0.75 and r["severity"] in ("High", "Medium"):
+            raise_defect(x, r, "seed", status="Closed" if u > 0.68 else "In progress" if u > 0.6 else "Open")
 
 
 # ---------------------------------------------------------------------------
@@ -478,14 +494,7 @@ def run_plan(x, plan_id, engine, device, self_heal=True, analysis=True, who="app
         x.one("""INSERT INTO aw_result(cycle_id,case_id,status,duration_ms,root_cause,detail,resolution,self_healed) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING 1""",
               (cyc, cs["id"], status, ms, cause[0] if cause and analysis else (cause and "Not analysed"), cause[1] if cause else None,
                cause[2] if cause and analysis else None, healed))
-        if status == "failed" and cause and cause[0] in ("Data mismatch", "Product defect", "Slow query"):
-            if not x.one("SELECT 1 AS ok FROM aw_defect WHERE case_id=%s AND status<>'Closed'", (cs["id"],)):
-                n = x.one("SELECT COUNT(*)+1 AS n FROM aw_defect")["n"]
-                sev = "Critical" if cs["priority"] == "High" and cs["type"] in ("security", "data") else "Major" if cs["priority"] == "High" else "Minor"
-                mod = x.one("""SELECT m.module FROM aw_mapping mp JOIN aw_module m ON m.id=mp.module_id WHERE mp.case_id=%s ORDER BY mp.score DESC LIMIT 1""", (cs["id"],))
-                st = "Closed" if h01(cs["key"], "close") < 0.35 and seq < 3 else "Open"
-                x.one("""INSERT INTO aw_defect(key,title,severity,status,case_id,feature,component,cycle_id,cause) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING 1""",
-                      (f"DEF-{n:03d}", f"{cause[0]}: {cs['title'][:120]}", sev, st, cs["id"], cs["feature"], mod["module"] if mod else None, cyc, cause[1]))
+        # Failures land in the triage queue (Analytics → Failure triage); a defect is raised from there.
     x.one("""UPDATE aw_cycle SET ended=%s, status='Completed', total=%s, passed=%s, failed=%s, skipped=%s, self_healed=%s WHERE id=%s RETURNING 1""",
           (start + timedelta(milliseconds=dur), len(cases), tot["passed"], tot["failed"], tot["skipped"], tot["healed"], cyc))
     x.one("UPDATE aw_plan SET last_execution=%s WHERE id=%s RETURNING 1", (start + timedelta(milliseconds=dur), plan_id))
@@ -620,12 +629,17 @@ PILLARS = [
 @router.get("/overview")
 def overview(p: dict = Depends(screen("aw_overview"))):
     s = summary(DB)
-    return {"pillars": PILLARS, "llm": llm.available(), "llm_status": llm.status(),
+    from .settings_api import disabled_assets
+    off = {n.lower() for n in disabled_assets(DB)}
+    pillars = [{**pl, "tools": [[t, d, any(o in t.lower() or t.lower() in o for o in off)] for t, d in pl["tools"]]} for pl in PILLARS]
+    return {"pillars": pillars, "disabled_assets": sorted(off), "llm": llm.available(), "llm_status": llm.status(),
             "counts": {"stories": s["stories"], "covered": s["covered"], "cases": DB.one("SELECT COUNT(*) AS n FROM aw_case")["n"],
                        "suites": DB.one("SELECT COUNT(*) AS n FROM aw_suite")["n"], "datasets": DB.one("SELECT COUNT(*) AS n FROM aw_dataset")["n"],
                        "scripts": DB.one("SELECT COUNT(*) AS n FROM aw_script")["n"], "cycles": DB.one("SELECT COUNT(*) AS n FROM aw_cycle")["n"],
                        "passed": s["passed"], "failed": s["failed"], "skipped": s["skipped"], "self_healed": s["self_healed"],
                        "open_defects": sum(1 for d in s["defects"] if d["status"] != "Closed"),
+                       "data_checks": DB.one("SELECT COUNT(*) AS n FROM taf_case")["n"],
+                       "taf_runs": DB.one("SELECT COUNT(*) AS n FROM taf_run")["n"],
                        "modules": DB.one("SELECT COUNT(*) AS n FROM aw_module")["n"], "changed": DB.one("SELECT COUNT(*) AS n FROM aw_module WHERE changed")["n"]}}
 
 
@@ -773,6 +787,8 @@ class RunIn(BaseModel):
 @router.post("/execution/plans/{pid}/run")
 def run(pid: int, body: RunIn, p: dict = Depends(screen("aw_execution"))):
     e = DB.one("SELECT * FROM aw_engine WHERE name=%s", (body.engine,))
+    if e and e.get("platform") == "Databricks":
+        raise HTTPException(400, "Databricks engines run TAF data checks (Execution → Data checks run). Pick a simulator or Snowflake engine for test plans.")
     if e and e["expires"] and e["expires"] < date.today():
         raise HTTPException(400, f"Engine '{body.engine}' expired on {e['expires']}. Reclaim or extend it first.")
     cid = run_plan(DB, pid, body.engine, body.device, body.self_healing, body.failure_analysis, p["code"])
@@ -865,6 +881,15 @@ def testmap(x, release_id=None):
     latest = {r["case_id"]: r["status"] for r in x.q(f"""SELECT DISTINCT ON (r.case_id) r.case_id, r.status FROM aw_result r
                  JOIN aw_cycle cy ON cy.id=r.cycle_id WHERE TRUE {rf} ORDER BY r.case_id, r.cycle_id DESC""", (release_id,) if release_id else ())}
     cases = x.q("SELECT id, key, title, type, priority, test_type FROM aw_case")
+    # TAF data checks count too: their latest result maps Pass/Warn to passed, Fail/Error to failed, Manual/Skipped to skipped
+    tmap = {"Pass": "passed", "Warn": "passed", "Fail": "failed", "Error": "failed", "Manual": "skipped", "Skipped": "skipped", "Blocked": "failed"}
+    for d in x.q("""SELECT c.test_id, c.suite, c.requirement_title, c.lakehouse_type,
+                    (SELECT r.status FROM taf_result r JOIN taf_run u ON u.run_id=r.run_id WHERE r.test_id=c.test_id AND r.suite=c.suite
+                     ORDER BY u.started_at DESC LIMIT 1) AS st FROM taf_case c WHERE c.lakehouse_type IS NOT NULL AND c.is_active"""):
+        did = f"taf:{d['suite']}:{d['test_id']}"
+        cases.append({"id": did, "key": d["test_id"], "title": f"[data check] {d['requirement_title']}", "test_type": d["lakehouse_type"]})
+        if tmap.get(d["st"]):
+            latest[did] = tmap[d["st"]]
     types = x.q("SELECT * FROM aw_test_type ORDER BY seq")
     by = {t["code"]: [] for t in types}
     for c in cases:
@@ -875,7 +900,7 @@ def testmap(x, release_id=None):
         res = [latest[c["id"]] for c in cs if c["id"] in latest]
         n = {s: res.count(s) for s in ("passed", "failed", "skipped")}
         status = "Gap" if not cs else "Planned" if not res else "At risk" if n["failed"] else "Covered"
-        out.append({**t, "cases": len(cs), "executed": len(res), **n, "status": status,
+        out.append({**t, "cases": len(cs), "data_checks": sum(1 for c in cs if str(c["id"]).startswith("taf:")), "executed": len(res), **n, "status": status,
                     "pass_rate": round(100 * n["passed"] / len(res)) if res else None,
                     "sample": [{"key": c["key"], "title": c["title"], "status": latest.get(c["id"], "not run")} for c in cs[:8]]})
     counts = {s: sum(1 for t in out if t["status"] == s) for s in ("Covered", "At risk", "Planned", "Gap")}

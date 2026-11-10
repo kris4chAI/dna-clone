@@ -7,3 +7,4 @@ secrets/*
 !secrets/README.md
 *.zip
 .git
+data/

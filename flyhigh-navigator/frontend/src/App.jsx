@@ -13,6 +13,7 @@ import Journeys from './views/Journeys'
 import Insights from './views/Insights'
 import DataModels from './views/DataModels'
 import Skills from './views/Skills'
+import Settings from './views/Settings'
 import { AwOverview, AwTestMap, AwDesign, AwExecution, AwAnalytics, AwMaintenance } from './views/Assurance'
 import { Playbook, Readiness, Roadmap, Estimator, UseCases, Kpis, Governance, Team } from './views/Pmo'
 
@@ -51,6 +52,7 @@ const NAV = [
     { id: 'aw_execution', label: 'Execution', hint: 'Engines · plans · runs · reports', icon: '▶' },
     { id: 'aw_analytics', label: 'Analytics', hint: 'Coverage · defects · hotspots', icon: '◔' },
     { id: 'aw_maintenance', label: 'Maintenance', hint: 'Code mapping · impact analysis', icon: '⟲' },
+    { id: 'aw_settings', label: 'Settings', hint: 'Assets · connections', icon: '⚙' },
   ] },
 ]
 
@@ -131,10 +133,11 @@ export default function App() {
         {v === 'data' && <DataModels focus={nav.ref} />}
         {v === 'aw_overview' && <AwOverview onNavigate={go} />}
         {v === 'aw_testmap' && <AwTestMap me={me} onNavigate={go} />}
-        {v === 'aw_design' && <AwDesign />}
-        {v === 'aw_execution' && <AwExecution />}
-        {v === 'aw_analytics' && <AwAnalytics me={me} />}
+        {v === 'aw_design' && <AwDesign focus={nav.ref} />}
+        {v === 'aw_execution' && <AwExecution focus={nav.ref} />}
+        {v === 'aw_analytics' && <AwAnalytics me={me} focus={nav.ref} />}
         {v === 'aw_maintenance' && <AwMaintenance me={me} onNavigate={go} />}
+        {v === 'aw_settings' && <Settings onNavigate={go} />}
         {v === 'playbook' && <Playbook onNavigate={go} />}
         {v === 'readiness' && <Readiness onNavigate={go} />}
         {v === 'roadmap' && <Roadmap me={me} focus={nav.ref} onNavigate={go} />}

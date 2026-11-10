@@ -8,3 +8,7 @@ httpx==0.28.1
 sqlglot==30.29.0
 # Optional at runtime, installed so "Execute on Snowflake" works as soon as .env has a connection
 snowflake-connector-python==3.16.0
+python-multipart==0.0.20
+databricks-sdk==0.40.0
+pyyaml==6.0.2
+openpyxl==3.1.5

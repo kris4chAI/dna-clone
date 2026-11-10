@@ -17,12 +17,16 @@ python3 tools/smoke_test.py                  # default http://localhost:8080
 python3 tools/smoke_test.py http://host:port
 ```
 
-The script runs 76 checks, which together exercise all 65 skills:
+The script runs 101 checks, which together exercise all 65 skills:
 
 - health and the UI;
 - the persona lens (401 without a persona, 403 across the pursuit, delivery, assurance and PMO lenses);
 - every screen's API, the PMO and assurance screens (including test generation and a plan run), and the chat guide in all four lenses;
+- assurance settings (spec, assets, add and mask a connection, validation, configure per asset, test, delete, lens access);
+- TAF data checks (config, suite toggle, a simulator run with results and log, health scenarios) and failure triage (resolve rule, raise a defect, lens access);
 - every pursuit, PMO and assurance skill engine and all 46 Snowflake delivery skills.
+
+Unit tests for the TAF logic, compiler and scenarios: `cd backend && pip install pytest && pytest tests`.
 
 ## Reset, upgrade, back up
 
@@ -31,7 +35,7 @@ The script runs 76 checks, which together exercise all 65 skills:
 | Reload the seed content (drops curated edits, gate log, runs) | Set `RESET_DB=true` in `.env`, run `docker compose up -d`, then set it back to `false` |
 | Start completely fresh | `docker compose down -v && docker compose up -d --build` |
 | Upgrade to a new version of the folder | `docker compose up -d --build`. The entrypoint reloads content automatically when the schema version changes |
-| Back up | `docker compose exec db pg_dump -U flyhigh flyhigh > flyhigh-backup.sql` |
+| Back up | `docker compose exec db pg_dump -U flyhigh flyhigh > flyhigh-backup.sql`, plus the settings key: `docker compose cp app:/srv/data/settings.key .` (or set `SETTINGS_SECRET_KEY`) |
 | Restore | `docker compose exec -T db psql -U flyhigh -d flyhigh < flyhigh-backup.sql` |
 
 ## Change content and skills

@@ -5,3 +5,4 @@ __pycache__/
 frontend/dist/
 secrets/*
 !secrets/README.md
+data/

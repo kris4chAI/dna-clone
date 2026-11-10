@@ -86,6 +86,7 @@ SCREEN_ACCESS = [
     ("aw_execution", "Assurance execution", [A], "Engines, devices, releases, plans, executions and reports."),
     ("aw_analytics", "Assurance analytics", [A, D, M], "Test report summary and defect impact: read by delivery and the PMO for gates and steering."),
     ("aw_maintenance", "Assurance maintenance", [A, D], "Test-to-code mappings and impact analysis: delivery reads it before each change."),
+    ("aw_settings", "Assurance settings", [A], "Asset management and connections (LLM, ALM, storage, DB, parser): credentials stay with the assurance team."),
     ("team", "Team and RACI", [M, D], "Pod topology and RACI: owned by the PMO, shared with delivery."),
 ]
 # pursuit stages shared with the PMO (hand-over into mobilization)

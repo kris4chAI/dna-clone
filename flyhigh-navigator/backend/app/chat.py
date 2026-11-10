@@ -41,7 +41,7 @@ PURSUIT_WORDS = {
 }
 SUGGEST = {
     "pursuit": ["How do we qualify a bid?", "What does gate G5 need?", "Show the win score", "Which sections are below 90?"],
-    "assurance": ["Where do I start?", "Which tests failed?", "What does the latest change impact?", "Show open defects"],
+    "assurance": ["Where do I start?", "Which tests failed?", "How are the data checks?", "What needs triage?", "Show open defects"],
     "pmo": ["How ready is Track A?", "Estimate the effort", "Show the top risks", "Which KPIs are amber or red?"],
     "delivery": ["Where do I start?", "What does the delivery plan stage need?", "Show the agents in Platform migration", "Which sections can I score?"],
 }
@@ -122,11 +122,12 @@ def assurance_answer(m: str, context: dict):
     card = lambda v, t, s: _card(v, t, s, v, "")
     if re.search(r"\b(hi|hello|help|start|begin|get started|where do i)\b", m) and len(m) < 60:
         s = A.summary(A.DB)
-        return {"reply": "You're in the **assurance lens**: the assurance workbench for FlyHigh, in four parts.\n"
+        return {"reply": "You're in the **assurance lens**: the assurance workbench for FlyHigh, in five parts.\n"
                          "- **Design:** generate test cases from user stories or documents, synthetic test data and keyword-driven scripts.\n"
                          "- **Execution:** engines, devices, releases and test plans; run them with self-healing and failure analysis.\n"
                          "- **Analytics:** coverage, results, hotspots, defects and the impact × likelihood grid.\n"
-                         "- **Maintenance:** map tests to code and pick the regression suite for each change.\n\n"
+                         "- **Maintenance:** map tests to code and pick the regression suite for each change.\n"
+                         "- **Data checks (TAF):** column, template and SQL assertions on Simulator, Snowflake or Databricks; every failure lands in **failure triage**.\n\n"
                          f"Right now: {s['stories']} stories, {s['covered']} covered; latest results {s['passed']} passed, {s['failed']} failed, {s['skipped']} skipped; "
                          f"{sum(1 for d in s['defects'] if d['status'] != 'Closed')} open defects.",
                 "cards": [card("aw_overview", "Assurance overview", "Start here"), card("aw_design", "Design", "Generate test cases")],
@@ -140,6 +141,35 @@ def assurance_answer(m: str, context: dict):
                 "The lakehouse test map covers six platform layers and three cross-cutting disciplines: " + ", ".join(f"{t} {v}" for t, v in tm["counts"].items()) + ".")
         return {"reply": head + "\n" + "\n".join(f"- **{t['code']} {t['name']}** ({t['status']}, {t['cases']} cases): {t['what']}" for t in types[:14]),
                 "cards": [card("aw_testmap", "Lakehouse test map", "Coverage by layer")], "suggestions": ["Which tests failed?"]}
+    if re.search(r"setting|connection|connector|credential|api key|asset management|llm connection|which llm", m):
+        from .settings_api import asset_status, connections
+        st = asset_status(A.DB)
+        cn = connections(A.DB)
+        by_kind = ", ".join(k.upper() + " " + str(sum(1 for c in cn if c["kind"] == k)) for k in ("llm", "alm", "storage", "db", "parser"))
+        gaps = [f"{a['name']} (needs {', '.join(k.upper() for k, v in a['connections'].items() if not v['ok'])})" for a in st if a["enabled"] and not a["ready"]]
+        return {"reply": f"**Settings**: {sum(1 for a in st if a['enabled'])} of {len(st)} assets switched on; {len(cn)} connections "
+                         f"({by_kind}).\n" +
+                         ("Assets still missing a connection:\n" + "\n".join(f"- {g}" for g in gaps[:10]) if gaps else "Every switched-on asset has the connections it needs."),
+                "cards": [card("aw_settings", "Settings", "Asset management and connections")], "suggestions": ["Where do I start?"]}
+    if re.search(r"triage|recommended fix|unresolved|resolve", m):
+        from .taf.api import triage_rows
+        rows = triage_rows(False, "latest", A.DB)
+        return {"reply": f"**Failure triage**: {len(rows)} open failures in the latest runs, {sum(1 for r in rows if r['severity'] in ('Critical', 'High'))} high severity, "
+                         f"{sum(1 for r in rows if r['defect_key'])} already linked to a defect.\n" +
+                         "\n".join(f"- **{r['ref']}** ({r['source'].lower()}, {r['severity']}) {(r['title'] or '')[:70]}: {r['defect_key'] or ('fix: ' + r['recommended_fix'] if r['recommended_fix'] else 'needs a fix')}" for r in rows[:8])
+                         + "\n\nRecord a recommended fix and resolve, or raise a linked defect when it needs a code change.",
+                "cards": [card("aw_analytics", "Failure triage", "Fix, resolve or raise a defect")], "suggestions": ["Show open defects", "How are the data checks?"]}
+    if re.search(r"data check|\btaf\b|assertion|data quality|\bdq\b|health scenario|databricks", m):
+        from .taf.api import _latest_run
+        rid = _latest_run(None, A.DB)
+        run = A.DB.one("SELECT * FROM taf_run WHERE run_id=%s", (rid,)) if rid else None
+        bad = A.DB.q("SELECT test_id, status, violation_count, severity FROM taf_result WHERE run_id=%s AND status IN ('Fail','Error') ORDER BY severity, test_id LIMIT 8", (rid,)) if rid else []
+        n = A.DB.one("SELECT COUNT(*) FILTER (WHERE is_active) AS a, COUNT(*) AS t FROM taf_case")
+        return {"reply": f"**TAF data checks**: {n['a']} of {n['t']} cases active (column, template and SQL assertions plus the external suite). Engines: Simulator, Snowflake and Databricks.\n" +
+                         (f"Latest run **{run['run_id']}** on {run['engine']} is **{run['status']}**: {run['pass_count']} pass, {run['fail_count']} fail, {run['warn_count']} warn, {run['error_count']} error.\n" if run else "No runs yet.\n") +
+                         "\n".join(f"- **{b['test_id']}** {b['status']} ({b['severity']}, {b['violation_count'] if b['violation_count'] is not None else 'n/a'} violations)" for b in bad),
+                "cards": [card("aw_execution", "Data checks run", "Run on Simulator, Snowflake or Databricks"), card("aw_analytics", "Health scenarios", "Checks on the runs themselves")],
+                "suggestions": ["What needs triage?"]}
     if re.search(r"fail|flaky|hotspot|root cause", m):
         s = A.summary(A.DB)
         return {"reply": "Most-failed test cases:\n" + "\n".join(f"- **{d['key']}** {d['title'][:70]} — {d['failure_rate']}% ({d['root_cause'] or 'n/a'}): {d['resolution'] or ''}" for d in s["most_failed"][:8])

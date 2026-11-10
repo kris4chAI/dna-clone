@@ -8,6 +8,8 @@
             │    ├── main.py          implementation lifecycle, catalog, solution content, curation, chat
             │    ├── pursuit_api.py   lifecycle, pursuit stages, kit (sheets + template downloads), win room, response quality
             │    ├── assurance_api.py assurance lens: test design, execution simulator, analytics, code mapping, 5 engines
+            │    ├── settings_api.py  assurance settings: assets, connections (encrypted credentials), per-asset assignment, connection tests
+            │    ├── taf/             TAF data checks: run logic, Snowflake compiler and simulator, Databricks engine, health scenarios, failure triage
             │    ├── pmo_api.py       PMO lens: playbook, readiness, plan, estimator, use cases, KPIs, governance, RAID, 4 PMO engines
             │    ├── skills_api.py    skills studio: 9 pursuit + 4 PMO + 6 assurance engines, 46 Snowflake generators, SQL checks, gate log, execution
             │    ├── chat.py          lens-aware intent rules (pursuit, delivery, PMO) + retrieval over the search_index view (LLM optional)
@@ -17,8 +19,9 @@
                  │
                  ▼
             db container: PostgreSQL 16 (named volume pgdata)
+            app data: named volume appdata (/srv/data): settings key, files uploaded to storage connections
                  │
-                 └──► optional: your LLM provider · optional: Snowflake DEV account
+                 └──► optional: your LLM provider · optional: Snowflake DEV account · optional: Databricks workspace (TAF jobs and UC views)
 ```
 
 ## Data (PostgreSQL)
@@ -29,7 +32,9 @@
 | Solution content | `persona`, `journey_step`, `insight_dashboard`, `insight_question`, `domain`, `subject_area`, `data_entity`, `attribute`, `kpi`, `conformed_dim`, `data_layer` |
 | Pursuit lifecycle | `pursuit_stage`, `pursuit_artefact`, `pursuit_skill`, `pursuit_ref`, `kit_template`, `kit_sheet`, `kit_row`, `rubric_criterion`, `response_section`, `section_score`, `section_musthave` |
 | Persona lens | `lens`, `lens_role`, `access_rule` (resource = screen, pursuit_stage or skill; `lenses` array) |
-| Assurance workbench | `aw_story`, `aw_suite`, `aw_case`, `aw_dataset`, `aw_component`, `aw_script`, `aw_engine`, `aw_device`, `aw_release`, `aw_plan`, `aw_cicd`, `aw_cycle`, `aw_result`, `aw_defect`, `aw_module`, `aw_mapping`, `aw_test_type` (lakehouse test catalogue) |
+| Assurance workbench | `aw_story`, `aw_suite`, `aw_case`, `aw_dataset`, `aw_component`, `aw_script`, `aw_engine`, `aw_device`, `aw_release`, `aw_plan`, `aw_cicd`, `aw_cycle`, `aw_result`, `aw_defect`, `aw_module`, `aw_mapping`, `aw_test_type` (lakehouse test catalogue), `aw_triage` (failure triage: recommended fix, resolution, linked defect) |
+| Assurance settings (kept across reseeds) | `aw_asset` (assets, needs, on/off), `aw_conn` (connections; secrets Fernet-encrypted in `secret_enc`), `aw_conn_assign` (LLM and parser connection per asset, or `*` for all) |
+| TAF data checks | `taf_case` (suite control plane), `taf_run` (run manifest), `taf_result` (one row per check per run), `taf_upload`, `taf_scenario_run` |
 | Program office | `pb_doc` (playbook content), `pmo_readiness`, `pmo_check`, `pmo_kpi`, `pmo_usecase`, `pmo_raid`, `pmo_estimate` |
 | Activity | `guide_progress`, `chat_message`, `skill_run`, `skill_execution`, `gate_decision`, `section_round`, `app_meta` |
 

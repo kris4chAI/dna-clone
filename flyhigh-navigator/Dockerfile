@@ -14,7 +14,7 @@ RUN npm run build
 # ---------- 2. Runtime ----------
 FROM ${PYTHON_IMAGE}
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    FLYHIGH_HOME=/srv PORT=8000
+    FLYHIGH_HOME=/srv FLYHIGH_DATA=/srv/data PORT=8000
 WORKDIR /srv
 COPY backend/requirements.txt backend/requirements.txt
 RUN pip install --prefer-binary -r backend/requirements.txt
@@ -25,7 +25,7 @@ COPY docker/entrypoint.sh /usr/local/bin/flyhigh-entrypoint
 COPY --from=ui /ui/dist frontend/dist
 RUN chmod +x /usr/local/bin/flyhigh-entrypoint \
  && useradd --create-home --uid 10001 flyhigh \
- && mkdir -p /srv/secrets && chown -R flyhigh:flyhigh /srv
+ && mkdir -p /srv/secrets /srv/data && chown -R flyhigh:flyhigh /srv
 USER flyhigh
 EXPOSE 8000
 HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=5 \
