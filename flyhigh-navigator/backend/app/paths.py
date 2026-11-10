@@ -14,6 +14,7 @@ SKILLS = ROOT / "skills"
 PURSUIT_SKILLS = SKILLS / "pursuit"
 DELIVERY_SKILLS = SKILLS / "delivery"
 PMO_SKILLS = SKILLS / "pmo"
+AW_SKILLS = SKILLS / "assurance"
 PACKAGES = SKILLS / "packages"
 FRONTEND_DIST = Path(os.getenv("FRONTEND_DIST", ROOT / "frontend" / "dist"))
 

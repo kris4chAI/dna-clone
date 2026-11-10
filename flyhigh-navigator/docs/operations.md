@@ -17,12 +17,12 @@ python3 tools/smoke_test.py                  # default http://localhost:8080
 python3 tools/smoke_test.py http://host:port
 ```
 
-The script runs 55 checks, which together exercise all 59 skills:
+The script runs 73 checks, which together exercise all 64 skills:
 
 - health and the UI;
-- the persona lens (401 without a persona, 403 across the pursuit, delivery and PMO lenses);
-- every screen's API, the PMO screens and RAID writes, and the chat guide in all three lenses;
-- every pursuit and PMO skill engine and all 46 Snowflake delivery skills.
+- the persona lens (401 without a persona, 403 across the pursuit, delivery, assurance and PMO lenses);
+- every screen's API, the PMO and assurance screens (including test generation and a plan run), and the chat guide in all four lenses;
+- every pursuit, PMO and assurance skill engine and all 46 Snowflake delivery skills.
 
 ## Reset, upgrade, back up
 

@@ -4,6 +4,7 @@ import { api } from '../api'
 const LOOP_OF = (n) => (n <= 6 ? 'Build' : n === 7 ? 'Review' : n === 8 ? 'Review + Fix' : 'Fix')
 const NEXT = {
   pursuit: { view: 'pursuit', text: 'Qualify the opportunity and take the bid decision at G0. The pursuit kit holds the bid memo and stakeholder map templates.' },
+  assurance: { view: 'aw_overview', text: 'Open the assurance workbench: generate test cases from the user stories, run the pilot plans with self-healing, and watch coverage, defects and the regression impact of every change.' },
   delivery: { view: 'workflow', text: 'Open Discover to draft the PRD at G1. In the pursuit you join at stage 5 to reconcile effort, at stage 8 to red-team the delivery sections, and at stage 9 for orals.' },
   pmo: { view: 'playbook', text: 'Read the playbook primer, score each track on the readiness scorecard, then plan waves back from the licence dates. You join the pursuit at stage 5 (effort becomes the mobilization baseline) and stage 9 (hand-over).' },
 }
@@ -24,6 +25,7 @@ export default function Lifecycle({ me, onNavigate }) {
   const name = (code) => d.lenses.find((l) => l.code === code)?.name || code
   const first = lens === 'pursuit' ? { label: `Stage ${d.pursuit[0].num} · ${d.pursuit[0].name}`, ref: d.pursuit[0].code }
     : lens === 'delivery' ? { label: `Step ${d.implementation[0].seq} · ${d.implementation[0].name}`, ref: d.implementation[0].code }
+      : lens === 'assurance' ? { label: 'Assurance workbench · overview', ref: '' }
       : { label: 'Delivery playbook · primer', ref: '' }
   const nx = NEXT[lens] || NEXT.delivery
 
@@ -33,7 +35,7 @@ export default function Lifecycle({ me, onNavigate }) {
         <div>
           <div className="eyebrow">Lifecycle overview · {name(lens).toLowerCase()}</div>
           <h1>From RFP signal to a monitored platform</h1>
-          <p className="lede">One flow, three lenses. Pursuit personas run the nine-gate pursuit. Delivery personas run the ten-step implementation. The PMO runs the program around it with the AI Native Delivery Playbook: readiness, plan, execute and optimize. The final pursuit stages hand over to delivery and the PMO.</p>
+          <p className="lede">One flow, four lenses. Pursuit personas run the nine-gate pursuit. Delivery personas run the ten-step implementation, and assurance personas test it in the assurance workbench. The PMO runs the program around it with the AI Native Delivery Playbook: readiness, plan, execute and optimize. The final pursuit stages hand over to delivery and the PMO.</p>
         </div>
         <div className="you-card">
           <span className={`lens-dot ${lens}`} />
@@ -90,9 +92,23 @@ export default function Lifecycle({ me, onNavigate }) {
             </button>
           ))}
         </div>
+        <div className="lc-row-head">
+          <b>Assurance workbench</b><span>Design · execution · analytics · maintenance · tests every implementation step and wave</span>
+        </div>
+        <div className="lc-row aw">
+          {d.assurance.map((s) => (
+            <button key={s.code} className={`lc-node assurance ${s.locked ? 'locked' : ''}`} disabled={s.locked}
+              onClick={() => onNavigate(s.code)} title={s.locked ? 'Not in your lens' : s.hint}>
+              <span className="lc-num">{s.seq}</span>
+              <span className="lc-name">{s.name}</span>
+              <span className="lc-gate small">{s.hint}</span>
+              {s.locked && <span className="lc-lock">Assurance only</span>}
+            </button>
+          ))}
+        </div>
         <div className="lc-legend">
           <span><i className="sw pursuit" />Pursuit lens</span><span><i className="sw shared" />Shared final stages</span>
-          <span><i className="sw pmo" />PMO lens</span><span><i className="sw delivery" />Delivery lens</span><span><i className="sw locked" />Not in your lens</span>
+          <span><i className="sw pmo" />PMO lens</span><span><i className="sw delivery" />Delivery lens</span><span><i className="sw assurance" />Assurance lens</span><span><i className="sw locked" />Not in your lens</span>
         </div>
       </section>
 

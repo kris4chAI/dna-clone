@@ -8,6 +8,7 @@ from psycopg.rows import dict_row
 
 from . import seed_data as S
 from .db import DATABASE_URL
+from .assurance_api import seed_assurance
 from .pmo_api import seed_pmo
 from .seed_pursuit import seed_pursuit
 
@@ -111,9 +112,10 @@ def seed(c):
 
     seed_pursuit(c)
     seed_pmo(c)
+    seed_assurance(c)
 
 
-SCHEMA_VERSION = "4.0"
+SCHEMA_VERSION = "5.0"
 
 
 def main():
@@ -141,7 +143,8 @@ def main():
             (SELECT count(*) FROM kpi) kpis, (SELECT count(*) FROM pursuit_stage) pursuit_stages,
             (SELECT count(*) FROM kit_template) templates, (SELECT count(*) FROM kit_sheet) sheets, (SELECT count(*) FROM kit_row) kit_rows,
             (SELECT count(*) FROM response_section) sections, (SELECT count(*) FROM lens_role) roles,
-            (SELECT count(*) FROM pmo_kpi) pmo_kpis, (SELECT count(*) FROM pmo_usecase) pmo_usecases, (SELECT count(*) FROM pmo_raid) raid""").fetchone()
+            (SELECT count(*) FROM pmo_kpi) pmo_kpis, (SELECT count(*) FROM pmo_usecase) pmo_usecases, (SELECT count(*) FROM pmo_raid) raid,
+            (SELECT count(*) FROM aw_story) aw_stories, (SELECT count(*) FROM aw_case) aw_cases, (SELECT count(*) FROM aw_cycle) aw_cycles, (SELECT count(*) FROM aw_defect) aw_defects""").fetchone()
         print("Seeded:", counts)
 
 

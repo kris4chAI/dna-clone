@@ -22,7 +22,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: flyhigh-navigator:4.0
+    image: flyhigh-navigator:5.0
     restart: unless-stopped
     depends_on:
       db:

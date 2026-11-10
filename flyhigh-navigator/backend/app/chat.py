@@ -41,6 +41,7 @@ PURSUIT_WORDS = {
 }
 SUGGEST = {
     "pursuit": ["How do we qualify a bid?", "What does gate G5 need?", "Show the win score", "Which sections are below 90?"],
+    "assurance": ["Where do I start?", "Which tests failed?", "What does the latest change impact?", "Show open defects"],
     "pmo": ["How ready is Track A?", "Estimate the effort", "Show the top risks", "Which KPIs are amber or red?"],
     "delivery": ["Where do I start?", "What does the delivery plan stage need?", "Show the agents in Platform migration", "Which sections can I score?"],
 }
@@ -112,7 +113,63 @@ def _next_stage(code):
     return one("SELECT code FROM stage WHERE seq>%s ORDER BY seq LIMIT 1", (s["seq"],))
 
 
-PMO_KIND_SCREEN = {"pmo_kpi": "kpis", "pmo_raid": "governance", "pmo_usecase": "usecases"}
+PMO_KIND_SCREEN = {"pmo_kpi": "kpis", "pmo_raid": "governance", "pmo_usecase": "usecases", "aw_case": "aw_design", "aw_defect": "aw_analytics"}
+
+
+def assurance_answer(m: str, context: dict):
+    """Intent rules for the assurance lens, answered from the assurance workbench tables."""
+    from . import assurance_api as A
+    card = lambda v, t, s: _card(v, t, s, v, "")
+    if re.search(r"\b(hi|hello|help|start|begin|get started|where do i)\b", m) and len(m) < 60:
+        s = A.summary(A.DB)
+        return {"reply": "You're in the **assurance lens**: the assurance workbench for FlyHigh, in four parts.\n"
+                         "- **Design:** generate test cases from user stories or documents, synthetic test data and keyword-driven scripts.\n"
+                         "- **Execution:** engines, devices, releases and test plans; run them with self-healing and failure analysis.\n"
+                         "- **Analytics:** coverage, results, hotspots, defects and the impact × likelihood grid.\n"
+                         "- **Maintenance:** map tests to code and pick the regression suite for each change.\n\n"
+                         f"Right now: {s['stories']} stories, {s['covered']} covered; latest results {s['passed']} passed, {s['failed']} failed, {s['skipped']} skipped; "
+                         f"{sum(1 for d in s['defects'] if d['status'] != 'Closed')} open defects.",
+                "cards": [card("aw_overview", "Assurance overview", "Start here"), card("aw_design", "Design", "Generate test cases")],
+                "suggestions": SUGGEST["assurance"]}
+    if re.search(r"fail|flaky|hotspot|root cause", m):
+        s = A.summary(A.DB)
+        return {"reply": "Most-failed test cases:\n" + "\n".join(f"- **{d['key']}** {d['title'][:70]} — {d['failure_rate']}% ({d['root_cause'] or 'n/a'}): {d['resolution'] or ''}" for d in s["most_failed"][:8])
+                         + f"\n\nHotspots: {len(s['hotspots']['critical'])} critical, {len(s['hotspots']['flaky'])} flaky, {len(s['hotspots']['stable'])} stable.",
+                "cards": [card("aw_analytics", "Assurance analytics", "Test case performance")], "suggestions": ["Show open defects"]}
+    if re.search(r"defect|bug", m):
+        s = A.summary(A.DB)
+        op = [d for d in s["defects"] if d["status"] != "Closed"]
+        return {"reply": f"{len(op)} open defects ({', '.join(f'{k} {v}' for k, v in s['severity'].items())} overall):\n" +
+                         "\n".join(f"- **{d['key']}** {d['severity']} · {d['title'][:80]}" for d in op[:10]),
+                "cards": [card("aw_analytics", "Defect impact analysis", "By severity and suite")], "suggestions": ["Which tests failed?"]}
+    if re.search(r"impact|regression|chang|diff|code map|mapping", m):
+        mods = A.DB.q("SELECT id, path FROM aw_module WHERE changed")
+        rows = A.impact(A.DB, [x["id"] for x in mods]) if mods else []
+        return {"reply": ("Changed modules: " + ", ".join(f"`{x['path']}`" for x in mods) + f". {len(rows)} test cases are impacted; run these first:\n" +
+                          "\n".join(f"- **{r['key']}** {r['title'][:70]} (risk {r['risk']}, via {r['module']})" for r in rows[:8])) if mods
+                         else "No modules are marked as changed. Paste your changed files in **Maintenance → Impact analysis**.",
+                "cards": [card("aw_maintenance", "Assurance maintenance", "Impact analysis")], "suggestions": []}
+    if re.search(r"coverage|covered|ready|readiness|summary|report", m):
+        s = A.summary(A.DB)
+        return {"reply": f"{s['covered']} of {s['stories']} user stories have test cases; {s['tested']} have executed results. "
+                         f"Latest: {s['passed']} passed, {s['failed']} failed, {s['skipped']} skipped, {s['self_healed']} self-healed. "
+                         f"{s['features_ready']} of {s['features_total']} features have no failures.",
+                "cards": [card("aw_analytics", "Test report summarizer", "Coverage and readiness")], "suggestions": ["Which tests failed?"]}
+    if re.search(r"test data|synthetic|mask", m):
+        return {"reply": "The **test data generator** builds valid, boundary, invalid and masked rows from a data-model entity, pasted DDL or a CSV header, with Snowflake INSERT SQL and the data-quality checks the invalid rows must fail.",
+                "cards": [card("aw_design", "Design", "Test data generator")], "suggestions": []}
+    if re.search(r"script|keyword|automat|framework", m):
+        return {"reply": "The **test script generator** turns a test case into a keyword-driven pytest (or a BDD feature) over reusable components: Login, NavigateTo, ApplyFilter, ReadKpiTile, RunSql, CompareToLegacy, AssertRowAccess, AssertMasked, MeasureLatency, AskCortex and AssertDenied.",
+                "cards": [card("aw_design", "Design", "Test script generator")], "suggestions": []}
+    if re.search(r"engine|device|release|plan|execut|run|schedule|ci/cd|self-heal", m):
+        cy = A.DB.q("SELECT name, passed, failed, skipped, self_healed, engine FROM aw_cycle ORDER BY id DESC LIMIT 4")
+        return {"reply": "Recent execution cycles:\n" + "\n".join(f"- **{c['name']}** on {c['engine']}: {c['passed']} passed, {c['failed']} failed, {c['skipped']} skipped, {c['self_healed']} self-healed" for c in cy)
+                         + "\n\nExecutions run on the built-in simulator until a real engine is connected.",
+                "cards": [card("aw_execution", "Assurance execution", "Plans and cycles")], "suggestions": []}
+    if re.search(r"test case|generate|user stor", m):
+        return {"reply": "The **test case generator** turns user stories (one case per acceptance criterion plus a negative case) or pasted FSD/BRD lines, screens or API endpoints into a versioned suite, classified as functional, data, security, performance, UI or API.",
+                "cards": [card("aw_design", "Design", "Test case generator")], "suggestions": []}
+    return None
 ARCH_WORDS = {"migrate": ["dmlc", "warehouse migration", "legacy warehouse", "migration archetype"],
               "product": ["dplc", "data product", "medallion"],
               "bi": ["bmlc", "bi and semantic", "semantic modern", "bi modern"],
@@ -212,6 +269,12 @@ def answer(message: str, context: dict | None = None, lens: str = "delivery"):
                          "use the pursuit kit for each stage's template, and track the win score and section rubric as you go.",
                 "cards": [_card("pursuit", "1 · Signal and qualify", "Start here", "pursuit", "signal")],
                 "suggestions": SUGGEST["pursuit"]}
+
+    # Assurance lens: the assurance workbench
+    if lens == "assurance":
+        r = assurance_answer(m, context)
+        if r:
+            return r
 
     # PMO lens: the delivery playbook
     if lens == "pmo":
@@ -423,7 +486,7 @@ def answer(message: str, context: dict | None = None, lens: str = "delivery"):
             "persona": "journeys", "journey_step": "journeys", "dashboard": "insights", "insight": "insights",
             "subject_area": "data", "entity": "data", "kpi": "data", "pursuit_stage": "pursuit", "pursuit_artefact": "pursuit",
             "pursuit_skill": "kit", "kit_template": "kit", "section": "quality",
-            "pmo_kpi": "kpis", "pmo_raid": "governance", "pmo_usecase": "usecases"}
+            "pmo_kpi": "kpis", "pmo_raid": "governance", "pmo_usecase": "usecases", "aw_case": "aw_design", "aw_defect": "aw_analytics"}
     reply = "Here's what matches in the catalog:\n" + "\n".join(f"- **{r['title']}** ({r['kind'].replace('_', ' ')}) — {(r['body'] or '')[:110]}" for r in top)
     cards = [_card(r["kind"], r["title"], r["kind"].replace("_", " "), view.get(r["kind"], "catalog"), r["ref"]) for r in top[:4]]
     return {"reply": reply, "cards": cards, "suggestions": SUGGEST[lens][:2], "context_rows": top}

@@ -7,9 +7,10 @@ const KIND_ICON = { stage: '◆', persona: '◉', dashboard: '◔', kpi: '#', da
 const SUB = {
   pursuit: 'Pursuit lens · ask about stages, gates, templates, scores',
   delivery: 'Delivery lens · ask about steps, agents, skills, shared pursuit stages',
+  assurance: 'Assurance lens · ask about tests, failures, defects, coverage, impact',
   pmo: 'PMO lens · ask about readiness, effort, KPIs, RAID, RACI, governance',
 }
-const HINT = { pursuit: 'e.g. What does gate G5 need?', delivery: 'e.g. Which skills build RBAC?', pmo: 'e.g. How ready is Track A?' }
+const HINT = { pursuit: 'e.g. What does gate G5 need?', delivery: 'e.g. Which skills build RBAC?', pmo: 'e.g. How ready is Track A?', assurance: 'e.g. Which tests failed?' }
 
 export default function Chat({ lens, context, ask, onNavigate, onClose }) {
   const [msgs, setMsgs] = useState([])

@@ -7,9 +7,10 @@ Everything FlyHigh Navigator knows how to *do* lives in this folder. The app loa
 |---|---|
 | `pursuit/<name>/SKILL.md` | The 9 AI Native Pursuit Engineering pursuit skills (source of truth) |
 | `pmo/<name>/SKILL.md` | The 4 PMO skills from the AI Native Delivery Playbook (source of truth) |
+| `assurance/<name>/SKILL.md` | The 5 assurance workbench skills (source of truth) |
 | `delivery/snowskills/` | The Snowflake generator library behind the 46 delivery skills (pure Python, stdlib only) |
 | `delivery/catalog/sf-*/` | Readable SKILL.md and example parameters per delivery skill |
-| `packages/pursuit/*.skill`, `packages/pmo/*.skill`, `packages/delivery/*.skill` | Packaged skills (zip format) |
+| `packages/pursuit/*.skill`, `packages/pmo/*.skill`, `packages/assurance/*.skill`, `packages/delivery/*.skill` | Packaged skills (zip format) |
 
 Rebuild packages and this catalog after editing a skill: `python tools/package_skills.py`.
 
@@ -28,7 +29,7 @@ python -m snowskills run gen-grants --params catalog/sf-gen-grants/examples/para
 | `niche-exec-offering` | Turn a pursuit section into a slide spec (titles of three words or fewer, message in subtitles, stamps, evidence tags) for the firm's deck builder. | [SKILL.md](pursuit/niche-exec-offering/SKILL.md) · [package](packages/pursuit/niche-exec-offering.skill) |
 | `proposal-to-job-descriptions` | Generate role-by-role job descriptions from a proposal, or from a user's role list mapped to standard data & analytics offering playbooks, with must-haves flagged for onshore, nearshore and offshore. | [SKILL.md](pursuit/proposal-to-job-descriptions/SKILL.md) · [package](packages/pursuit/proposal-to-job-descriptions.skill) |
 | `rfp-commercials-model` | Turn a proposal's resource loading into commercials: rate card, scope options, managed services, fixed and flex term discounts, contract value, TCO and ROI, plus the matching pricing slides. | [SKILL.md](pursuit/rfp-commercials-model/SKILL.md) · [package](packages/pursuit/rfp-commercials-model.skill) |
-| `rfp-response-orchestrator` | Run a Niche Consulting RFP pursuit end to end with the AI Native Sales Engineering method: nine gated stages from RFP signal to orals, with artefacts, skills, stamps and stage questions. | [SKILL.md](pursuit/rfp-response-orchestrator/SKILL.md) · [package](packages/pursuit/rfp-response-orchestrator.skill) |
+| `rfp-response-orchestrator` | Run a Niche Consulting RFP pursuit end to end with the AI Native Pursuit Engineering method: nine gated stages from RFP signal to orals, with artefacts, skills, stamps and stage questions. | [SKILL.md](pursuit/rfp-response-orchestrator/SKILL.md) · [package](packages/pursuit/rfp-response-orchestrator.skill) |
 | `rfp-section-builder` | Extract the section structure of a Niche Consulting RFP response, then generate or revise any one of its 14 sections independently from a section brief, ready for rubric scoring. | [SKILL.md](pursuit/rfp-section-builder/SKILL.md) · [package](packages/pursuit/rfp-section-builder.skill) |
 | `rfp-section-loop` | Improve RFP response sections with a generate, score and revise loop until each reaches 90% of the rubric with all must-haves, or escalate the inputs needed. | [SKILL.md](pursuit/rfp-section-loop/SKILL.md) · [package](packages/pursuit/rfp-section-loop.skill) |
 | `rfp-section-rubric` | Independently score one RFP response section against a 10-criterion weighted rubric and its must-haves, citing evidence, and return the highest-leverage fixes. | [SKILL.md](pursuit/rfp-section-rubric/SKILL.md) · [package](packages/pursuit/rfp-section-rubric.skill) |
@@ -42,6 +43,16 @@ python -m snowskills run gen-grants --params catalog/sf-gen-grants/examples/para
 | `pmo-steering-pack` | Compile the FlyHigh steering pack: readiness per track, KPI scorecard by RAG, top risks and issues, decisions needed, playbook progress and recent gate decisions. | [SKILL.md](pmo/pmo-steering-pack/SKILL.md) · [package](packages/pmo/pmo-steering-pack.skill) |
 | `pmo-unit-effort-estimator` | Estimate an AI-native Snowflake program with the unit-effort model: objects by complexity, AI frameworks and discovery, pilot share and wave speed-up, returning person-days, person-months and average FTE. | [SKILL.md](pmo/pmo-unit-effort-estimator/SKILL.md) · [package](packages/pmo/pmo-unit-effort-estimator.skill) |
 | `pmo-usecase-prioritizer` | Rank data modernization activities for AI and agent enablement on value, repeatability, feasibility, trust and automation, and assign each a lane: pilot wave, next wave, assist only or human gate. | [SKILL.md](pmo/pmo-usecase-prioritizer/SKILL.md) · [package](packages/pmo/pmo-usecase-prioritizer.skill) |
+
+## Assurance skills (5)
+
+| Skill | Purpose | Files |
+|---|---|---|
+| `aw-impact-analyzer` | From a list of changed files, find the impacted test cases through test-to-code mappings and rank the regression suite by risk (mapping score × priority × failure history). | [SKILL.md](assurance/aw-impact-analyzer/SKILL.md) · [package](packages/assurance/aw-impact-analyzer.skill) |
+| `aw-test-case-generator` | Generate a versioned suite of functional, negative, data, security, performance, UI and API test cases from user stories or from requirements, screen lists and API endpoints, for a Snowflake modernization program. | [SKILL.md](assurance/aw-test-case-generator/SKILL.md) · [package](packages/assurance/aw-test-case-generator.skill) |
+| `aw-test-data-generator` | Generate synthetic Snowflake test data for valid, boundary, invalid and masked scenarios from a schema file (CREATE TABLE DDL, CSV header) or a data-model entity, with INSERT SQL and data-quality checks. | [SKILL.md](assurance/aw-test-data-generator/SKILL.md) · [package](packages/assurance/aw-test-data-generator.skill) |
+| `aw-test-report-summarizer` | Summarize test results for a release: user-story coverage, results, feature readiness, hotspots (critical, flaky, stable), defects by severity, most-failed tests with root cause, and the impact × likelihood grid. | [SKILL.md](assurance/aw-test-report-summarizer/SKILL.md) · [package](packages/assurance/aw-test-report-summarizer.skill) |
+| `aw-test-script-generator` | Generate keyword-driven pytest scripts or BDD features for a test case over reusable components (login, navigation, filters, KPI tiles, SQL, legacy comparison, row access, masking, latency, Cortex). | [SKILL.md](assurance/aw-test-script-generator/SKILL.md) · [package](packages/assurance/aw-test-script-generator.skill) |
 
 ## Snowflake delivery skills (46)
 

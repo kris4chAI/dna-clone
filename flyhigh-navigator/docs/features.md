@@ -32,6 +32,18 @@ Rows loaded from the reference content are tagged `origin='seed'`. Anything adde
 
 Pursuit content comes from the AI Native Pursuit Engineering method (`AI Native Sales Engineering Methodology.docx` and `Workflow.pptx` in the source folder), `00 Start here.docx`, `Stage templates/` and `Skills/`. Seeds are in `backend/app/pursuit_data.py` and `assets/seed/pursuit_kit.json`. The blank templates are in `assets/templates/`.
 
+## Assurance workbench (assurance lens)
+
+Modelled on an AI test-assurance workbench, rebuilt for FlyHigh. It sits after the implementation lifecycle and tests every step and wave. Working data lives in the `aw_*` tables; all engines are deterministic.
+
+| Screen | Who | What it does |
+|---|---|---|
+| Overview | assurance, delivery, PMO | Counts (stories, cases, data sets, scripts, cycles, results, open defects, changed modules) and the four pillars with their components |
+| Design | assurance | **Test case generator:** a two-step wizard, from user stories (the FlyHigh persona journeys and the FLY Jira backlog, by feature or picked one by one) or from documents (FSD/BRD lines, UI/UX screens, API endpoints); one case per acceptance criterion plus a negative case, typed functional, data, security, performance, UI or API; every run is a new suite version; CSV import. **Test data generator:** valid, boundary, invalid and masked rows from a data-model entity or pasted DDL / CSV header, with Snowflake INSERT SQL and DQ checks. **Test script generator:** keyword-driven pytest or BDD over the framework tree (applications, reusable components, standard suites, services) |
+| Execution | assurance | Execution engines (local or cluster, with expiry), devices, releases; execution management (test planning, test execution with global engine and device, self-healing and failure analysis, CI/CD executions and schedules); test execution report (latest execution, results with root cause and resolution, every cycle). Runs use the built-in simulator, clearly labelled, until a real engine is connected |
+| Analytics | assurance, delivery, PMO | Test report summarizer by release: feature-level status (story coverage, planned/actual/skipped/passed/failed, feature readiness, hotspots critical/flaky/stable), defect impact analysis (by status, severity and feature), defect list (status editable by assurance), impact-based test suggestion (impact × likelihood grid), test case performance (most failed with root cause and resolution) |
+| Maintenance | assurance, delivery | Test case – code mappings (mapping table, code coverage per module, test case recommendations) and impact analysis: paste changed files (`git diff --name-only`), see the impacted cases ranked by risk, and create a regression test plan |
+
 ## Program office (PMO lens)
 
 The PMO lens turns the **Snowflake AI Native Delivery Playbook** (data modernization variant) into a working program office. Content is seeded from `assets/seed/delivery_playbook.json`; working data lives in the `pmo_*` tables.
@@ -66,6 +78,8 @@ All client, vendor and accelerator names in the playbook are rebranded for the s
 | proposal-to-job-descriptions | One JD per role and location tier, with the tier must-haves taken from the skill | Skills studio (stage 5, shared) |
 | niche-brand-guardian | Audit of titles and text: three-word titles, sentence case, INDICATIVE on money, competitor names, filler | Skills studio |
 | niche-exec-offering | Slide spec JSON for a response section | Skills studio |
+
+**Assurance skills (5).** Engines over the assurance workbench; SKILL.md files in `skills/assurance/`: `aw-test-case-generator`, `aw-test-data-generator`, `aw-test-script-generator`, `aw-test-report-summarizer`, `aw-impact-analyzer`. The assurance lens also gets the Snowflake testing skills (`/reconcile`, `/gen-unit-tests`, `/gen-etl-tests`, `/check-scd`, `/test-cdc`, `/replay-load`, `/compare-reports`, `/test-rls`, `/test-metrics`, `/golden-queries`, `/load-test`, `/tune-warehouse`, `/lint-sql`, `/parallel-run`).
 
 **PMO skills (4).** Engines over the playbook data; SKILL.md files in `skills/pmo/`.
 
@@ -105,7 +119,7 @@ The packages are in `skills/packages/delivery/sf-*.skill`, `skills/packages/purs
 - Pursuit skills follow their stages: the win scorecard and commercials model are pursuit-only; the other pursuit skills are shared with delivery.
 - The orchestrator only opens stages the lens can see.
 - Delivery skills are delivery-only, except the planning and release skills shared with the PMO.
-- PMO skills are PMO-only. Only delivery personas can execute SQL on Snowflake.
+- PMO skills are PMO-only; assurance skills are assurance-only. Only delivery personas can execute SQL on Snowflake.
 
 **SQL checks and execution:**
 
@@ -122,6 +136,7 @@ The packages are in `skills/packages/delivery/sf-*.skill`, `skills/packages/purs
 - `GET /api/progress/{session}`, `POST /api/progress`
 - `POST /api/chat` `{message, session_id, context:{stage}}`
 - `GET /api/lens/list`: every lens with its personas (the sales lens is listed as coming soon)
+- Assurance: `GET /api/assurance/overview|design|execution|analytics|maintenance`, `POST /api/assurance/design/cases/generate|import`, `POST /api/assurance/design/data/generate`, `POST /api/assurance/design/scripts/generate`, `POST|DELETE /api/assurance/execution/{engines|devices|releases|plans|cicd}`, `POST /api/assurance/execution/plans/{id}/run`, `PUT /api/assurance/analytics/defects/{id}`, `POST /api/assurance/maintenance/diff|remap|plan`
 - PMO: `GET /api/pmo/playbook|readiness|roadmap|estimator|usecases|kpis|governance|team`, `PUT /api/pmo/readiness/{track}/{qid}`, `POST /api/pmo/readiness/tracks`, `PUT /api/pmo/roadmap/check`, `POST /api/pmo/estimator`, `PUT /api/pmo/usecases/{id}`, `PUT /api/pmo/kpis/{id}`, `POST|PUT|DELETE /api/pmo/raid[/{id}]`
 
 ## Notes

@@ -5,7 +5,8 @@ Each user picks a persona. The persona maps to a lens, and the lens decides what
 | Lens | Personas | Sees |
 |---|---|---|
 | **Pursuit** | Pursuit lead, client partner, proposal manager, solution architect (pre-sales), experience lead, deal lead and finance, Legal, alliance lead | All 9 pursuit stages, pursuit kit, win room, response quality (all sections), solution content, pursuit skills |
-| **Delivery** | Delivery lead, product owner, architecture lead, platform engineer, migration lead, data engineer, BI lead, QA lead, release manager, platform operations | Implementation workflow, toolkit catalog, solution content, all 46 Snowflake skills, the delivery playbook, plan and execute, team and RACI, plus the **shared final pursuit stages** 5, 8, 9 |
+| **Delivery** | Delivery lead, product owner, architecture lead, platform engineer, migration lead, data engineer, BI lead, release manager, platform operations | Implementation workflow, toolkit catalog, solution content, all 46 Snowflake skills, the delivery playbook, plan and execute, team and RACI, the assurance overview, analytics and maintenance (read), plus the **shared final pursuit stages** 5, 8, 9 |
+| **Assurance** | QA lead (test manager), test automation engineer, test data engineer, reconciliation and data quality lead, performance engineer, UAT and business acceptance lead | The assurance workbench (overview, design, execution, analytics, maintenance), the implementation workflow and toolkit catalog, solution content, the 5 assurance skills and the Snowflake testing skills (reconciliation, SCD, CDC, report comparison, row access, golden queries, load and warehouse tuning, unit tests, SQL lint) |
 | **PMO** | AI program manager, AI Champion (AI Native data lead), client program head, PMO analyst, data governance lead, FinOps and commercial controller | The program office: delivery playbook, readiness scorecard, plan and execute, unit-effort estimator, AI use-case matrix, KPI scorecard, governance and RAID, team and RACI; the implementation workflow; solution content; pursuit stages 5 and 9; the PMO skills plus the planning and release skills |
 | **Sales** *(coming soon)* | — | Sales strategy and pipeline generation. Listed in the picker but not yet available |
 
@@ -17,7 +18,7 @@ Each user picks a persona. The persona maps to a lens, and the lens decides what
 | 8 · Assemble, brand and red team (G7) | Delivery | Delivery reviewers score the engineering, delivery plan and team sections for feasibility |
 | 9 · Submit, orals and learn (G8) | Delivery, PMO | Delivery leads present in orals; the hand-over feeds implementation Discover and the PMO's Align phase |
 
-Within shared stages, delivery personas can also use the pursuit skills that belong to them: the orchestrator (shared stages only), the section rubric, loop and builder, job descriptions, the brand guardian and the deck spec. The PMO uses the orchestrator and job descriptions. The win scorecard and the commercials model stay with the pursuit lens.
+Within shared stages, delivery personas can also use the pursuit skills that belong to them: the orchestrator (shared stages only), the section rubric, loop and builder, job descriptions, the brand guardian and the deck spec. The PMO uses the orchestrator and job descriptions. The PMO also reads the assurance overview and analytics for gates and steering. The win scorecard and the commercials model stay with the pursuit lens.
 
 ## Enforcement
 

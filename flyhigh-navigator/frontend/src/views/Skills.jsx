@@ -17,7 +17,7 @@ export default function Skills({ me, focus, onNavigate }) {
     const g = new Map()
     const key = (s) => s.kind === 'pursuit'
       ? [`P${String(s.stages[0].num).padStart(2, '0')}`, me.lens === 'pursuit' ? `Pursuit · stage ${s.stages.map((x) => x.num).join(', ')}` : 'Shared pursuit skills']
-      : s.kind === 'pmo' ? ['A', 'PMO skills']
+      : s.kind === 'pmo' ? ['A', 'PMO skills'] : s.kind === 'assurance' ? ['B', 'Assurance workbench skills']
         : [`D${String(s.stage_seq).padStart(2, '0')}`, `${s.stage_seq}. ${s.stage_name}`]
     f.forEach((s) => { const [k, label] = key(s); const kk = me.lens !== 'pursuit' && s.kind === 'pursuit' ? 'Z' : k; if (!g.has(kk)) g.set(kk, { label, items: [] }); g.get(kk).items.push(s) })
     return [...g.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([, v]) => v)
@@ -26,22 +26,25 @@ export default function Skills({ me, focus, onNavigate }) {
   if (!cat) return <div className="page">Loading…</div>
   const nPursuit = cat.skills.filter((s) => s.kind === 'pursuit').length
   const nPmo = cat.skills.filter((s) => s.kind === 'pmo').length
-  const nDelivery = cat.skills.length - nPursuit - nPmo
+  const nAw = cat.skills.filter((s) => s.kind === 'assurance').length
+  const nDelivery = cat.skills.length - nPursuit - nPmo - nAw
 
   return (
     <div className="page">
       <header className="page-head">
         <div>
           <div className="eyebrow">Skills studio · {me.lens} lens</div>
-          <h1>{me.lens === 'pursuit' ? 'Run the pursuit skills on live pursuit data' : me.lens === 'pmo' ? 'Run the program office on live playbook data' : 'Generate Snowflake-ready artefacts, skill by skill'}</h1>
+          <h1>{me.lens === 'pursuit' ? 'Run the pursuit skills on live pursuit data' : me.lens === 'pmo' ? 'Run the program office on live playbook data' : me.lens === 'assurance' ? 'Generate, run and analyse tests with the assurance skills' : 'Generate Snowflake-ready artefacts, skill by skill'}</h1>
           <p className="lede">{me.lens === 'pursuit'
             ? 'Each pursuit skill runs as an engine over the kit, scorecard and rubric in this app, writes its results back, and hands you a ready-to-paste prompt for your LLM.'
+            : me.lens === 'assurance' ? 'Assurance skills generate test cases, test data and keyword-driven scripts, summarize test reports and pick the regression suite from what changed. You also get the Snowflake testing skills: reconciliation, SCD and CDC checks, report comparison, row-access tests, golden queries and performance.'
             : me.lens === 'pmo' ? 'PMO skills score readiness, size effort, rank AI use cases and compile the steering pack from the playbook data in this app. You also get the wave-planning and release skills, and the pursuit orchestrator and job descriptions for the hand-over stages.'
             : 'Each implementation skill generates reviewable Snowflake SQL, schemachange, dbt, Terraform and runbooks. Download it as a .skill package, or execute reviewed SQL in a DEV account from here.'}</p>
         </div>
         <div className="status-pills">
           {nPmo > 0 && <span className="spill"><b>{nPmo}</b> PMO</span>}
-          <span className="spill"><b>{nPursuit}</b> pursuit</span>
+          {nAw > 0 && <span className="spill"><b>{nAw}</b> assurance</span>}
+          {nPursuit > 0 && <span className="spill"><b>{nPursuit}</b> pursuit</span>}
           {nDelivery > 0 && <span className="spill"><b>{nDelivery}</b> Snowflake delivery</span>}
           <span className={`spill ${cat.llm ? 'on' : ''}`} title="Set LLM_PROVIDER and LLM_API_KEY in .env">{cat.llm ? `LLM · ${cat.llm_status.provider} · ${cat.llm_status.model}` : 'LLM not configured · prompt mode'}</span>
           {me.lens === 'delivery' && <span className={`spill ${cat.snowflake.configured && cat.snowflake.execute_enabled ? 'on' : ''}`}>Snowflake {cat.snowflake.configured ? (cat.snowflake.execute_enabled ? `· ${cat.snowflake.account}` : 'read-only') : 'not connected'}</span>}
@@ -98,7 +101,7 @@ function SkillPanel({ name, me, cat, onNavigate }) {
     <>
       <div className="persona-head">
         <div>
-          <Chip tone={delivery ? 'snow' : 'agent'}>{delivery ? `Snowflake delivery skill · ${sk.package}` : sk.kind === 'pmo' ? 'PMO skill' : 'Pursuit skill'}</Chip>
+          <Chip tone={delivery ? 'snow' : 'agent'}>{delivery ? `Snowflake delivery skill · ${sk.package}` : sk.kind === 'pmo' ? 'PMO skill' : sk.kind === 'assurance' ? 'Assurance skill' : 'Pursuit skill'}</Chip>
           <h2 className={delivery ? 'mono' : ''}>{delivery ? `/${sk.name}` : sk.title}</h2>
           <p>{delivery ? sk.description : sk.engine}</p>
           {delivery && <div className="muted small">{sk.agent} · stage <a className="link" onClick={() => onNavigate('workflow', sk.stage)}>{sk.stage}</a> · gate: {sk.gate}</div>}
@@ -166,6 +169,11 @@ const PMO_SCREEN = {
   'pmo-unit-effort-estimator': ['estimator', 'Open the estimator'],
   'pmo-usecase-prioritizer': ['usecases', 'Open the use-case matrix'],
   'pmo-steering-pack': ['governance', 'Open governance and RAID'],
+  'aw-test-case-generator': ['aw_design', 'Open assurance design'],
+  'aw-test-data-generator': ['aw_design', 'Open assurance design'],
+  'aw-test-script-generator': ['aw_design', 'Open assurance design'],
+  'aw-test-report-summarizer': ['aw_analytics', 'Open assurance analytics'],
+  'aw-impact-analyzer': ['aw_maintenance', 'Open impact analysis'],
 }
 
 function Result({ res, file, setFile, me, cat, delivery, name, onNavigate }) {

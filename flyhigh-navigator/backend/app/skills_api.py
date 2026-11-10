@@ -27,15 +27,18 @@ from snowskills.skillmd import render as render_skill_md
 from . import llm
 from .access import allowed, allowed_codes, persona, require_stage
 from .db import one, q
+from .assurance_api import AW_ENGINES, AW_SKILLS
 from .pmo_api import PMO_ENGINES, PMO_SKILLS
 
 router = APIRouter(prefix="/api")
 PURSUIT_MD = paths.PURSUIT_SKILLS
-PMO_MD = paths.PMO_SKILLS
+# Lens-owned engine skills beyond the pursuit set: PMO and assurance
+EXTRA = {**{n: {**m, "kind": "pmo", "dir": paths.PMO_SKILLS, "run": PMO_ENGINES[n]} for n, m in PMO_SKILLS.items()},
+         **{n: {**m, "kind": "assurance", "dir": paths.AW_SKILLS, "run": AW_ENGINES[n]} for n, m in AW_SKILLS.items()}}
 
 
 def _md_path(name):
-    return (PMO_MD if name in PMO_SKILLS else PURSUIT_MD) / name / "SKILL.md"
+    return (EXTRA[name]["dir"] if name in EXTRA else PURSUIT_MD) / name / "SKILL.md"
 PH = re.compile(r"^\[.*\]$")
 
 # ---------------------------------------------------------------------------
@@ -79,7 +82,7 @@ PURSUIT = {
 
 
 def _skill_ok(name: str, lens: str) -> bool:
-    if name in PURSUIT or name in PMO_SKILLS:
+    if name in PURSUIT or name in EXTRA:
         return allowed("skill", name, lens)
     if name in snowskills.REGISTRY:
         return allowed("skill", name, lens)
@@ -88,6 +91,8 @@ def _skill_ok(name: str, lens: str) -> bool:
 
 PMO_DELIVERY_SKILLS = {"plan-waves", "parallel-run", "gen-changelog", "release-notes", "gen-runbook", "gen-training", "kt-checklist"}
 PMO_PURSUIT_SKILLS = {"rfp-response-orchestrator", "proposal-to-job-descriptions"}
+AW_DELIVERY_SKILLS = {"gen-unit-tests", "reconcile", "parallel-run", "gen-etl-tests", "check-scd", "test-cdc", "replay-load", "compare-reports",
+                      "test-rls", "test-metrics", "golden-queries", "load-test", "tune-warehouse", "lint-sql"}
 
 
 def seed_skill_access(c):
@@ -98,12 +103,14 @@ def seed_skill_access(c):
         lenses = ["pursuit"] + (["delivery"] if m["lens"] == "shared" else []) + (["pmo"] if n in PMO_PURSUIT_SKILLS else [])
         c.execute(ins, (n, m["title"], lenses,
                         "Shared: used in the final pursuit stages." if m["lens"] == "shared" else "Pursuit only: buyer intelligence and pricing."))
-    for n, m in PMO_SKILLS.items():
-        c.execute(ins, (n, m["title"], ["pmo"], "PMO skill: runs over the delivery playbook data."))
+    for n, m in EXTRA.items():
+        c.execute(ins, (n, m["title"], [m["kind"]], "PMO skill: runs over the delivery playbook data." if m["kind"] == "pmo"
+                        else "Assurance skill: runs over the assurance workbench data."))
     for n, s in snowskills.REGISTRY.items():
-        pm = n in PMO_DELIVERY_SKILLS
-        c.execute(ins, (n, f"/{n}", ["delivery", "pmo"] if pm else ["delivery"],
-                        "Planning and release skill shared with the PMO." if pm else "Implementation skill for delivery personas."))
+        lenses = ["delivery"] + (["assurance"] if n in AW_DELIVERY_SKILLS else []) + (["pmo"] if n in PMO_DELIVERY_SKILLS else [])
+        why = ("Testing and assurance skill shared with the assurance lens." if n in AW_DELIVERY_SKILLS
+               else "Planning and release skill shared with the PMO." if n in PMO_DELIVERY_SKILLS else "Implementation skill for delivery personas.")
+        c.execute(ins, (n, f"/{n}", lenses, why))
 
 
 # ---------------------------------------------------------------------------
@@ -490,9 +497,9 @@ def list_skills(p: dict = Depends(persona)):
                         "stages": [{"num": x, "name": stages[x]["name"]} for x in m["stages"]],
                         "description": _frontmatter(n).get("description", "")})
     screens = {r["code"]: r["label"] for r in q("SELECT code, label FROM access_rule WHERE resource='screen'")}
-    for n, m in PMO_SKILLS.items():
+    for n, m in EXTRA.items():
         if _skill_ok(n, lens):
-            out.append({"name": n, "kind": "pmo", "title": m["title"], "engine": m["engine"],
+            out.append({"name": n, "kind": m["kind"], "title": m["title"], "engine": m["engine"],
                         "screens": [{"code": x, "label": screens.get(x, x)} for x in m["screens"]],
                         "description": _frontmatter(n).get("description", "")})
     for n, s in snowskills.REGISTRY.items():
@@ -523,9 +530,9 @@ def get_skill(name: str, p: dict = Depends(persona)):
             fields = [{**fields[0], "options": [s["code"] for s in q("SELECT code FROM pursuit_stage ORDER BY num") if s["code"] in ok],
                        "default": "signal" if "signal" in ok else "delivery"}]
         return {"name": name, "kind": "pursuit", "title": m["title"], "engine": m["engine"], "skill_md": md, "fields": fields, "runs": runs}
-    if name in PMO_SKILLS:
-        m = PMO_SKILLS[name]
-        return {"name": name, "kind": "pmo", "title": m["title"], "engine": m["engine"], "screens": m["screens"],
+    if name in EXTRA:
+        m = EXTRA[name]
+        return {"name": name, "kind": m["kind"], "title": m["title"], "engine": m["engine"], "screens": m["screens"],
                 "skill_md": _md_path(name).read_text(), "fields": m["fields"], "runs": runs}
     s = snowskills.REGISTRY[name]
     return {"name": name, "kind": "delivery", "title": s.title, "description": s.description, "agent": s.agent, "stage": s.stage,
@@ -549,10 +556,10 @@ def run_skill(name: str, body: RunIn, p: dict = Depends(persona)):
         params.update({k: v for k, v in (body.params or {}).items() if v not in (None, "")})
         res = ENGINES[name](params, p, body.session_id)
         md_text = (PURSUIT_MD / name / "SKILL.md").read_text()
-    elif name in PMO_SKILLS:
-        params = {f["key"]: f.get("default", "") for f in PMO_SKILLS[name]["fields"]}
+    elif name in EXTRA:
+        params = {f["key"]: f.get("default", "") for f in EXTRA[name]["fields"]}
         params.update({k: v for k, v in (body.params or {}).items() if v not in (None, "")})
-        res = PMO_ENGINES[name](params, p, body.session_id)
+        res = EXTRA[name]["run"](params, p, body.session_id)
         md_text = _md_path(name).read_text()
     else:
         res = snowskills.run(name, body.params)
@@ -570,7 +577,7 @@ def run_skill(name: str, body: RunIn, p: dict = Depends(persona)):
         except Exception as e:
             res["claude_error"] = str(e)
     row = one("""INSERT INTO skill_run(skill, kind, persona, mode, params, summary, output) VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
-              (name, "pursuit" if name in PURSUIT else "pmo" if name in PMO_SKILLS else "delivery", p["code"], body.mode, json.dumps(body.params, default=str), res.get("summary", ""),
+              (name, "pursuit" if name in PURSUIT else EXTRA[name]["kind"] if name in EXTRA else "delivery", p["code"], body.mode, json.dumps(body.params, default=str), res.get("summary", ""),
                json.dumps({k: v for k, v in res.items() if k != "prompt"}, default=str)))
     res["run_id"] = row["id"]
     return res
@@ -598,7 +605,7 @@ def skill_package(name: str, persona_code: str):
         raise HTTPException(403)
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
-        if name in PURSUIT or name in PMO_SKILLS:
+        if name in PURSUIT or name in EXTRA:
             z.writestr(f"{name}/SKILL.md", _md_path(name).read_text())
             fname = f"{name}.skill"
         else:

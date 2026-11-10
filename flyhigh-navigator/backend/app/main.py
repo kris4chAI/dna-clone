@@ -13,6 +13,7 @@ from . import chat
 from .access import allowed, persona, require_stage, screen
 from .db import one, pool, q
 from .paths import FRONTEND_DIST as DIST
+from .assurance_api import router as assurance_router
 from .pmo_api import router as pmo_router
 from .pursuit_api import router as pursuit_router
 from .skills_api import router as skills_router
@@ -25,7 +26,7 @@ async def lifespan(_):
     pool.close()
 
 
-app = FastAPI(title="FlyHigh Navigator API", version="4.0", lifespan=lifespan)
+app = FastAPI(title="FlyHigh Navigator API", version="5.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
@@ -239,6 +240,7 @@ def chat_history(session_id: str, p: dict = Depends(persona)):
 app.include_router(pursuit_router)
 app.include_router(skills_router)
 app.include_router(pmo_router)
+app.include_router(assurance_router)
 
 
 # ---------------- Serve the built React app (single-container mode) ----------------

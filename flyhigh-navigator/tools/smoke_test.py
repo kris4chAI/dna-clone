@@ -4,7 +4,7 @@
     python tools/smoke_test.py http://localhost:8000
 
 Checks: health, UI, persona lens enforcement (401/403), lifecycle, pursuit, kit, win room, quality,
-the PMO screens, the chat guide in all three lenses, every pursuit and PMO skill engine and every Snowflake delivery skill.
+the PMO and assurance screens, the chat guide in all four lenses, every pursuit, PMO and assurance skill engine and every Snowflake delivery skill.
 """
 import json
 import sys
@@ -47,7 +47,7 @@ for path, who in [("/api/lifecycle", S), ("/api/pursuit/overview", S), ("/api/ki
                   ("/api/stages", D), ("/api/components", D), ("/api/personas", D), ("/api/datamodel", S)]:
     check(f"GET {path} as {who}", call(path, who)[0] == 200)
 s, ls = call("/api/lens/list")
-check("lenses: pursuit, delivery, PMO (+ sales reserved)", s == 200 and [l["code"] for l in ls if l["available"]] == ["pursuit", "delivery", "pmo"])
+check("lenses: pursuit, delivery, assurance, PMO (+ sales reserved)", s == 200 and len([l for l in ls if l["available"]]) == 4)
 for path in ["/api/pmo/playbook", "/api/pmo/readiness", "/api/pmo/roadmap?archetype=bi", "/api/pmo/estimator", "/api/pmo/usecases",
              "/api/pmo/kpis", "/api/pmo/governance", "/api/pmo/team", "/api/stages", "/api/pursuit/stages/delivery"]:
     check(f"GET {path} as {M}", call(path, M)[0] == 200)
@@ -56,8 +56,19 @@ check("PMO blocked from pursuit stage 6", call("/api/pursuit/stages/commercials"
 check("pursuit blocked from PMO readiness", call("/api/pmo/readiness", S)[0] == 403)
 check("delivery reads the playbook, not the KPI scorecard", call("/api/pmo/playbook", D)[0] == 200 and call("/api/pmo/kpis", D)[0] == 403)
 s, r = call("/api/pmo/raid", M, {"kind": "Risk", "title": "smoke test risk"})
+Q = "qa_lead"
+for path in ["/api/assurance/overview", "/api/assurance/design", "/api/assurance/execution", "/api/assurance/analytics", "/api/assurance/maintenance"]:
+    check(f"GET {path} as {Q}", call(path, Q)[0] == 200)
+check("assurance lens available after delivery", [l["code"] for l in ls if l["available"]] == ["pursuit", "delivery", "assurance", "pmo"])
+check("delivery reads assurance analytics, not design", call("/api/assurance/analytics", D)[0] == 200 and call("/api/assurance/design", D)[0] == 403)
+check("pursuit blocked from assurance", call("/api/assurance/overview", S)[0] == 403)
+s, r = call("/api/assurance/design/cases/generate", Q, {"source": "document", "doc_type": "API DOCS", "doc_text": "GET /shipments/{id}"})
+check("assurance generates test cases from API docs", s == 200 and r and r.get("id"))
+s, e = call("/api/assurance/execution", Q)
+s, c = call(f"/api/assurance/execution/plans/{e['plans'][0]['id']}/run", Q, {}) if e else (0, None)
+check("assurance runs a test plan", s == 200 and c and c["total"] > 0, f"{c and c['passed']} passed, {c and c['failed']} failed")
 check("PMO adds a RAID item", s == 200 and r and call(f"/api/pmo/raid/{r['id']}", M, method="DELETE")[0] == 200)
-for who, msg in [(S, "What does gate G5 need?"), (D, "Which skills build RBAC?"), (M, "How ready is Track A?")]:
+for who, msg in [(S, "What does gate G5 need?"), (D, "Which skills build RBAC?"), (M, "How ready is Track A?"), ("qa_lead", "Which tests failed?")]:
     s, r = call("/api/chat", who, {"message": msg, "session_id": "smoke"})
     check(f"chat as {who}", s == 200 and r and len(r.get("reply", "")) > 20)
 
@@ -78,6 +89,13 @@ check("PMO skills catalogue", len(pmo) == 4, f"{len(pmo)} PMO skills, {len(cat['
 for n in pmo:
     s, r = call(f"/api/skills/{n}/run", M, {"params": {}, "mode": "engine", "session_id": "smoke"})
     check(f"PMO skill {n}", s == 200 and r and r.get("files"), r.get("summary", "") if r else "")
+s, cat = call("/api/skills", "qa_lead")
+aw = [x["name"] for x in cat["skills"] if x["kind"] == "assurance"] if cat else []
+check("assurance skills catalogue", len(aw) == 5, f"{len(aw)} assurance skills, {len(cat['skills']) if cat else 0} in the assurance lens")
+for n in aw:
+    s, r = call(f"/api/skills/{n}/run", "qa_lead", {"params": {}, "mode": "engine", "session_id": "smoke"})
+    check(f"assurance skill {n}", s == 200 and r and r.get("files"), r.get("summary", "") if r else "")
+check("assurance runs /reconcile", call("/api/skills/reconcile/run", "qa_lead", {"params": {}})[0] == 200)
 check("PMO runs plan-waves", call("/api/skills/plan-waves/run", M, {"params": {}})[0] == 200)
 check("PMO blocked from gen-grants", call("/api/skills/gen-grants/run", M, {"params": {}})[0] == 403)
 check("pursuit blocked from delivery skill", call("/api/skills/gen-grants/run", S, {"params": {}})[0] == 403)

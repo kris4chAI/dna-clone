@@ -1,7 +1,9 @@
 -- FlyHigh Navigator schema (PostgreSQL 14+)
 -- `origin` = 'seed' for rows loaded from the proposal, 'curated' for rows added or edited in the UI.
 
-DROP TABLE IF EXISTS pmo_readiness, pmo_check, pmo_kpi, pmo_usecase, pmo_raid, pmo_estimate, pb_doc,
+DROP TABLE IF EXISTS aw_mapping, aw_module, aw_defect, aw_result, aw_cycle, aw_cicd, aw_plan, aw_release, aw_device, aw_engine,
+  aw_script, aw_component, aw_dataset, aw_case, aw_suite, aw_story,
+  pmo_readiness, pmo_check, pmo_kpi, pmo_usecase, pmo_raid, pmo_estimate, pb_doc,
   skill_execution, skill_run, gate_decision, section_round, lens_role, lens, access_rule, pursuit_stage, pursuit_artefact, pursuit_skill, pursuit_ref,
   kit_template, kit_sheet, kit_row, response_section, rubric_criterion, section_score, section_musthave,
   chat_message, guide_progress, stage_component, component, stage, phase,
@@ -208,6 +210,40 @@ CREATE TABLE pmo_estimate (
   id SERIAL PRIMARY KEY, name TEXT, params JSONB, result JSONB, created_by TEXT, created_at TIMESTAMPTZ DEFAULT now()
 );
 
+
+-- ---------------------------------------------------------------------------
+-- Assurance lens: assurance workbench
+-- ---------------------------------------------------------------------------
+CREATE TABLE aw_story (id SERIAL PRIMARY KEY, key TEXT UNIQUE, title TEXT, feature TEXT, persona TEXT, narrative TEXT,
+  acceptance JSONB, source TEXT, priority TEXT);
+CREATE TABLE aw_suite (id SERIAL PRIMARY KEY, name TEXT, source_kind TEXT, source_ref TEXT, llm TEXT, version INT,
+  created_by TEXT, created_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE aw_case (id SERIAL PRIMARY KEY, suite_id INT REFERENCES aw_suite(id) ON DELETE CASCADE, key TEXT, title TEXT,
+  story_key TEXT, feature TEXT, type TEXT, priority TEXT, steps JSONB, expected TEXT, automation TEXT, origin TEXT DEFAULT 'generated');
+CREATE TABLE aw_dataset (id SERIAL PRIMARY KEY, name TEXT, schema_source TEXT, entity TEXT, scenarios TEXT[], rows JSONB, sql TEXT,
+  created_by TEXT, created_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE aw_component (id SERIAL PRIMARY KEY, kind TEXT, name TEXT, description TEXT);
+CREATE TABLE aw_script (id SERIAL PRIMARY KEY, case_id INT REFERENCES aw_case(id) ON DELETE CASCADE, framework TEXT, app TEXT, file TEXT,
+  keywords JSONB, code TEXT, created_by TEXT, created_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE aw_engine (id SERIAL PRIMARY KEY, name TEXT UNIQUE, type TEXT, status TEXT, expires DATE);
+CREATE TABLE aw_device (id SERIAL PRIMARY KEY, name TEXT, type TEXT, platform TEXT, environment TEXT);
+CREATE TABLE aw_release (id SERIAL PRIMARY KEY, name TEXT, description TEXT, start_date DATE, release_date DATE);
+CREATE TABLE aw_plan (id SERIAL PRIMARY KEY, name TEXT, release_id INT REFERENCES aw_release(id), case_ids INT[] DEFAULT '{}', suite TEXT,
+  last_execution TIMESTAMPTZ);
+CREATE TABLE aw_cicd (id SERIAL PRIMARY KEY, name TEXT, pipeline TEXT, release_id INT REFERENCES aw_release(id), failure_analysis BOOLEAN,
+  self_healing BOOLEAN, config TEXT, schedule TEXT);
+CREATE TABLE aw_cycle (id SERIAL PRIMARY KEY, name TEXT, plan_id INT REFERENCES aw_plan(id), release_id INT REFERENCES aw_release(id),
+  engine TEXT, device TEXT, started TIMESTAMPTZ, ended TIMESTAMPTZ, status TEXT DEFAULT 'Executing', trigger TEXT,
+  total INT, passed INT, failed INT, skipped INT, self_healed INT, self_healing BOOLEAN, failure_analysis BOOLEAN, created_by TEXT);
+CREATE TABLE aw_result (id SERIAL PRIMARY KEY, cycle_id INT REFERENCES aw_cycle(id) ON DELETE CASCADE, case_id INT REFERENCES aw_case(id),
+  status TEXT, duration_ms INT, root_cause TEXT, detail TEXT, resolution TEXT, self_healed BOOLEAN);
+CREATE TABLE aw_defect (id SERIAL PRIMARY KEY, key TEXT, title TEXT, severity TEXT, status TEXT, case_id INT REFERENCES aw_case(id),
+  feature TEXT, component TEXT, cycle_id INT REFERENCES aw_cycle(id), cause TEXT, created_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE aw_module (id SERIAL PRIMARY KEY, path TEXT UNIQUE, module TEXT, kind TEXT, keywords TEXT, lines INT, covered INT,
+  changed BOOLEAN DEFAULT FALSE);
+CREATE TABLE aw_mapping (case_id INT REFERENCES aw_case(id) ON DELETE CASCADE, module_id INT REFERENCES aw_module(id) ON DELETE CASCADE,
+  score NUMERIC, PRIMARY KEY (case_id, module_id));
+
 CREATE VIEW search_index AS
   SELECT 'stage' AS kind, s.code AS ref, s.name AS title,
          concat_ws(' ', s.summary, s.lead_role, s.gate, s.key_steps::text, s.outputs::text) AS body
@@ -227,4 +263,6 @@ CREATE VIEW search_index AS
   UNION ALL SELECT 'section', r.id::text, r.name, concat_ws(' ', r.proves, r.missing, r.fixes) FROM response_section r
   UNION ALL SELECT 'pmo_kpi', k.id::text, k.name, concat_ws(' ', k.category, k.what, k.source, k.target) FROM pmo_kpi k
   UNION ALL SELECT 'pmo_raid', r.id::text, r.title, concat_ws(' ', r.kind, r.detail, r.owner, r.status) FROM pmo_raid r
-  UNION ALL SELECT 'pmo_usecase', u.id::text, u.activity, concat_ws(' ', u.archetype, u.stage, u.automation, u.prereq) FROM pmo_usecase u;
+  UNION ALL SELECT 'pmo_usecase', u.id::text, u.activity, concat_ws(' ', u.archetype, u.stage, u.automation, u.prereq) FROM pmo_usecase u
+  UNION ALL SELECT 'aw_case', c.id::text, c.title, concat_ws(' ', c.key, c.story_key, c.feature, c.type, c.expected) FROM aw_case c
+  UNION ALL SELECT 'aw_defect', d.id::text, d.title, concat_ws(' ', d.key, d.severity, d.status, d.feature, d.component) FROM aw_defect d;
